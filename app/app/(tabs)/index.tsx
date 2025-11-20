@@ -1,59 +1,48 @@
-import { Platform,  StyleSheet, TouchableOpacity, View } from 'react-native';
-
-import useBLE from '@/hooks/use-ble';
-import React, { useState } from 'react';
-import DeviceModal from './deviceConnectionModal';
+import { Platform, StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import BleManager from 'react-native-ble-manager';
 
 export default function HomeScreen() {
-   const {
-    allDevices,
-    connectedDevice,
-    connectToDevice,
-    color,
-    requestPermissions,
-    scanForPeripherals,
-  } = useBLE();
-  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
-  const scanForDevices = async () => {
-    const isPermissionsEnabled = await requestPermissions();
-    if (isPermissionsEnabled) {
-      scanForPeripherals();
-    }
-  };
+  const [bleInit, setBleInit] = useState<boolean>(false);
 
-  const hideModal = () => {
-    setIsModalVisible(false);
-  };
+  //initialize bluetooth manager
+  useEffect(() => {
+    BleManager.start({ showAlert: true });
 
-  const openModal = async () => {
-    scanForDevices();
-    setIsModalVisible(true);
-  };
+    BleManager.isStarted().then((started) => {
+      setBleInit(true);
+      console.log(`Module is ${started ? '' : 'not '}started`);
+    });
+
+    const onStopListener = BleManager.onStopScan((args) => {
+      console.log("scan finished");
+      BleManager.getConnectedPeripherals([]).then((peripheralsArray) => {
+        // Success code
+        console.log("Connected peripherals: " + peripheralsArray.length);
+      });
+    })
+
+    return () => {
+      onStopListener.remove();
+    };
+  }, [])
+
+
+  if (bleInit) {
+    const scanOptions = {seconds:5};
+    BleManager.scan(scanOptions).then(() => {
+      // Success code
+      console.log(scanOptions);
+      console.log("Scan started");
+    });
+  }
+
   return (
-
-    <View style={[styles.container, { backgroundColor: color }]}>
-      <View style={styles.heartRateTitleWrapper}>
-        {connectedDevice ? (
-          <>
-            <p style={styles.heartRateTitleText}>Connected</p>
-          </>
-        ) : (
-          <p style={styles.heartRateTitleText}>
-            Please connect the Arduino
-          </p>
-        )}
-      </View>
-      <TouchableOpacity onPress={openModal} style={styles.ctaButton}>
-        <p style={styles.ctaButtonText}>Connect</p>
-      </TouchableOpacity>
-      { <DeviceModal
-        closeModal={hideModal}
-        visible={isModalVisible}
-        connectToPeripheral={connectToDevice}
-        devices={allDevices}
-      /> }
-    </View>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.heartRateText}>Content is in safe area.</Text>
+    </SafeAreaView>
   );
 };
 
