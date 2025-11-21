@@ -1,25 +1,31 @@
+
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import BleManager from 'react-native-ble-manager'
-import { useEffect } from 'react';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === 'light' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)"
+          options={{
+            headerShown: true,
+            title: "MyQuattro",
+            headerStyle: {
+              
+            },
+            contentStyle: {
+              paddingTop: 0,
+            },
+          }}
+        />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={colorScheme === 'light' ? 'light' : 'dark'} />
     </ThemeProvider>
   );
 }
+
