@@ -16,9 +16,10 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import BleManager, { Peripheral } from "react-native-ble-manager";
 import { useTheme } from "@react-navigation/native";
 
+const deviceUUID = '00001000-0000-1000-8000-00805f9b34fb';
 
 export default function HomeScreen() {
-  const [deviceInfo, setDeviceInfo] = useState<Peripheral[]>([]);
+  const [deviceList, setDeviceList] = useState<Peripheral[]>([]);
   const [restartScan, setRestartScan] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
 
@@ -37,17 +38,29 @@ export default function HomeScreen() {
 
     const onDiscoveredPeripheralListener = BleManager.onDiscoverPeripheral(
       (peripheral: Peripheral) => {
-        const { id, name } = peripheral;
+        const { id, name, advertising } = peripheral;
+        const { isConnectable, serviceUUIDs } = advertising;
 
         console.log("found device");
         console.log(`Device Id: ${id}`);
         console.log(`Device Name: ${name ?? "Unknown"}`);
+        console.log(`Device is connectable: ${isConnectable}`);
+        const match = serviceUUIDs?.find(
+          uuid => uuid.toLowerCase().includes('1000')
+        );
 
-        setDeviceInfo((prev): any => {
-          // const exists = prev.some((p) => p.id === peripheral.id);
+        console.log(`Matched Service UUID: ${match}`);
 
-          return [...prev, peripheral];
-        });
+        if (match) {
+          setDeviceList(prev => {
+            // Avoid duplicates
+            if (prev.find((p) => p.id === peripheral.id)) return prev;
+
+            return [peripheral, ...prev];
+          });
+        }
+
+
       }
     );
 
@@ -62,7 +75,7 @@ export default function HomeScreen() {
 
     if (!isScanning) {
       setIsScanning(true);
-      const scanOptions = { seconds: 5, allowDuplicates: false };
+      const scanOptions = { serviceUUIDs: [], seconds: 10, allowDuplicates: false };
       BleManager.scan(scanOptions).then(() => {
         // Success code
         console.log(scanOptions);
@@ -71,6 +84,66 @@ export default function HomeScreen() {
     }
 
   }
+
+
+  const connectToDevice = (device: Peripheral) => {
+    console.log("Trying to connect to device.");
+    BleManager.connect(device.id).then(() => {
+      console.log("connected to device!");
+      readDeviceData(device);
+
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+
+  const readDeviceData = (device: Peripheral) => {
+
+    BleManager.retrieveServices(device.id)
+      .then((peripheralInfo) => {
+        console.log("Peripheral info:", peripheralInfo);
+        //Possible temp reading
+        return BleManager.read(device.id, "180a", "2a24");
+
+        //Date
+        //return BleManager.read(device.id, "180a", "2a25");
+
+        //Version Number
+        //return BleManager.read(device.id, "180a", "2a26");
+
+        //Device Name
+        //return BleManager.read(device.id, "180a", "2a27");
+
+        //Some Website
+        //return BleManager.read(device.id, "180a", "2a29");
+
+        //experimental
+        //return BleManager.read(device.id, "180a", "2a2a");
+
+        //Not sure
+        //return BleManager.read(device.id, "180a", "2a50");
+
+      })
+      .then((readData) => {
+        if (!readData || readData.length === 0) {
+          console.log("No data received");
+          return;
+        }
+
+        console.log("Raw Read (bytes):", readData);
+
+        const uint8Array = new Uint8Array(readData);
+        const decoder = new TextDecoder('utf-8');
+        const decodedString = decoder.decode(uint8Array);
+
+        console.log("Decoded String:", decodedString);
+      })
+      .catch((err) => {
+        console.log("Read error:", err);
+      });
+  }
+
 
   const handleDeviceListRefresh = () => {
 
@@ -99,8 +172,8 @@ export default function HomeScreen() {
         <ScrollView contentContainerStyle={styles.scrollView} refreshControl={
           <RefreshControl refreshing={isScanning} onRefresh={handleDeviceListRefresh} />
         }>
-          {deviceInfo.length > 0 ?
-            deviceInfo.map((device, index) => (
+          {deviceList.length > 0 ?
+            deviceList.map((device: Peripheral, index) => (
               <View key={index} style={styles.card}>
                 <Text>Device ID:{device.id}</Text>
                 <Text>
@@ -111,6 +184,7 @@ export default function HomeScreen() {
                   Device rssi:
                   {device.rssi ?? "Unknown"}
                 </Text>
+                <Button title="Connect Device" onPress={() => connectToDevice(device)}></Button>
               </View>
             )) : (
               <View>
