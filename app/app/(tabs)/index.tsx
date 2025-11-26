@@ -14,7 +14,6 @@ import {
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import BleManager, { Peripheral } from "react-native-ble-manager";
-import { useTheme } from "@react-navigation/native";
 
 const deviceUUID = '00001000-0000-1000-8000-00805f9b34fb';
 

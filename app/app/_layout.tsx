@@ -11,6 +11,18 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'light' ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name="()"
+          options={{
+            headerShown: true,
+            title: "MyQuattro",
+            headerStyle: {
+              
+            },
+            contentStyle: {
+              paddingTop: 0,
+            },
+          }}
+        />
         <Stack.Screen name="(tabs)"
           options={{
             headerShown: true,
