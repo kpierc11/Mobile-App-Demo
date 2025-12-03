@@ -14,15 +14,7 @@ export default function Settings() {
     <View style={styles.container}>
       <Text style={styles.title}>Settings</Text>
 
-      <Text style={styles.label}>Enter a Scan Time:</Text>
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={handleChange}
-        keyboardType="numeric"
-        placeholder="0"
-      />
-      
+    
       <Text style={styles.output}>You entered: {value}</Text>
     </View>
   );
@@ -31,8 +23,8 @@ export default function Settings() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
     padding: 16,
     backgroundColor: '#f5f5f5',
   },

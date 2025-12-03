@@ -10,6 +10,11 @@ import {
   Alert,
   Linking,
   RefreshControl,
+  TouchableOpacity,
+  TouchableNativeFeedback,
+  TouchableHighlight,
+  Modal,
+  Pressable,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -19,6 +24,7 @@ import ModalScreen from "../modal";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Link } from "expo-router";
+import { Image } from "expo-image";
 
 
 
@@ -28,7 +34,9 @@ interface ConnectedDevices {
 }
 
 const deviceUUID = '00001000-0000-1000-8000-00805f9b34fb';
-const scanTime = 7;
+const scanTime = 2;
+const blurhash =
+  '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
 export default function HomeScreen() {
   const [deviceList, setDeviceList] = useState<Peripheral[]>([]);
@@ -37,6 +45,8 @@ export default function HomeScreen() {
   const [connectedDeviceData, setConnectedDeviceData] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevices, setConnectedDevices] = useState<Peripheral[]>([]);
+
+  const sortedDevices = deviceList.sort((a, b) => b.rssi - a.rssi);
 
   //initialize bluetooth manager
   useEffect(() => {
@@ -87,6 +97,28 @@ export default function HomeScreen() {
   }, []);
 
 
+  const formatBleNameToMac = (name: string | null | undefined): string | undefined => {
+    if (!name) {
+      return;
+    }
+
+    let hex = name.replace(/^BLE#0x/, '');
+    hex = hex.toUpperCase();
+
+    const match = hex.match(/.{1,2}/g);
+    if (!match) {
+      return;
+    }
+
+    return match.join(':');
+  };
+
+  const formatDeviceID = (deviceName: string) => {
+
+    return deviceName.slice(0, 7);
+  }
+
+
   const startScanningDevices = () => {
 
     if (!isScanning) {
@@ -100,6 +132,14 @@ export default function HomeScreen() {
     }
 
   }
+
+  const getSignalIcon = (rssi: number) => {
+    if (rssi >= -50) return "wifi-strength-4";
+    if (rssi >= -65) return "wifi-strength-3";
+    if (rssi >= -75) return "wifi-strength-2";
+    if (rssi >= -85) return "wifi-strength-1";
+    return "wifi-strength-outline";
+  };
 
 
   const connectToDevice = (device: Peripheral) => {
@@ -251,14 +291,24 @@ export default function HomeScreen() {
     )
   }
 
-  if (isConnecting) {
-    return (
-      <ModalScreen text="Attempting to connect to device..." />
-    )
-  }
-
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      <Modal
+        animationType="slide"
+        backdropColor={"rgba(0, 0, 0, 0.6)"}
+        visible={isConnecting}
+      >
+        <View style={styles.centeredView}>
+          <View style={{}}>
+            <Text style={{color:"white", fontSize:20}}>Connecting to device...</Text>
+            {/* <Pressable
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => setModalVisible(!modalVisible)}>
+              <Text style={styles.textStyle}>Hide Modal</Text>
+            </Pressable> */}
+          </View>
+        </View>
+      </Modal>
       <View style={{ flex: 1, paddingHorizontal: 20 }}>
         <Text style={styles.deviceTitle}>HBS Devices</Text>
         <ScrollView contentContainerStyle={styles.scrollView} refreshControl={
@@ -270,17 +320,76 @@ export default function HomeScreen() {
           {connectedDevices.length > 0 ?
             connectedDevices.map((device: Peripheral, index) => (
               <View key={index} style={styles.card}>
-                <Text>Device ID:{device.id}</Text>
-                <Text>
-                  Device Name:
-                  {device.name ?? "Unknown"}
-                </Text>
-                <Text>
-                  Device rssi:
-                  {device.rssi ?? "Unknown"}
-                </Text>
-                <View style={{ display: "flex", flexDirection: "row", gap: 5, marginTop: 20 }}>
-                  <View style={{ display: "flex", flexDirection: "row", gap: 5, marginRight: "auto", alignItems: "center" }}>
+
+                <View style={{ display: "flex", width: "100%", alignItems: "flex-end" }}>
+                  <MaterialCommunityIcons
+                    name={getSignalIcon(device.rssi)}
+                    size={20}
+                    color="#215387"
+                  />
+                </View>
+
+                <View style={{ display: "flex", flexDirection: "row", gap: 30 }}>
+                  <View>
+                    <Image
+                      style={styles.image}
+                      source={require('../../assets/images/solaraft-qdb-transparent.png')}
+                      contentFit="cover"
+                    />
+                  </View>
+
+                  <View>
+                    <Text style={{ fontWeight: "bold" }}>{formatDeviceID(device.id)}</Text>
+                    <Text style={{ wordWrap: "wrap", maxWidth: 150 }}>
+                      {formatBleNameToMac(device.name) ?? "Unknown"}
+                    </Text>
+
+                  </View>
+                </View>
+
+
+                <View style={{ display: "flex", flexDirection: "row", gap: 5, marginRight: "auto", }}>
+                  <Text>Disconnect:</Text>
+                  <AntDesign name="disconnect" size={20} color="#215387" onPress={() => disconnectDevice(device)} />
+                </View>
+
+              </View>
+            )) : (<></>)}
+          <View style={{ display: "flex", alignSelf: "flex-start" }}>
+            <Text style={styles.subHeading}>Found Devices</Text>
+          </View>
+          {sortedDevices.length > 0 ?
+            sortedDevices.map((device: Peripheral, index) => (
+              <View key={index} style={styles.card}>
+
+                <View style={{ display: "flex", width: "100%", alignItems: "flex-end" }}>
+                  <MaterialCommunityIcons
+                    name={getSignalIcon(device.rssi)}
+                    size={20}
+                    color="#215387"
+                  />
+                </View>
+
+                <View style={{ display: "flex", flexDirection: "row", gap: 30 }}>
+                  <View>
+                    <Image
+                      style={styles.image}
+                      source={require('../../assets/images/solaraft-qdb-transparent.png')}
+                      contentFit="cover"
+                    />
+                  </View>
+
+                  <View>
+                    <Text style={{ fontWeight: "bold" }}>{formatDeviceID(device.id)}</Text>
+                    <Text style={{ wordWrap: "wrap", maxWidth: 150 }}>
+                      {formatBleNameToMac(device.name) ?? "Unknown"}
+                    </Text>
+
+                  </View>
+                </View>
+
+                <View style={{ display: "flex", flexDirection: "row", gap: 5, marginTop: 5 }}>
+                  <View style={{ display: "flex", flexDirection: "row", gap: 5, marginRight: "auto", }}>
                     <Link
                       href={{
                         pathname: "/[deviceDetails]",
@@ -289,39 +398,12 @@ export default function HomeScreen() {
                         },
                       }}
                     >
-                      Go to Details
+                      Connect:
                     </Link>
-                    <MaterialCommunityIcons name="bluetooth-connect" size={28} color="#215387" onPress={() => connectToDevice(device)} />
+                    <MaterialCommunityIcons name="connection" size={20} color="#215387" onPress={() => connectToDevice(device)} />
                   </View>
-                  <AntDesign name="database" size={24} color="#215387" onPress={() => readDeviceData(device)} />
-                  <AntDesign name="disconnect" size={28} color="#215387" onPress={() => disconnectDevice(device)} />
                 </View>
-                <View>
-                  <Text>{connectedDeviceData}</Text>
-                </View>
-              </View>
-            )) : (<></>)}
-          <View style={{ display: "flex", alignSelf: "flex-start" }}>
-            <Text style={styles.subHeading}>Found Devices</Text>
-          </View>
-          {deviceList.length > 0 ?
-            deviceList.map((device: Peripheral, index) => (
-              <View key={index} style={styles.card}>
-                <Text>Device ID:{device.id}</Text>
-                <Text>
-                  Device Name:
-                  {device.name ?? "Unknown"}
-                </Text>
-                <Text>
-                  Device rssi:
-                  {device.rssi ?? "Unknown"}
-                </Text>
-                <View style={styles.ctaButton}>
-                  <Button title="Connect Device" color="white" onPress={() => connectToDevice(device)}></Button>
-                </View>
-                <View>
-                  <Text>{connectedDeviceData}</Text>
-                </View>
+
               </View>
             )) : (
               <View style={{ display: "flex", alignSelf: "flex-start" }}>
@@ -349,6 +431,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 10,
+    marginLeft: 10
   },
 
   deviceTitle: {
@@ -387,6 +471,7 @@ const styles = StyleSheet.create({
 
   card: {
     borderColor: "black",
+    width: "100%",
     borderWidth: 0,
     marginBottom: 20,
     padding: 20,
@@ -397,10 +482,35 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5, // For Android
     borderRadius: 10,
-    marginLeft: 5,
-    marginRight: 5,
+    marginLeft: 20,
+    marginRight: 20,
   },
   button: {
     backgroundColor: "#215387",
-  }
+  },
+  image: {
+    flex: 1,
+    width: 80,
+    height: 80,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
