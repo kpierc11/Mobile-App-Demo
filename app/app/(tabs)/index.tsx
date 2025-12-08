@@ -3,28 +3,21 @@ import {
   View,
   Text,
   ScrollView,
-  Button,
   StatusBar,
   ActivityIndicator,
-  Platform,
-  Alert,
-  Linking,
   RefreshControl,
-  TouchableOpacity,
-  TouchableNativeFeedback,
-  TouchableHighlight,
   Modal,
-  Pressable,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import BleManager, { Peripheral } from "react-native-ble-manager";
+import { SafeAreaView } from "react-native-safe-area-context";
+import BleManager, { Characteristic, Peripheral } from "react-native-ble-manager";
 import { Buffer } from 'buffer';
-import ModalScreen from "../modal";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Link } from "expo-router";
 import { Image } from "expo-image";
+import { DeviceEventEmitter } from 'react-native';
+import DeviceDetails from "../[deviceDetails]";
 
 
 
@@ -33,20 +26,28 @@ interface ConnectedDevices {
   isConnected: boolean;
 }
 
-const deviceUUID = '00001000-0000-1000-8000-00805f9b34fb';
-const scanTime = 2;
+const serviceUUID = '0x1000';
+const readCharacteristicUUID = '0x1002';
+const scanTime = 5;
 const blurhash =
   '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
 export default function HomeScreen() {
+
   const [deviceList, setDeviceList] = useState<Peripheral[]>([]);
   const [restartScan, setRestartScan] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [connectedDeviceData, setConnectedDeviceData] = useState("");
+  const [connectedDeviceData, setConnectedDeviceData] = useState<string[]>([]);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevices, setConnectedDevices] = useState<Peripheral[]>([]);
 
   const sortedDevices = deviceList.sort((a, b) => b.rssi - a.rssi);
+
+  function uuid16to128(uuid16: string) {
+    // Ensure it's 4 characters (e.g., "1002")
+    const shortUUID = uuid16.padStart(4, '0').toLowerCase();
+    return `0000${shortUUID}-0000-1000-8000-00805f9b34fb`;
+  }
 
   //initialize bluetooth manager
   useEffect(() => {
@@ -71,13 +72,8 @@ export default function HomeScreen() {
         console.log(`Device Id: ${id}`);
         console.log(`Device Name: ${name ?? "Unknown"}`);
         console.log(`Device is connectable: ${isConnectable}`);
-        const match = serviceUUIDs?.find(
-          uuid => uuid.toLowerCase().includes('1000')
-        );
 
-        console.log(`Matched Service UUID: ${match}`);
-
-        if (rssi > -85 && isConnectable && name?.toLowerCase() != "unknown") {
+        if (rssi > -85 && isConnectable && name?.toLowerCase().includes("ble#")) {
           setDeviceList(prev => {
             // Avoid duplicates
             if (prev.find((p) => p.id === peripheral.id)) return prev;
@@ -90,9 +86,17 @@ export default function HomeScreen() {
       }
     );
 
+    const onDidUpdateValueForCharacteristicListener = BleManager.onDidUpdateValueForCharacteristic(({ value, peripheral, characteristic, service }: any) => {
+      console.log("Notification received:");
+      console.log("Peripheral:", peripheral);
+      console.log("Characteristic:", characteristic);
+      console.log("Data:", value);
+    })
+
     return () => {
       onStopListener.remove();
       onDiscoveredPeripheralListener.remove();
+      // onDidUpdateValueForCharacteristicListener.remove();
     };
   }, []);
 
@@ -155,6 +159,7 @@ export default function HomeScreen() {
       readDeviceData(device);
 
     }).catch((error) => {
+      setIsConnecting(false);
       console.log(error);
     });
   }
@@ -189,6 +194,23 @@ export default function HomeScreen() {
       .then((peripheralInfo) => {
         console.log("Peripheral info:", peripheralInfo);
 
+
+        BleManager.startNotification(peripheralInfo.id, serviceUUID, readCharacteristicUUID)
+          .then(() => {
+            console.log("Notification started");
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+
+        BleManager.read(device.id, serviceUUID, readCharacteristicUUID).then((readData): any => {
+          console.log("Read: " + readData);
+
+          const buffer = Buffer.from(readData);
+          const sensorData = buffer.readUInt8(0);
+        })
+          .catch((err) => console.log("Read error:", err));
+
         peripheralInfo.characteristics?.forEach((char) => {
           if (char.descriptors && char.descriptors.length > 0) {
             char.descriptors.forEach((descript) => {
@@ -204,8 +226,14 @@ export default function HomeScreen() {
                     // Convert bytes to string
                     const buffer = Buffer.from(readData);
                     const text = buffer.toString("utf8");
+
+                    const line = `Characteristic: ${char.characteristic}, Service: ${char.service}, Descriptor: ${descript.uuid}, Properties: ${char.properties.Notify}, Value: ${text}`;
+
+                    // Functional update: always uses the latest state
+                    setConnectedDeviceData((prev) => [line, ...prev]);
+
                     console.log(
-                      `Characteristic: ${char.characteristic}, Service: ${char.service}, Descriptor: ${descript.uuid}, Value: ${text}`
+                      `Characteristic: ${char.characteristic}, Service: ${char.service}, Descriptor: ${descript.uuid}, Properties: ${char.properties.Notify}, Value: ${text}`
                     );
                   })
                   .catch((err) => {
@@ -222,50 +250,6 @@ export default function HomeScreen() {
             });
           }
         });
-
-
-        BleManager.read(device.id, "180a", "2a25").then((readData) => {
-          console.log("Read: " + readData);
-
-          // https://github.com/feross/buffer
-          // https://nodejs.org/api/buffer.html#static-method-bufferfromarray
-          const buffer = Buffer.from(readData);
-          const text = buffer.toString("utf8");
-          console.log(text);
-          setConnectedDeviceData(text);
-
-        })
-          .catch((err) => console.log("Read error:", err));;
-
-        //return BleManager.readDescriptor(device.id, "1000", "1002", "2901");
-
-        //Possible temp reading
-        //return BleManager.read(device.id, "180a", "2a24");
-
-        //Date
-        //return BleManager.read(device.id, "180a", "2a25");
-
-        //Version Number
-        //return BleManager.read(device.id, "180a", "2a26");
-
-        //Device Name
-        //return BleManager.read(device.id, "180a", "2a27");
-
-        //Some Website
-        //return BleManager.read(device.id, "180a", "2a29");
-
-        //experimental
-        //return BleManager.read(device.id, "180a", "2a2a");
-
-        //Not sure
-        //return BleManager.read(device.id, "180a", "2a50");
-
-        //Not sure
-        //return BleManager.read(device.id, "1000", "1005");
-
-        // return BleManager.read(device.id, "f000ffd0-0451-4000-b000-000000000000",
-        //   "f000ffd1-0451-4000-b000-000000000000");
-
 
       })
   }
@@ -300,7 +284,7 @@ export default function HomeScreen() {
       >
         <View style={styles.centeredView}>
           <View style={{}}>
-            <Text style={{color:"white", fontSize:20}}>Connecting to device...</Text>
+            <Text style={{ color: "white", fontSize: 20 }}>Connecting to device...</Text>
             {/* <Pressable
               style={[styles.button, styles.buttonClose]}
               onPress={() => setModalVisible(!modalVisible)}>
@@ -352,6 +336,29 @@ export default function HomeScreen() {
                   <Text>Disconnect:</Text>
                   <AntDesign name="disconnect" size={20} color="#215387" onPress={() => disconnectDevice(device)} />
                 </View>
+
+
+
+                <View>
+                  <Text style={{ fontWeight: '600', marginBottom: 8 }}>
+                    Connected Device Data:
+                  </Text>
+
+                  <View>
+                    {connectedDeviceData?.length ? (
+                      connectedDeviceData.map((data, idx) => (
+                        <Text key={idx} style={{ marginVertical: 2 }}>
+                          {String(data)}
+                        </Text>
+                      ))
+                    ) : (
+                      <Text style={{ fontStyle: 'italic', color: '#666' }}>
+                        No data available
+                      </Text>
+                    )}
+                  </View>
+                </View>
+
 
               </View>
             )) : (<></>)}

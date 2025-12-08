@@ -56,7 +56,7 @@
             "peripheral",
             "central"
           ],
-          "bluetoothAlwaysPermission": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
+          "bluetoothAlwaysPermission": "Allow MyQuattro to connect to bluetooth devices"
         }
       ],
       "react-native-ble-manager"
@@ -64,7 +64,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true,
-      "bluetoothAlwaysPermission": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
+      "bluetoothAlwaysPermission": "Allow MyQuattro to connect to bluetooth devices"
     },
     "extra": {
       "router": {},
