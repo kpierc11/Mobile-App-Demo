@@ -74,10 +74,10 @@ export default function HomeScreen() {
 
     const onDidUpdateValueForCharacteristicListener = BleManager.onDidUpdateValueForCharacteristic(({ value, peripheral, characteristic, service }: any) => {
       console.log("Notification received:");
-      console.log(value);
+      //console.log(value);
       const returnData = new Uint8Array(value);
-      console.log("Return Data:", returnData.length)
-      console.log("Return Data:", returnData)
+      console.log("Return Data:", returnData.length);
+      console.log("Return Data:", returnData);
 
       // const buffer = new ArrayBuffer(returnData.buffer);
 
@@ -161,7 +161,7 @@ export default function HomeScreen() {
 
 
         const sendTimePacket = new Uint8Array([
-          // First 33 bytes from your log
+      
           0xB2, 0xC2, 0x10, 0x00, 0x00, 0x00, 0xFF, 0x1F,
           0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
