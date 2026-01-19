@@ -35,6 +35,9 @@ export default function HomeScreen() {
 
   const sortedDevices = deviceList.sort((a, b) => b.rssi - a.rssi);
 
+  const packet = new Packet();
+  packet.createPacket();
+
   //initialize bluetooth manager
   useEffect(() => {
     BleManager.start({ showAlert: true }).then(() => {
