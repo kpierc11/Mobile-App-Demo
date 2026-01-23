@@ -12,8 +12,8 @@ import {
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BleManager, { Peripheral } from "react-native-ble-manager";
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import AntDesign from '@expo/vector-icons/AntDesign';
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import { Packet } from "@/hooks/Packet";
@@ -25,18 +25,16 @@ const READ_DESC = "00002902-0000-1000-8000-00805f9b34fb";
 const SCAN_DURATION = 5;
 
 export default function HomeScreen() {
-
   const [deviceList, setDeviceList] = useState<Peripheral[]>([]);
   const [restartScan, setRestartScan] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [connectedDeviceData, setConnectedDeviceData] = useState<string[]>([]);
+  const [connectedDeviceData, setConnectedDeviceData] = useState<string>();
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevices, setConnectedDevices] = useState<Peripheral[]>([]);
 
   const sortedDevices = deviceList.sort((a, b) => b.rssi - a.rssi);
 
   const packet = new Packet();
-  packet.createPacket();
 
   //initialize bluetooth manager
   useEffect(() => {
@@ -57,39 +55,42 @@ export default function HomeScreen() {
         const { id, name, advertising, rssi } = peripheral;
         const { isConnectable, serviceUUIDs } = advertising;
 
-        console.log("found device");
-        console.log(`Device Id: ${id}`);
-        console.log(`Device Name: ${name ?? "Unknown"}`);
-        console.log(`Device is connectable: ${isConnectable}`);
+        // console.log("found device");
+        // console.log(`Device Id: ${id}`);
+        // console.log(`Device Name: ${name ?? "Unknown"}`);
+        // console.log(`Device is connectable: ${isConnectable}`);
 
-        if (rssi > -85 && isConnectable && name?.toLowerCase().includes("ble#")) {
-          setDeviceList(prev => {
+        if (
+          rssi > -85 &&
+          isConnectable &&
+          name?.toLowerCase().includes("ble#")
+        ) {
+          setDeviceList((prev) => {
             // Avoid duplicates
             if (prev.find((p) => p.id === peripheral.id)) return prev;
 
             return [peripheral, ...prev];
           });
         }
-
-
-      }
+      },
     );
 
-    const onDidUpdateValueForCharacteristicListener = BleManager.onDidUpdateValueForCharacteristic(({ value, peripheral, characteristic, service }: any) => {
-      console.log("Notification received:");
-      //console.log(value);
-      const returnData = new Uint8Array(value);
-      console.log("Return Data:", returnData.length);
-      console.log("Return Data:", returnData);
+    const onDidUpdateValueForCharacteristicListener =
+      BleManager.onDidUpdateValueForCharacteristic(
+        ({ value, peripheral, characteristic, service }: any) => {
+          console.log("Notification received:");
 
-      // const buffer = new ArrayBuffer(returnData.buffer);
+          //console.log(value);
+          const returnData = new Uint8Array(value);
+          const { } = packet.parsePacket(returnData);
 
-      // const dataView = new DataView(buffer);
-
-      // console.log(dataView.getUint8(0));
-
-
-    })
+          console.log("Return Data:", returnData.length);
+          console.log("Return Data:", returnData);
+          setConnectedDeviceData(
+            connectedDeviceData + "ReturnData: " + returnData,
+          );
+        },
+      );
 
     return () => {
       onStopListener.remove();
@@ -98,15 +99,14 @@ export default function HomeScreen() {
     };
   }, []);
 
-
-
-
-  const formatBleNameToMac = (name: string | null | undefined): string | undefined => {
+  const formatBleNameToMac = (
+    name: string | null | undefined,
+  ): string | undefined => {
     if (!name) {
       return;
     }
 
-    let hex = name.replace(/^BLE#0x/, '');
+    let hex = name.replace(/^BLE#0x/, "");
     hex = hex.toUpperCase();
 
     const match = hex.match(/.{1,2}/g);
@@ -114,28 +114,28 @@ export default function HomeScreen() {
       return;
     }
 
-    return match.join(':');
+    return match.join(":");
   };
 
   const formatDeviceID = (deviceName: string) => {
     return deviceName.slice(0, 7);
-  }
-
-
+  };
 
   const startScanningDevices = () => {
-
     if (!isScanning) {
       setIsScanning(true);
-      const scanOptions = { serviceUUIDs: [], seconds: SCAN_DURATION, allowDuplicates: false };
+      const scanOptions = {
+        serviceUUIDs: [],
+        seconds: SCAN_DURATION,
+        allowDuplicates: false,
+      };
       BleManager.scan(scanOptions).then(() => {
         // Success code
         console.log(scanOptions);
         console.log("Scan started");
       });
     }
-
-  }
+  };
 
   const getSignalIcon = (rssi: number) => {
     if (rssi >= -50) return "wifi-strength-4";
@@ -145,7 +145,6 @@ export default function HomeScreen() {
     return "wifi-strength-outline";
   };
 
-
   const connectToDevice = (device: Peripheral) => {
     console.log("Trying to connect to device.");
     setIsConnecting(true);
@@ -154,115 +153,85 @@ export default function HomeScreen() {
       .then(() => {
         console.log("connected to device!");
         setIsConnecting(false);
-        setConnectedDevices(prev => {
-          if (prev.find(d => d.id === device.id)) return prev;
+        setConnectedDevices((prev) => {
+          if (prev.find((d) => d.id === device.id)) return prev;
           return [device, ...prev];
         });
 
-
         let packet = new Packet();
-
-
-        const sendTimePacket = new Uint8Array([
-      
-          0xB2, 0xC2, 0x10, 0x00, 0x00, 0x00, 0xFF, 0x1F,
-          0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x02, 0x01, 0x00, 0x04, 0xD8, 0x02, 0x00, 0x00,
-          0x7C
-        ]);
+        packet.sendSetTimePacket();
 
         const getInitialData = new Uint8Array([
-          0xB2, 0xC2, 0x19, 0x00, 0x00, 0x00, 0xFF, 0x1F,
-          0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x01, 0x05, 0x00, 0x0A, 0x00, 0x0D, 0x00, 0x08,
-          0x00, 0x0E, 0x00, 0x09, 0x00, 0x04, 0x00, 0x01,
-          0x00, 0x13
+          0xb2, 0xc2, 0x19, 0x00, 0x00, 0x00, 0xff, 0x1f, 0x00, 0x00, 0x00,
+          0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x01, 0x05, 0x00, 0x0a, 0x00, 0x0d, 0x00, 0x08, 0x00,
+          0x0e, 0x00, 0x09, 0x00, 0x04, 0x00, 0x01, 0x00, 0x13,
         ]);
 
-
-
-        readDeviceData(device, sendTimePacket);
+        readDeviceData(device, packet.sendSetTimePacket());
 
         readDeviceData(device, getInitialData);
-
       })
-      .catch(error => {
+      .catch((error) => {
         setIsConnecting(false);
         console.log(error);
       });
-
-  }
-
+  };
 
   const disconnectDevice = (device: Peripheral) => {
     console.log("Disconnected device.");
-    BleManager.disconnect(device.id).then(() => {
-      console.log("disconnected device!");
-      setConnectedDevices(connectedDevices.filter(d =>
-        d.id !== device.id
-      ))
-    }).catch((error) => {
-      console.log(error);
-    });
-  }
+    BleManager.disconnect(device.id)
+      .then(() => {
+        console.log("disconnected device!");
+        setConnectedDevices(connectedDevices.filter((d) => d.id !== device.id));
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   const getConnectedDevices = () => {
-
     BleManager.getConnectedPeripherals([]).then((peripheralsArray) => {
       console.log("Connected peripherals: " + peripheralsArray.length);
-      setConnectedDevices(peripheralsArray)
+      setConnectedDevices(peripheralsArray);
     });
-  }
-
+  };
 
   const readDeviceData = (device: Peripheral, packet: Uint8Array) => {
+    BleManager.retrieveServices(device.id).then((peripheralInfo) => {
+      //console.log("Peripheral info:", peripheralInfo);
 
-    BleManager.retrieveServices(device.id)
-      .then((peripheralInfo) => {
-        console.log("Peripheral info:", peripheralInfo);
-
-
-        BleManager.startNotification(device.id, SERVICE_UUID, READ_CHAR)
-          .then(() => {
-            console.log("Notification started");
-            BleManager.write(
-              device.id,
-              SERVICE_UUID,
-              WRITE_CHAR,
-              [...packet]
-            )
-              .then(() => console.log("Write OK"))
-              .catch(err => console.log("Write error:", err));
-
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-
-      })
-  }
-
+      BleManager.startNotification(device.id, SERVICE_UUID, READ_CHAR)
+        .then(() => {
+          console.log("Notification started");
+          
+          BleManager.write(device.id, SERVICE_UUID, WRITE_CHAR, [...packet])
+            .then(() => console.log("Write OK"))
+            .catch((err) => console.log("Write error:", err));
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    });
+  };
 
   const handleDeviceListRefresh = () => {
-
     setTimeout(() => {
       startScanningDevices();
     }, 800);
-  }
-
+  };
 
   if (isScanning) {
     return (
-      <SafeAreaView style={{ flex: 1, }}>
-
+      <SafeAreaView style={{ flex: 1 }}>
         <View style={{ flex: 1, paddingHorizontal: 20 }}>
-          <Text style={{ textAlign: "center", marginTop: 20, fontSize: 18 }}>Scanning for Devices:</Text>
+          <Text style={{ textAlign: "center", marginTop: 20, fontSize: 18 }}>
+            Scanning for Devices:
+          </Text>
           <ActivityIndicator style={{ marginTop: 20 }} size="large" />
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
   return (
@@ -274,15 +243,28 @@ export default function HomeScreen() {
       >
         <View style={styles.centeredView}>
           <View style={{}}>
-            <ActivityIndicator style={{ marginTop: 20 }} size="large" color="#215387" />
-            <Text style={{ color: "white", fontSize: 20 }}>Connecting to device...</Text>
+            <ActivityIndicator
+              style={{ marginTop: 20 }}
+              size="large"
+              color="#215387"
+            />
+            <Text style={{ color: "white", fontSize: 20 }}>
+              Connecting to device...
+            </Text>
           </View>
         </View>
       </Modal>
       <View style={{ flex: 1, paddingHorizontal: 20 }}>
         <Text style={styles.deviceTitle}>HBS Devices</Text>
-        <ScrollView contentContainerStyle={styles.scrollView} refreshControl={
-          <RefreshControl refreshing={isScanning} onRefresh={handleDeviceListRefresh} />}>
+        <ScrollView
+          contentContainerStyle={styles.scrollView}
+          refreshControl={
+            <RefreshControl
+              refreshing={isScanning}
+              onRefresh={handleDeviceListRefresh}
+            />
+          }
+        >
           {connectedDevices.length > 0 && (
             <>
               {/* Header */}
@@ -293,7 +275,6 @@ export default function HomeScreen() {
               {/* Device cards */}
               {connectedDevices.map((device: Peripheral, index) => (
                 <View key={device.id ?? index} style={styles.card}>
-
                   {/* RSSI */}
                   <View style={{ width: "100%", alignItems: "flex-end" }}>
                     <MaterialCommunityIcons
@@ -307,7 +288,7 @@ export default function HomeScreen() {
                   <View style={{ flexDirection: "row", gap: 30 }}>
                     <Image
                       style={styles.image}
-                      source={require('../../assets/images/solaraft-qdb-transparent.png')}
+                      source={require("../../assets/images/solaraft-qdb-transparent.png")}
                       contentFit="cover"
                     />
 
@@ -322,28 +303,47 @@ export default function HomeScreen() {
                   </View>
 
                   {/* Disconnect */}
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 5,
+                    }}
+                  >
                     <View style={{ marginRight: "auto" }}>
-                      <TouchableOpacity style={styles.button} onPress={() => disconnectDevice(device)}>
-                        <Text style={{ color: "white", fontSize: 12 }}>Disconnect</Text>
-                        <AntDesign
-                          name="disconnect"
-                          size={14}
-                          color="white"
-                        />
+                      <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => disconnectDevice(device)}
+                      >
+                        <Text style={{ color: "white", fontSize: 12 }}>
+                          Disconnect
+                        </Text>
+                        <AntDesign name="disconnect" size={14} color="white" />
                       </TouchableOpacity>
                     </View>
-                    <TouchableOpacity style={styles.button} onPress={() => router.navigate({
-                      pathname: "/device-details",
-                      params: {
-                        deviceDetails: JSON.stringify(device),
-                      },
-                    })}>
-
-                      <Text style={{ color: "white", fontSize: 12 }}>DeviceDetails</Text>
-                      <MaterialCommunityIcons name="arrow-right" size={12} color="white" />
+                    <TouchableOpacity
+                      style={styles.button}
+                      onPress={() =>
+                        router.navigate({
+                          pathname: "/device-details",
+                          params: {
+                            deviceDetails: JSON.stringify(device),
+                          },
+                        })
+                      }
+                    >
+                      <Text style={{ color: "white", fontSize: 12 }}>
+                        DeviceDetails
+                      </Text>
+                      <MaterialCommunityIcons
+                        name="arrow-right"
+                        size={12}
+                        color="white"
+                      />
                     </TouchableOpacity>
-
+                  </View>
+                  <View>
+                    <Text>{connectedDeviceData}</Text>
                   </View>
                 </View>
               ))}
@@ -359,7 +359,6 @@ export default function HomeScreen() {
               {/* Device list */}
               {sortedDevices.map((device: Peripheral) => (
                 <View key={device.id} style={styles.card}>
-
                   {/* RSSI */}
                   <View style={{ width: "100%", alignItems: "flex-end" }}>
                     <MaterialCommunityIcons
@@ -373,7 +372,7 @@ export default function HomeScreen() {
                   <View style={{ flexDirection: "row", gap: 30 }}>
                     <Image
                       style={styles.image}
-                      source={require('../../assets/images/solaraft-qdb-transparent.png')}
+                      source={require("../../assets/images/solaraft-qdb-transparent.png")}
                       contentFit="cover"
                     />
 
@@ -389,9 +388,20 @@ export default function HomeScreen() {
 
                   {/* Connect button */}
                   <View style={{ flexDirection: "row", gap: 5, marginTop: 5 }}>
-                    <View style={{ flexDirection: "row", gap: 5, marginRight: "auto" }}>
-                      <TouchableOpacity style={styles.button} onPress={() => connectToDevice(device)}>
-                        <Text style={{ color: "white", fontSize: 12 }}>Connect</Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 5,
+                        marginRight: "auto",
+                      }}
+                    >
+                      <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => connectToDevice(device)}
+                      >
+                        <Text style={{ color: "white", fontSize: 12 }}>
+                          Connect
+                        </Text>
                         <MaterialCommunityIcons
                           name="connection"
                           size={14}
@@ -400,7 +410,6 @@ export default function HomeScreen() {
                       </TouchableOpacity>
                     </View>
                   </View>
-
                 </View>
               ))}
             </>
@@ -413,7 +422,6 @@ export default function HomeScreen() {
             </View>
           )}
         </ScrollView>
-
       </View>
     </SafeAreaView>
   );
@@ -430,10 +438,10 @@ const styles = StyleSheet.create({
 
   scrollView: {
     marginTop: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 10,
-    marginLeft: 10
+    marginLeft: 10,
   },
 
   deviceTitle: {
@@ -457,8 +465,8 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     marginBottom: 20,
     padding: 20,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
+    backgroundColor: "#fff",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.25,
     shadowRadius: 1.84,
@@ -484,11 +492,11 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 35,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -499,7 +507,7 @@ const styles = StyleSheet.create({
   },
   centeredView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
