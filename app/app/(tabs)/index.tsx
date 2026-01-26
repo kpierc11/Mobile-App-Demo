@@ -159,7 +159,6 @@ export default function HomeScreen() {
         });
 
         let packet = new Packet();
-        packet.sendSetTimePacket();
 
         const getInitialData = new Uint8Array([
           0xb2, 0xc2, 0x19, 0x00, 0x00, 0x00, 0xff, 0x1f, 0x00, 0x00, 0x00,
@@ -168,9 +167,13 @@ export default function HomeScreen() {
           0x0e, 0x00, 0x09, 0x00, 0x04, 0x00, 0x01, 0x00, 0x13,
         ]);
 
+
+        console.log("Send Set Time packet: " + packet.sendSetTimePacket());
         readDeviceData(device, packet.sendSetTimePacket());
 
-        readDeviceData(device, getInitialData);
+        //console.log("Identify Unit Packet sent: " + packet.sendIdentifyUnitPacket());
+
+        //readDeviceData(device, getInitialData);
       })
       .catch((error) => {
         setIsConnecting(false);

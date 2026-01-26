@@ -9,6 +9,7 @@ enum PacketCmds {
   CBIN_PACKET_SET = 2,
   CBIN_PACKET_GET_DATA = 3,
   CBIN_PACKET_SET_ACK = 4,
+  CBIN_PACKET_IDENTIFY_MODE = 20,
 }
 
 interface Register {
@@ -78,7 +79,7 @@ export class Packet {
   sendSetTimePacket(): Uint8Array {
     let byteOffset = this.header.length;
 
-    this.createHeaderChunk();
+    this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
 
     //8 random bytes
     for (let i = 0; i < 8; i++) {
@@ -112,10 +113,44 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
-  getInitialData() {
+  sendIdentifyUnitPacket() {
+    let byteOffset = this.header.length;
 
+    this.createHeaderChunk(this.uIDIdentityPacket, this.uIDServer);
 
+    //8 random bytes
+    for (let i = 0; i < 8; i++) {
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 256));
+    }
+
+    //Set Command
+    this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_IDENTIFY_MODE);
+
+    // //Set Time
+    // //register ID for time
+    // this.dataView.setUint8(byteOffset++, 1);
+    // this.dataView.setUint8(byteOffset++, 0);
+
+    // //Number of bytes for the time value
+    // this.dataView.setUint8(byteOffset++, 4);
+
+    // //the time
+    // this.dataView.setUint8(byteOffset++, -113);
+    // this.dataView.setUint8(byteOffset++, 3);
+    // this.dataView.setUint8(byteOffset++, 0);
+    // this.dataView.setUint8(byteOffset++, 0);
+
+    //Add Checksum
+    this.dataView.setUint8(byteOffset++, 19);
+
+    //this.logHeaderDetails();
+
+    //console.log("Send Packet:" + new Uint8Array(this.dataView.buffer, 0, byteOffset))
+
+    return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
+
+  getInitialData() {}
 
   parsePacket(packet: Uint8Array) {
     console.log("Parsing Packet... ");
@@ -133,13 +168,9 @@ export class Packet {
 
     console.log(data.byteLength);
 
-    for(let i = 0; i < data.byteLength; i++)
-    {
-
-    }
+    for (let i = 0; i < data.byteLength; i++) {}
 
     //const currentRegister = registers.get(this.header.source.hID)?.find(register => register.id ==  );
-    
 
     // const batteryVoltageRegID = this.dataView.getUint16(byteOffset, true);
     // byteOffset += 2;
@@ -162,13 +193,13 @@ export class Packet {
     // console.log("Temperature: " + temperature / 100);
     // const temp = temperature / 100;
 
-    return{} //{ batteryVoltage: batteryV, temp: temp };
+    return {}; //{ batteryVoltage: batteryV, temp: temp };
   }
 
   /**
    * This function creates the header portion of the packet.
    */
-  createHeaderChunk(): void {
+  createHeaderChunk(destinationPacket: CUID, sourcePacket: CUID): void {
     let byteOffset = 0;
 
     //Signature (2 bytes)
@@ -181,18 +212,15 @@ export class Packet {
     this.dataView.setUint8(byteOffset++, 0x00);
 
     //Destination (6 bytes)
-    const { fID, hID, serNum } = this.uIDBroadcastPacket;
-    console.log("serial Number: " + serNum);
-    this.dataView.setUint8(byteOffset++, fID);
-    this.dataView.setUint8(byteOffset++, hID);
-    this.dataView.setUint32(byteOffset, serNum, true);
+    this.dataView.setUint8(byteOffset++, destinationPacket.fID);
+    this.dataView.setUint8(byteOffset++, destinationPacket.hID);
+    this.dataView.setUint32(byteOffset, destinationPacket.serNum, true);
     byteOffset += 4;
 
     //Source (6 bytes)
-    const src = this.uIDServer;
-    this.dataView.setUint8(byteOffset++, src.fID);
-    this.dataView.setUint8(byteOffset++, src.hID);
-    this.dataView.setUint32(byteOffset, src.serNum, true);
+    this.dataView.setUint8(byteOffset++, sourcePacket.fID);
+    this.dataView.setUint8(byteOffset++, sourcePacket.hID);
+    this.dataView.setUint32(byteOffset, sourcePacket.serNum, true);
     byteOffset += 4;
   }
 
@@ -218,7 +246,6 @@ export class Packet {
     this.header.source.hID = this.dataView.getUint8(byteOffset++);
     this.header.source.serNum = this.dataView.getUint32(byteOffset, true);
     byteOffset += 4;
-
   }
 
   logHeaderDetails() {
