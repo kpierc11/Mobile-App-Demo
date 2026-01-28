@@ -172,7 +172,7 @@ export default function HomeScreen() {
 
         //console.log("Identify Unit Packet sent: " + packet.sendIdentifyUnitPacket());
 
-        //readDeviceData(device, getInitialData);
+        readDeviceData(device, getInitialData);
       })
       .catch((error) => {
         setIsConnecting(false);

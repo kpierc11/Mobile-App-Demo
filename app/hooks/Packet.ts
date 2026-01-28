@@ -169,15 +169,28 @@ export class Packet {
     let byteOffset = this.header.length + 8 + 1;
 
     console.log("Parsing Header....");
-    this.parseHeaderChunck();
+    this.parseHeaderChunk();
 
     //this.logHeaderDetails();
 
-    const data = this.dataView.buffer.slice(byteOffset);
+    const data = this.dataView.buffer.slice(
+      byteOffset,
+      this.dataView.buffer.byteLength,
+    );
 
-    console.log(data.byteLength);
+    const dataArray = new Uint8Array(data);
 
-    for (let i = 0; i < data.byteLength; i++) {}
+    console.log("Sliced Data Packet:" + dataArray);
+
+    for (let i = 0; i < dataArray.length; i++) {
+      let byteOffset = i;
+      //Identify register id
+      const registerID = this.dataView.getUint16(byteOffset, true);
+      //get the byte length
+      const byteLength = data.
+      //get data chunk
+      //map to register for ui.
+    }
 
     //const currentRegister = registers.get(this.header.source.hID)?.find(register => register.id ==  );
 
@@ -224,17 +237,17 @@ export class Packet {
     //Destination (6 bytes)
     this.dataView.setUint8(byteOffset++, destinationPacket.fID);
     this.dataView.setUint8(byteOffset++, destinationPacket.hID);
-    this.dataView.setUint32(byteOffset, destinationPacket.serNum);
+    this.dataView.setUint32(byteOffset, destinationPacket.serNum, true);
     byteOffset += 4;
 
     //Source (6 bytes)
     this.dataView.setUint8(byteOffset++, sourcePacket.fID);
     this.dataView.setUint8(byteOffset++, sourcePacket.hID);
-    this.dataView.setUint32(byteOffset, sourcePacket.serNum);
+    this.dataView.setUint32(byteOffset, sourcePacket.serNum, true);
     byteOffset += 4;
   }
 
-  parseHeaderChunck() {
+  parseHeaderChunk() {
     let byteOffset = 0;
 
     //Signature (2 bytes)
@@ -242,7 +255,7 @@ export class Packet {
     byteOffset += 2;
 
     //Length (2 bytes)
-    this.header.length = this.dataView.getUint16(byteOffset, true);
+    //this.header.length = this.dataView.getUint16(byteOffset, true);
     byteOffset += 2;
 
     //Destination (6 bytes)
