@@ -167,8 +167,7 @@ export default function HomeScreen() {
           0x0e, 0x00, 0x09, 0x00, 0x04, 0x00, 0x01, 0x00, 0x13,
         ]);
 
-
-        console.log("Send Set Time packet: " + packet.sendSetTimePacket());
+        //console.log("Send Set Time packet: " + packet.sendSetTimePacket());
         readDeviceData(device, packet.sendSetTimePacket());
 
         //console.log("Identify Unit Packet sent: " + packet.sendIdentifyUnitPacket());

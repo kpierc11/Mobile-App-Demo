@@ -83,7 +83,7 @@ export class Packet {
 
     //8 random bytes
     for (let i = 0; i < 8; i++) {
-      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 256));
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
     }
 
     //Set Command
@@ -103,12 +103,21 @@ export class Packet {
     this.dataView.setUint8(byteOffset++, 0);
     this.dataView.setUint8(byteOffset++, 0);
 
+    let ck = 0;
+    console.log("byte length:");
+    for (let i = 0; i < 33; i++) {
+      ck -= this.dataView.getInt8(i);
+    }
+
+    console.log(ck);
     //Add Checksum
-    this.dataView.setUint8(byteOffset++, 19);
+    this.dataView.setUint8(byteOffset++, ck & 0xff);
 
     this.logHeaderDetails();
 
-    //console.log("Send Packet:" + new Uint8Array(this.dataView.buffer, 0, byteOffset))
+    console.log(
+      "Send Packet:" + new Uint8Array(this.dataView.buffer, 0, byteOffset),
+    );
 
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
@@ -120,7 +129,7 @@ export class Packet {
 
     //8 random bytes
     for (let i = 0; i < 8; i++) {
-      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 256));
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
     }
 
     //Set Command
@@ -204,23 +213,24 @@ export class Packet {
 
     //Signature (2 bytes)
     const sig = this.header.signature;
-    this.dataView.setUint8(byteOffset++, (sig >> 8) & 0xff);
-    this.dataView.setUint8(byteOffset++, sig & 0xff);
+    this.dataView.setUint16(byteOffset, sig);
+    byteOffset += 2;
 
     //Length (2 bytes)
     this.dataView.setUint8(byteOffset++, this.header.length);
     this.dataView.setUint8(byteOffset++, 0x00);
 
+    console.log(destinationPacket.serNum);
     //Destination (6 bytes)
     this.dataView.setUint8(byteOffset++, destinationPacket.fID);
     this.dataView.setUint8(byteOffset++, destinationPacket.hID);
-    this.dataView.setUint32(byteOffset, destinationPacket.serNum, true);
+    this.dataView.setUint32(byteOffset, destinationPacket.serNum);
     byteOffset += 4;
 
     //Source (6 bytes)
     this.dataView.setUint8(byteOffset++, sourcePacket.fID);
     this.dataView.setUint8(byteOffset++, sourcePacket.hID);
-    this.dataView.setUint32(byteOffset, sourcePacket.serNum, true);
+    this.dataView.setUint32(byteOffset, sourcePacket.serNum);
     byteOffset += 4;
   }
 
