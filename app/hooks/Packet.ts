@@ -18,6 +18,24 @@ interface Register {
   byteCount: number;
 }
 
+// 25, () -> {
+// 			RegMap p = new RegMap();
+// 			p.Add("Time", 1, new RegTime());
+// 			p.Add("Schedule", 2, new RegArray(36));
+// 			p.Add("Pause", 3, new RegNumber(4));
+// 			p.Add("Sonic Power", 4, new RegOnOff("Enabled", "Disabled"));
+
+// 			p.Add("Sonic Voltage", 5, new RegNumber(4, 3));
+// 			p.Add("Internal Temperature (C)", 6, new RegNumber(4, 2));
+
+// 			p.Add("Sonic 1 Status", 7, new RegOnOff("Detected", "Not Detected"));
+// 			p.Add("Sonic 2 Status", 8, new RegOnOff("Detected", "Not Detected"));
+
+// 			p.setExposed(new String[]{
+// 					"Time", "Sonic Power", "Internal Temperature (C)", "Sonic Voltage",
+// 					"Sonic 1 Status", "Sonic 2 Status"
+// 			});
+
 const registers = new Map<number, Register[]>();
 registers.set(24, [
   { name: "Time", id: 1, byteCount: 4 },
@@ -40,6 +58,20 @@ registers.set(24, [
 
   { name: "Sonic 1 Status", id: 13, byteCount: 1 },
   { name: "Sonic 2 Status", id: 14, byteCount: 1 },
+]);
+
+registers.set(25, [
+  { name: "Time", id: 1, byteCount: 4 },
+  { name: "Schedule", id: 2, byteCount: 36 },
+  { name: "Pause", id: 3, byteCount: 4 },
+
+  { name: "Sonic Power", id: 4, byteCount: 1 },
+
+  { name: "Sonic Voltage", id: 5, byteCount: 4 },
+  { name: "Internal Temperature (C)", id: 6, byteCount: 4 },
+
+  { name: "Sonic 1 Status", id: 7, byteCount: 1 },
+  { name: "Sonic 2 Status", id: 8, byteCount: 1 },
 ]);
 
 export class Packet {
@@ -76,18 +108,21 @@ export class Packet {
    * This function creates the set time packet that is initially sent on connection to the solar controller via BLE
    * @returns Uint8Array
    */
-  sendSetTimePacket(): Uint8Array {
+  sendSetTime(): Uint8Array {
     let byteOffset = this.header.length;
+    let adjustedHeaderSize = 0;
 
     this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
 
     //8 random bytes
     for (let i = 0; i < 8; i++) {
       this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
+      adjustedHeaderSize += 1;
     }
 
     //Set Command
     this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_SET);
+    adjustedHeaderSize += 1;
 
     //Set Time
     //register ID for time
@@ -102,6 +137,10 @@ export class Packet {
     this.dataView.setUint8(byteOffset++, 3);
     this.dataView.setUint8(byteOffset++, 0);
     this.dataView.setUint8(byteOffset++, 0);
+    adjustedHeaderSize += 7;
+
+    //Update Header Length
+    this.dataView.setUint8(2, adjustedHeaderSize);
 
     let ck = 0;
     console.log("byte length:");
@@ -122,44 +161,107 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
-  sendIdentifyUnitPacket() {
+  sendIdentifyUnit() {
     let byteOffset = this.header.length;
-
-    this.createHeaderChunk(this.uIDIdentityPacket, this.uIDServer);
+    let adjustedHeaderSize = 0;
+    this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
 
     //8 random bytes
     for (let i = 0; i < 8; i++) {
       this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
+      adjustedHeaderSize += 1;
     }
 
     //Set Command
     this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_IDENTIFY_MODE);
+    adjustedHeaderSize += 1;
 
-    // //Set Time
-    // //register ID for time
-    // this.dataView.setUint8(byteOffset++, 1);
-    // this.dataView.setUint8(byteOffset++, 0);
-
-    // //Number of bytes for the time value
-    // this.dataView.setUint8(byteOffset++, 4);
-
-    // //the time
-    // this.dataView.setUint8(byteOffset++, -113);
-    // this.dataView.setUint8(byteOffset++, 3);
-    // this.dataView.setUint8(byteOffset++, 0);
-    // this.dataView.setUint8(byteOffset++, 0);
-
-    //Add Checksum
+    //
+    this.dataView.setUint8(byteOffset++, -120);
     this.dataView.setUint8(byteOffset++, 19);
+    this.dataView.setUint8(byteOffset++, 0);
+    this.dataView.setUint8(byteOffset++, 0);
+    adjustedHeaderSize += 4;
 
-    //this.logHeaderDetails();
+    //Update Header Length
+    this.dataView.setUint8(2, adjustedHeaderSize);
 
-    //console.log("Send Packet:" + new Uint8Array(this.dataView.buffer, 0, byteOffset))
+    let ck = 0;
+    console.log("byte length:");
+    for (let i = 0; i < 33; i++) {
+      ck -= this.dataView.getInt8(i);
+    }
+
+    console.log(ck);
+    //Add Checksum
+    this.dataView.setUint8(byteOffset++, ck & 0xff);
+
+    this.logHeaderDetails();
+
+    console.log(
+      "Send Packet:" + new Uint8Array(this.dataView.buffer, 0, byteOffset),
+    );
 
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
-  getInitialData() {}
+  sendGetSensorData() {
+    let byteOffset = this.header.length;
+    let adjustedHeaderSize = 0;
+    this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
+
+    //8 random bytes
+    for (let i = 0; i < 8; i++) {
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
+      adjustedHeaderSize += 1;
+    }
+
+    //Set Command
+    this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_GET);
+    adjustedHeaderSize += 1;
+
+    console.log(registers);
+    //Get register id's
+    const exposedReg = [
+      "Time",
+      "Sonic Power",
+      "Internal Temperature (C)",
+      "Battery Voltage",
+      "Sonic 1 Voltage",
+      "Sonic 2 Voltage",
+      "Sonic 1 Status",
+      "Sonic 2 Status",
+    ];
+    registers.get(24)?.forEach((register) => {
+      console.log("Register:" + register.id);
+      if (exposedReg.find((name) => register.name == name)) {
+        this.dataView.setUint8(byteOffset++, register.id);
+        this.dataView.setUint8(byteOffset++, 0);
+        adjustedHeaderSize += 2;
+      }
+    });
+
+    //Update Header Length
+    this.dataView.setUint8(2, adjustedHeaderSize);
+
+    let ck = 0;
+    console.log("byte length:");
+    for (let i = 0; i < 33; i++) {
+      ck -= this.dataView.getInt8(i);
+    }
+
+    console.log(ck);
+    //Add Checksum
+    this.dataView.setUint8(byteOffset++, ck & 0xff);
+
+    this.logHeaderDetails();
+
+    console.log(
+      "Send Packet:" + new Uint8Array(this.dataView.buffer, 0, byteOffset),
+    );
+
+    return new Uint8Array(this.dataView.buffer, 0, byteOffset);
+  }
 
   parsePacket(packet: Uint8Array) {
     console.log("Parsing Packet... ");
@@ -182,15 +284,17 @@ export class Packet {
 
     console.log("Sliced Data Packet:" + dataArray);
 
-    for (let i = 0; i < dataArray.length; i++) {
-      let byteOffset = i;
-      //Identify register id
-      const registerID = this.dataView.getUint16(byteOffset, true);
-      //get the byte length
-      const byteLength = data.
-      //get data chunk
-      //map to register for ui.
-    }
+    // for (let i = 0; i < ; i++) {
+    //   let byteOffset = i;
+    //   //Identify register id
+    //   const registerID = this.dataView.getUint16(byteOffset, true);
+    //   byteOffset+=2;
+    //   //get the register byte length
+    //   //const regByteLength =
+
+    //   //get data chunk
+    //   //map to register for ui.
+    // }
 
     //const currentRegister = registers.get(this.header.source.hID)?.find(register => register.id ==  );
 
@@ -225,11 +329,10 @@ export class Packet {
     let byteOffset = 0;
 
     //Signature (2 bytes)
-    const sig = this.header.signature;
-    this.dataView.setUint16(byteOffset, sig);
+    this.dataView.setUint16(byteOffset, this.header.signature);
     byteOffset += 2;
 
-    //Length (2 bytes)
+    //Set default length
     this.dataView.setUint8(byteOffset++, this.header.length);
     this.dataView.setUint8(byteOffset++, 0x00);
 

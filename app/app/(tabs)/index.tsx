@@ -82,7 +82,7 @@ export default function HomeScreen() {
 
           //console.log(value);
           const returnData = new Uint8Array(value);
-          const { } = packet.parsePacket(returnData);
+          const {} = packet.parsePacket(returnData);
 
           console.log("Return Data:", returnData.length);
           console.log("Return Data:", returnData);
@@ -167,11 +167,7 @@ export default function HomeScreen() {
           0x0e, 0x00, 0x09, 0x00, 0x04, 0x00, 0x01, 0x00, 0x13,
         ]);
 
-        //console.log("Send Set Time packet: " + packet.sendSetTimePacket());
-        readDeviceData(device, packet.sendSetTimePacket());
-
-        //console.log("Identify Unit Packet sent: " + packet.sendIdentifyUnitPacket());
-
+        //readDeviceData(device, packet.sendSetTime());
         readDeviceData(device, getInitialData);
       })
       .catch((error) => {
@@ -206,7 +202,7 @@ export default function HomeScreen() {
       BleManager.startNotification(device.id, SERVICE_UUID, READ_CHAR)
         .then(() => {
           console.log("Notification started");
-          
+
           BleManager.write(device.id, SERVICE_UUID, WRITE_CHAR, [...packet])
             .then(() => console.log("Write OK"))
             .catch((err) => console.log("Write error:", err));
