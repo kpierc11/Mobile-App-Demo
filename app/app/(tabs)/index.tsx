@@ -84,7 +84,6 @@ export default function HomeScreen() {
           const returnData = new Uint8Array(value);
           const {} = packet.parsePacket(returnData);
 
-          console.log("Return Data:", returnData.length);
           console.log("Return Data:", returnData);
           setConnectedDeviceData(
             connectedDeviceData + "ReturnData: " + returnData,
@@ -160,15 +159,8 @@ export default function HomeScreen() {
 
         let packet = new Packet();
 
-        const getInitialData = new Uint8Array([
-          0xb2, 0xc2, 0x19, 0x00, 0x00, 0x00, 0xff, 0x1f, 0x00, 0x00, 0x00,
-          0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x00, 0x00, 0x01, 0x05, 0x00, 0x0a, 0x00, 0x0d, 0x00, 0x08, 0x00,
-          0x0e, 0x00, 0x09, 0x00, 0x04, 0x00, 0x01, 0x00, 0x13,
-        ]);
-
         //readDeviceData(device, packet.sendSetTime());
-        readDeviceData(device, getInitialData);
+        readDeviceData(device, packet.sendGetSensorData());
       })
       .catch((error) => {
         setIsConnecting(false);

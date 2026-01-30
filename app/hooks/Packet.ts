@@ -221,21 +221,26 @@ export class Packet {
     adjustedHeaderSize += 1;
 
     console.log(registers);
+
     //Get register id's
     const exposedReg = [
-      "Time",
-      "Sonic Power",
-      "Internal Temperature (C)",
       "Battery Voltage",
-      "Sonic 1 Voltage",
-      "Sonic 2 Voltage",
+      "Internal Temperature (C)",
       "Sonic 1 Status",
+      "Sonic 1 Voltage",
       "Sonic 2 Status",
+      "Sonic 2 Voltage",
+      "Sonic Power",
+      "Time",
     ];
-    registers.get(24)?.forEach((register) => {
-      console.log("Register:" + register.id);
-      if (exposedReg.find((name) => register.name == name)) {
-        this.dataView.setUint8(byteOffset++, register.id);
+
+    exposedReg.forEach((reg) => {
+      const foundRegister = registers
+        .get(24)
+        ?.find((register) => reg == register.name);
+
+      if (foundRegister) {
+        this.dataView.setUint8(byteOffset++, foundRegister.id);
         this.dataView.setUint8(byteOffset++, 0);
         adjustedHeaderSize += 2;
       }
@@ -244,17 +249,13 @@ export class Packet {
     //Update Header Length
     this.dataView.setUint8(2, adjustedHeaderSize);
 
+    //Create Checksum
     let ck = 0;
-    console.log("byte length:");
-    for (let i = 0; i < 33; i++) {
+    for (let i = 0; i < byteOffset; i++) {
       ck -= this.dataView.getInt8(i);
     }
 
-    console.log(ck);
-    //Add Checksum
     this.dataView.setUint8(byteOffset++, ck & 0xff);
-
-    this.logHeaderDetails();
 
     console.log(
       "Send Packet:" + new Uint8Array(this.dataView.buffer, 0, byteOffset),
@@ -265,7 +266,6 @@ export class Packet {
 
   parsePacket(packet: Uint8Array) {
     console.log("Parsing Packet... ");
-    console.log("Packet byte length:" + packet.byteLength);
     this.dataView = new DataView(packet.buffer, 0, packet.byteLength);
 
     let byteOffset = this.header.length + 8 + 1;
@@ -273,28 +273,25 @@ export class Packet {
     console.log("Parsing Header....");
     this.parseHeaderChunk();
 
-    //this.logHeaderDetails();
-
-    const data = this.dataView.buffer.slice(
-      byteOffset,
-      this.dataView.buffer.byteLength,
+    const registerData = new DataView(
+      this.dataView.buffer.slice(byteOffset, this.dataView.buffer.byteLength),
     );
 
-    const dataArray = new Uint8Array(data);
+    console.log(this.header.source.hID);
 
-    console.log("Sliced Data Packet:" + dataArray);
+    console.log("Sliced Data Packet:" + registerData);
 
-    // for (let i = 0; i < ; i++) {
-    //   let byteOffset = i;
-    //   //Identify register id
-    //   const registerID = this.dataView.getUint16(byteOffset, true);
-    //   byteOffset+=2;
-    //   //get the register byte length
-    //   //const regByteLength =
+    for (let i = 0; i < registerData.byteLength; i++) {
+      const registerID = registerData.getUint16(i, true);
+      i += 2;
+      const registerByteLength = this.dataView.getUint8(i++);
 
-    //   //get data chunk
-    //   //map to register for ui.
-    // }
+      const foundRegister = registers
+        .get(24)
+        ?.find((register) => registerID == register.id);
+
+      console.log(find);
+    }
 
     //const currentRegister = registers.get(this.header.source.hID)?.find(register => register.id ==  );
 
