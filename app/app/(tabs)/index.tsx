@@ -9,7 +9,7 @@ import {
   Modal,
   TouchableOpacity,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BleManager, { Peripheral } from "react-native-ble-manager";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -17,6 +17,8 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import { Packet } from "@/hooks/Packet";
+import { UnitDataContext } from "@/components/UnitDataProvider";
+import { Register } from "@/hooks/Register";
 
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
@@ -28,16 +30,20 @@ export default function HomeScreen() {
   const [deviceList, setDeviceList] = useState<Peripheral[]>([]);
   const [restartScan, setRestartScan] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [isDeviceConnected, setDeviceConnected] = useState<boolean>(false);
   const [connectedDeviceData, setConnectedDeviceData] = useState<string>();
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevices, setConnectedDevices] = useState<Peripheral[]>([]);
+  const latestPacketRef = useRef<any>(null);
+  const sendIntervalRef = useRef<any>(null);
+  const {unitData, setUnitData} = useContext(UnitDataContext)
 
   const sortedDevices = deviceList.sort((a, b) => b.rssi - a.rssi);
 
   const packet = new Packet();
 
-  //initialize bluetooth manager
   useEffect(() => {
+    // initialize bluetooth manager
     BleManager.start({ showAlert: true }).then(() => {
       console.log("BLE initialized");
       getConnectedDevices();
@@ -52,13 +58,8 @@ export default function HomeScreen() {
 
     const onDiscoveredPeripheralListener = BleManager.onDiscoverPeripheral(
       (peripheral: Peripheral) => {
-        const { id, name, advertising, rssi } = peripheral;
-        const { isConnectable, serviceUUIDs } = advertising;
-
-        // console.log("found device");
-        // console.log(`Device Id: ${id}`);
-        // console.log(`Device Name: ${name ?? "Unknown"}`);
-        // console.log(`Device is connectable: ${isConnectable}`);
+        const { name, advertising, rssi } = peripheral;
+        const { isConnectable } = advertising;
 
         if (
           rssi > -85 &&
@@ -66,9 +67,7 @@ export default function HomeScreen() {
           name?.toLowerCase().includes("ble#")
         ) {
           setDeviceList((prev) => {
-            // Avoid duplicates
             if (prev.find((p) => p.id === peripheral.id)) return prev;
-
             return [peripheral, ...prev];
           });
         }
@@ -77,17 +76,32 @@ export default function HomeScreen() {
 
     const onDidUpdateValueForCharacteristicListener =
       BleManager.onDidUpdateValueForCharacteristic(
-        ({ value, peripheral, characteristic, service }: any) => {
+        ({ value, peripheral }: any) => {
           console.log("Notification received:");
 
-          //console.log(value);
           const returnData = new Uint8Array(value);
-          const {} = packet.parsePacket(returnData);
-
           console.log("Return Data:", returnData);
-          setConnectedDeviceData(
-            connectedDeviceData + "ReturnData: " + returnData,
-          );
+
+          const latestPacket = packet.parsePacket(returnData);
+
+          setUnitData(packet.register.currentRegisterData);
+
+          if (latestPacket) {
+            latestPacketRef.current = {
+              packet: latestPacket,
+              id: peripheral,
+            };
+          }
+
+          // start interval once
+          if (!sendIntervalRef.current) {
+            sendIntervalRef.current = setInterval(() => {
+              if (latestPacketRef.current) {
+                const { packet, id } = latestPacketRef.current;
+                sendNewPacket(id, packet);
+              }
+            }, 2000);
+          }
         },
       );
 
@@ -95,6 +109,7 @@ export default function HomeScreen() {
       onStopListener.remove();
       onDiscoveredPeripheralListener.remove();
       onDidUpdateValueForCharacteristicListener.remove();
+      clearInterval(sendIntervalRef.current);
     };
   }, []);
 
@@ -152,15 +167,15 @@ export default function HomeScreen() {
       .then(() => {
         console.log("connected to device!");
         setIsConnecting(false);
+        setDeviceConnected(true);
         setConnectedDevices((prev) => {
           if (prev.find((d) => d.id === device.id)) return prev;
           return [device, ...prev];
         });
 
+        //Send initial set time packet
         let packet = new Packet();
-
-        //readDeviceData(device, packet.sendSetTime());
-        readDeviceData(device, packet.sendGetSensorData());
+        startDeviceNotify(device, packet.sendSetTime());
       })
       .catch((error) => {
         setIsConnecting(false);
@@ -187,7 +202,7 @@ export default function HomeScreen() {
     });
   };
 
-  const readDeviceData = (device: Peripheral, packet: Uint8Array) => {
+  const startDeviceNotify = (device: Peripheral, packet: Uint8Array) => {
     BleManager.retrieveServices(device.id).then((peripheralInfo) => {
       //console.log("Peripheral info:", peripheralInfo);
 
@@ -203,6 +218,12 @@ export default function HomeScreen() {
           console.log(error);
         });
     });
+  };
+
+  const sendNewPacket = (deviceID: string, packet: Uint8Array) => {
+    BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet])
+      .then(() => console.log("Write OK"))
+      .catch((err) => console.log("Write error:", err));
   };
 
   const handleDeviceListRefresh = () => {
@@ -226,11 +247,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <Modal
-        animationType="slide"
-        backdropColor={"rgba(0, 0, 0, 0.4)"}
-        visible={isConnecting}
-      >
+      <Modal backdropColor={"rgba(0, 0, 0, 0.6)"} visible={isConnecting}>
         <View style={styles.centeredView}>
           <View style={{}}>
             <ActivityIndicator
