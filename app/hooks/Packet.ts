@@ -75,15 +75,14 @@ export class Packet {
     //Number of bytes for the time value
     this.dataView.setUint8(byteOffset++, 4);
 
-    //const date = new Date();
+    // Set Time (Unix timestamp in seconds)
+    const timestamp = Math.floor(Date.now() / 1000);
 
-    //console.log("Date:" + date.getHours());
-
-    //the time
-    this.dataView.setUint8(byteOffset++, -113);
-    this.dataView.setUint8(byteOffset++, 3);
-    this.dataView.setUint8(byteOffset++, 0);
-    this.dataView.setUint8(byteOffset++, 0);
+    // Write LITTLE-ENDIAN directly
+    this.dataView.setUint8(byteOffset++, timestamp & 0xff); 
+    this.dataView.setUint8(byteOffset++, (timestamp >> 8) & 0xff);
+    this.dataView.setUint8(byteOffset++, (timestamp >> 16) & 0xff);
+    this.dataView.setUint8(byteOffset++, (timestamp >> 24) & 0xff); 
     adjustedHeaderSize += 7;
 
     //Update Header Length
@@ -165,18 +164,8 @@ export class Packet {
     this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_GET);
     adjustedHeaderSize += 1;
 
-    //Get register id's
-    const exposedReg = [
-      "Battery Voltage",
-      "Internal Temperature (C)",
-      "Sonic 1 Status",
-      "Sonic 1 Voltage",
-      "Sonic 2 Status",
-      "Sonic 2 Voltage",
-      "Sonic Power",
-      "Time",
-    ];
 
+    //Find matching register values based on hid
     const exposedRegisterMap: Record<number, string[]> = {
       [24]: this.register.exposedSolarChargerReg,
       [25]: this.register.exposedUniversalPSUReg,
@@ -299,7 +288,7 @@ export class Packet {
       const registerID = packet.getUint16(i, true);
       i += 2;
       const registerByteLength = packet.getUint8(i++);
-      
+
       let registerValue = 0;
       switch (registerByteLength) {
         case 1:

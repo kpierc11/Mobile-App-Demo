@@ -1,8 +1,7 @@
 import { UnitDataContext } from "@/components/UnitDataProvider";
-import { Register } from "@/hooks/Register";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useGlobalSearchParams, useLocalSearchParams } from "expo-router";
-import { useContext } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useContext, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,11 +9,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function DeviceDetails() {
   const { deviceDetails } = useLocalSearchParams();
   const { unitData } = useContext(UnitDataContext);
-  //console.log("Unit Data" + unitData);
 
-  unitData.forEach((data)=>{
+  // useEffect(()=>{
+
+  // }, [unitData])
+
+  unitData.forEach((data) => {
     console.log(data);
-  })
+  });
 
   const deviceString = Array.isArray(deviceDetails)
     ? deviceDetails[0]
@@ -26,6 +28,8 @@ export default function DeviceDetails() {
 
   const { id, name, type } = device;
 
+  const batteryVoltage = unitData.size ? unitData.get("Battery Voltage") : 0;
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scrollView}>
@@ -35,9 +39,10 @@ export default function DeviceDetails() {
             style={styles.image}
             resizeMode="cover"
           />
-          <View>
-            <Text style={styles.header}>{name}</Text>
-          </View>
+        </View>
+        <View style={{ display: "flex", alignItems: "flex-start", gap: 5 }}>
+          <Text style={{ fontSize: 20 }}>Device ID:</Text>
+          <Text style={styles.header}>{name}</Text>
         </View>
         <View
           style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}
@@ -53,9 +58,7 @@ export default function DeviceDetails() {
               </View>
             </View>
             <Text style={styles.subHeading}>Battery Voltage</Text>
-            <Text style={styles.deviceInfoText}>
-              {unitData.get("Battery Voltage")}
-            </Text>
+            <Text style={styles.deviceInfoText}>{batteryVoltage / 1000}</Text>
           </View>
           <View style={styles.card}>
             <View style={styles.iconContainer}>
@@ -68,7 +71,11 @@ export default function DeviceDetails() {
               </View>
             </View>
             <Text style={styles.subHeading}>Internal Temperature (C)</Text>
-            <Text style={styles.deviceInfoText}>22C</Text>
+            <Text style={styles.deviceInfoText}>
+              {unitData.size > 0
+                ? unitData.get("Internal Temperature (C)") / 100
+                : ""}
+            </Text>
           </View>
           <View style={styles.card}>
             <View style={styles.iconContainer}>
@@ -76,9 +83,13 @@ export default function DeviceDetails() {
                 <MaterialIcons name="electric-bolt" size={20} color="white" />
               </View>
             </View>
-            <Text style={styles.subHeading}>Sonic 1 Status/Voltage</Text>
-            <Text style={styles.deviceInfoText}>status: Not Detected</Text>
-            <Text style={styles.deviceInfoText}>voltage: Not Detected</Text>
+            <Text style={styles.subHeading}>Sonic 1 Status/Power</Text>
+            <Text style={styles.deviceInfoText}>
+              Status: {unitData.get("Sonic 1 Status")  === 0 ? "Disabled" : "Enabled"}
+            </Text>
+            <Text style={styles.deviceInfoText}>
+              Power: {unitData.get("Sonic 1 Voltage") / 1000 + "v"}
+            </Text>
           </View>
           <View style={styles.card}>
             <View style={styles.iconContainer}>
@@ -86,9 +97,13 @@ export default function DeviceDetails() {
                 <MaterialIcons name="electric-bolt" size={20} color="white" />
               </View>
             </View>
-            <Text style={styles.subHeading}>Sonic 2 Status/Voltage</Text>
-            <Text style={styles.deviceInfoText}>status: Not Detected</Text>
-            <Text style={styles.deviceInfoText}>voltage: Not Detected</Text>
+            <Text style={styles.subHeading}>Sonic 2 Status/Power</Text>
+            <Text style={styles.deviceInfoText}>
+              Status: {unitData.get("Sonic 2 Status")  === 0 ? "Disabled" : "Enabled"}
+            </Text>
+            <Text style={styles.deviceInfoText}>
+              Power: {unitData.get("Sonic 2 Voltage") / 1000 + "v"}
+            </Text>
           </View>
           <View style={styles.card}>
             <View style={styles.iconContainer}>
@@ -97,7 +112,9 @@ export default function DeviceDetails() {
               </View>
             </View>
             <Text style={styles.subHeading}>Sonic Power</Text>
-            <Text style={styles.deviceInfoText}>Disabled</Text>
+            <Text style={styles.deviceInfoText}>
+              {unitData.get("Sonic Power") === 0 ? "Disabled" : "Enabled"}
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -125,13 +142,13 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingVertical: 10,
-    fontSize: 24,
+    fontSize: 20,
   },
 
   scrollView: {
-    marginTop: 20,
+    marginTop: 2,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
@@ -146,8 +163,8 @@ const styles = StyleSheet.create({
   },
 
   subHeading: {
-    fontSize: 18,
-    fontWeight: "500",
+    fontSize: 16,
+    fontWeight: "400",
     textAlign: "left",
     color: "black",
     marginBottom: 4,
@@ -155,8 +172,9 @@ const styles = StyleSheet.create({
   },
 
   deviceInfoText: {
-    fontSize: 16,
-    fontWeight: 300,
+    marginTop: 5,
+    fontSize: 19,
+    fontWeight: "500",
   },
 
   card: {

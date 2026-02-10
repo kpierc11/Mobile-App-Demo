@@ -6,7 +6,6 @@ import {
   StatusBar,
   ActivityIndicator,
   RefreshControl,
-  Modal,
   TouchableOpacity,
 } from "react-native";
 import React, { useContext, useEffect, useRef, useState } from "react";
@@ -18,7 +17,6 @@ import { router } from "expo-router";
 import { Image } from "expo-image";
 import { Packet } from "@/hooks/Packet";
 import { UnitDataContext } from "@/components/UnitDataProvider";
-import { Register } from "@/hooks/Register";
 
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
@@ -30,13 +28,11 @@ export default function HomeScreen() {
   const [deviceList, setDeviceList] = useState<Peripheral[]>([]);
   const [restartScan, setRestartScan] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [isDeviceConnected, setDeviceConnected] = useState<boolean>(false);
-  const [connectedDeviceData, setConnectedDeviceData] = useState<string>();
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevices, setConnectedDevices] = useState<Peripheral[]>([]);
   const latestPacketRef = useRef<any>(null);
   const sendIntervalRef = useRef<any>(null);
-  const {unitData, setUnitData} = useContext(UnitDataContext)
+  const { unitData, setUnitData } = useContext(UnitDataContext);
 
   const sortedDevices = deviceList.sort((a, b) => b.rssi - a.rssi);
 
@@ -45,13 +41,11 @@ export default function HomeScreen() {
   useEffect(() => {
     // initialize bluetooth manager
     BleManager.start({ showAlert: true }).then(() => {
-      console.log("BLE initialized");
       getConnectedDevices();
       startScanningDevices();
     });
 
     const onStopListener = BleManager.onStopScan(() => {
-      console.log("scan finished");
       setRestartScan(false);
       setIsScanning(false);
     });
@@ -77,14 +71,9 @@ export default function HomeScreen() {
     const onDidUpdateValueForCharacteristicListener =
       BleManager.onDidUpdateValueForCharacteristic(
         ({ value, peripheral }: any) => {
-          console.log("Notification received:");
-
           const returnData = new Uint8Array(value);
-          console.log("Return Data:", returnData);
 
           const latestPacket = packet.parsePacket(returnData);
-
-          setUnitData(packet.register.currentRegisterData);
 
           if (latestPacket) {
             latestPacketRef.current = {
@@ -98,7 +87,22 @@ export default function HomeScreen() {
             sendIntervalRef.current = setInterval(() => {
               if (latestPacketRef.current) {
                 const { packet, id } = latestPacketRef.current;
+                console.log("Sent Packet to:" + id , packet);
                 sendNewPacket(id, packet);
+              }
+
+              if (packet.register.currentRegisterData.size > 0) {
+                console.log("Registers Set:");
+
+                setUnitData((prevMap: Map<string, number>) => {
+                  const newMap: Map<string, number> = new Map(prevMap); 
+                  packet.register.currentRegisterData.forEach(
+                    (value: number, key: string) => {
+                      newMap.set(key, value);
+                    },
+                  );
+                  return newMap;
+                });
               }
             }, 2000);
           }
@@ -143,11 +147,7 @@ export default function HomeScreen() {
         seconds: SCAN_DURATION,
         allowDuplicates: false,
       };
-      BleManager.scan(scanOptions).then(() => {
-        // Success code
-        console.log(scanOptions);
-        console.log("Scan started");
-      });
+      BleManager.scan(scanOptions);
     }
   };
 
@@ -160,14 +160,12 @@ export default function HomeScreen() {
   };
 
   const connectToDevice = (device: Peripheral) => {
-    console.log("Trying to connect to device.");
     setIsConnecting(true);
 
     BleManager.connect(device.id)
       .then(() => {
-        console.log("connected to device!");
         setIsConnecting(false);
-        setDeviceConnected(true);
+
         setConnectedDevices((prev) => {
           if (prev.find((d) => d.id === device.id)) return prev;
           return [device, ...prev];
@@ -178,16 +176,14 @@ export default function HomeScreen() {
         startDeviceNotify(device, packet.sendSetTime());
       })
       .catch((error) => {
-        setIsConnecting(false);
         console.log(error);
+        setIsConnecting(false);
       });
   };
 
   const disconnectDevice = (device: Peripheral) => {
-    console.log("Disconnected device.");
     BleManager.disconnect(device.id)
       .then(() => {
-        console.log("disconnected device!");
         setConnectedDevices(connectedDevices.filter((d) => d.id !== device.id));
       })
       .catch((error) => {
@@ -197,22 +193,17 @@ export default function HomeScreen() {
 
   const getConnectedDevices = () => {
     BleManager.getConnectedPeripherals([]).then((peripheralsArray) => {
-      console.log("Connected peripherals: " + peripheralsArray.length);
       setConnectedDevices(peripheralsArray);
     });
   };
 
   const startDeviceNotify = (device: Peripheral, packet: Uint8Array) => {
     BleManager.retrieveServices(device.id).then((peripheralInfo) => {
-      //console.log("Peripheral info:", peripheralInfo);
-
       BleManager.startNotification(device.id, SERVICE_UUID, READ_CHAR)
         .then(() => {
-          console.log("Notification started");
-
-          BleManager.write(device.id, SERVICE_UUID, WRITE_CHAR, [...packet])
-            .then(() => console.log("Write OK"))
-            .catch((err) => console.log("Write error:", err));
+          BleManager.write(device.id, SERVICE_UUID, WRITE_CHAR, [
+            ...packet,
+          ]).catch((err) => console.log("Write error:", err));
         })
         .catch((error) => {
           console.log(error);
@@ -221,9 +212,9 @@ export default function HomeScreen() {
   };
 
   const sendNewPacket = (deviceID: string, packet: Uint8Array) => {
-    BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet])
-      .then(() => console.log("Write OK"))
-      .catch((err) => console.log("Write error:", err));
+    BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet]).catch(
+      (err) => console.log("Write error:", err),
+    );
   };
 
   const handleDeviceListRefresh = () => {
@@ -247,20 +238,6 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <Modal backdropColor={"rgba(0, 0, 0, 0.6)"} visible={isConnecting}>
-        <View style={styles.centeredView}>
-          <View style={{}}>
-            <ActivityIndicator
-              style={{ marginTop: 20 }}
-              size="large"
-              color="#215387"
-            />
-            <Text style={{ color: "white", fontSize: 20 }}>
-              Connecting to device...
-            </Text>
-          </View>
-        </View>
-      </Modal>
       <View style={{ flex: 1, paddingHorizontal: 20 }}>
         <Text style={styles.deviceTitle}>HBS Devices</Text>
         <ScrollView
@@ -349,9 +326,6 @@ export default function HomeScreen() {
                       />
                     </TouchableOpacity>
                   </View>
-                  <View>
-                    <Text>{connectedDeviceData}</Text>
-                  </View>
                 </View>
               ))}
             </>
@@ -362,6 +336,23 @@ export default function HomeScreen() {
               <View style={{ alignSelf: "flex-start", marginBottom: 8 }}>
                 <Text style={styles.subHeading}>Found Devices</Text>
               </View>
+
+              {isConnecting ? (
+                <View style={{ flex: 1, paddingHorizontal: 20 }}>
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      marginTop: 20,
+                      fontSize: 18,
+                    }}
+                  >
+                    Connecting to Device...
+                  </Text>
+                  <ActivityIndicator style={{ marginTop: 20 }} size="large" />
+                </View>
+              ) : (
+                <></>
+              )}
 
               {/* Device list */}
               {sortedDevices.map((device: Peripheral) => (
@@ -421,7 +412,6 @@ export default function HomeScreen() {
               ))}
             </>
           ) : (
-            /* Empty state */
             <View style={styles.card}>
               <Text style={styles.subHeading}>No devices found.</Text>
               <Text>Pull down to scan for devices.</Text>
