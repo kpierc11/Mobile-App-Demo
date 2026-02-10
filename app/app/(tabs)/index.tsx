@@ -34,7 +34,7 @@ export default function HomeScreen() {
   const sendIntervalRef = useRef<any>(null);
   const { unitData, setUnitData } = useContext(UnitDataContext);
 
-  const sortedDevices = deviceList.sort((a, b) => b.rssi - a.rssi);
+   deviceList.sort((a, b) => b.rssi - a.rssi);
 
   const packet = new Packet();
 
@@ -147,7 +147,7 @@ export default function HomeScreen() {
         seconds: SCAN_DURATION,
         allowDuplicates: false,
       };
-      BleManager.scan(scanOptions);
+      BleManager.scan(scanOptions).then();
     }
   };
 
@@ -193,7 +193,7 @@ export default function HomeScreen() {
 
   const getConnectedDevices = () => {
     BleManager.getConnectedPeripherals([]).then((peripheralsArray) => {
-      setConnectedDevices(peripheralsArray);
+      setConnectedDevices([...peripheralsArray]);
     });
   };
 
@@ -330,7 +330,7 @@ export default function HomeScreen() {
               ))}
             </>
           )}
-          {sortedDevices.length > 0 ? (
+          {deviceList.length > 0 ? (
             <>
               {/* Title */}
               <View style={{ alignSelf: "flex-start", marginBottom: 8 }}>
@@ -355,7 +355,7 @@ export default function HomeScreen() {
               )}
 
               {/* Device list */}
-              {sortedDevices.map((device: Peripheral) => (
+              {deviceList.sort((a, b) => b.rssi - a.rssi).map((device: Peripheral) => (
                 <View key={device.id} style={styles.card}>
                   {/* RSSI */}
                   <View style={{ width: "100%", alignItems: "flex-end" }}>
