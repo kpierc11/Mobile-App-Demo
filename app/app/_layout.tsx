@@ -9,6 +9,7 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Image, Text } from "react-native";
 import UnitDataProvider from "@/components/UnitDataProvider";
+import { Drawer } from 'expo-router/drawer';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

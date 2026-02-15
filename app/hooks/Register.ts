@@ -4,6 +4,11 @@ interface RegisterData {
   byteCount: number;
 }
 
+interface ParsedRegisterData {
+  registerName: string;
+  value: any;
+}
+
 export class Register {
   name: string;
   id: number;
@@ -12,7 +17,7 @@ export class Register {
   exposedSolarChargerReg: string[] = [];
   exposedUniversalPSUReg: string[] = [];
   exposedACDCReg: string[] = [];
-  currentRegisterData = new Map<string, number>();
+  currentRegisterData = new Array<ParsedRegisterData>();
 
   constructor() {
     this.name = "";
@@ -107,10 +112,14 @@ export class Register {
     registerByteLength: number,
     data: number,
   ) {
+    
     this.registerMap.get(hID)?.forEach((reg) => {
       if (reg.id == registerID) {
-        console.log(reg.name, data);
-        this.currentRegisterData.set(reg.name, data);
+        this.currentRegisterData.push({
+          registerName: reg.name,
+          value: data,
+        });
+        console.log(reg.name, data)
       }
     });
   }

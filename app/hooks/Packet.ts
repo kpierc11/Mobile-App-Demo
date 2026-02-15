@@ -75,28 +75,30 @@ export class Packet {
     //Number of bytes for the time value
     this.dataView.setUint8(byteOffset++, 4);
 
-    // Set Time (Unix timestamp in seconds)
-    const timestamp = Math.floor(Date.now() / 1000);
+    // Set Time
+    const now = new Date();
+    const localTimestamp = Math.floor(
+      (now.getTime() - now.getTimezoneOffset() * 60000) / 1000,
+    );
+    const timeBuffer = new ArrayBuffer(4);
+    const timeView = new DataView(timeBuffer);
+    timeView.setUint32(0, localTimestamp);
+    const timeValue = timeView.getUint32(0, true);
 
-    // Write LITTLE-ENDIAN directly
-    this.dataView.setUint8(byteOffset++, timestamp & 0xff); 
-    this.dataView.setUint8(byteOffset++, (timestamp >> 8) & 0xff);
-    this.dataView.setUint8(byteOffset++, (timestamp >> 16) & 0xff);
-    this.dataView.setUint8(byteOffset++, (timestamp >> 24) & 0xff); 
+    this.dataView.setUint32(byteOffset, timeValue);
+    byteOffset += 4;
     adjustedHeaderSize += 7;
 
     //Update Header Length
     this.dataView.setUint8(2, adjustedHeaderSize);
 
     let ck = 0;
-    for (let i = 0; i < 33; i++) {
+    for (let i = 0; i < byteOffset; i++) {
       ck -= this.dataView.getInt8(i);
     }
 
     //Add Checksum
     this.dataView.setUint8(byteOffset++, ck & 0xff);
-
-    this.logHeaderDetails();
 
     console.log(
       "Send Set Time Packet:" +
@@ -139,8 +141,6 @@ export class Packet {
     //Add Checksum
     this.dataView.setUint8(byteOffset++, ck & 0xff);
 
-    this.logHeaderDetails();
-
     console.log(
       "Send Identify Unit Packet:" +
         new Uint8Array(this.dataView.buffer, 0, byteOffset),
@@ -163,7 +163,6 @@ export class Packet {
     //Set Command
     this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_GET);
     adjustedHeaderSize += 1;
-
 
     //Find matching register values based on hid
     const exposedRegisterMap: Record<number, string[]> = {
@@ -213,15 +212,14 @@ export class Packet {
     this.parseHeaderChunk(packetDataView);
 
     let pckCMD = packet[24];
-    console.log("CMD:" + pckCMD);
 
     if (pckCMD == PacketCmds.CBIN_PACKET_SET_ACK) {
-      packet = this.sendIdentifyUnit();
-    }
-
-    if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
       packet = this.sendGetSensorData();
     }
+
+    // if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
+    //   packet = this.sendGetSensorData();
+    // }
 
     if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
       packet = this.parseRegisterData(packetDataView);

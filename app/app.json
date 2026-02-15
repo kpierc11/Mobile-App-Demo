@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "app",
+    "name": "myQuattro",
     "slug": "mobile-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,7 @@
       }
     },
     "android": {
-      "package": "com.yourname.myawesomeapp",
+      "package": "com.hydrobioscience.myquattro",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -40,7 +40,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/myquattro-splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -49,23 +49,12 @@
           }
         }
       ],
-      [
-        "react-native-ble-plx",
-        {
-          "isBackgroundEnabled": true,
-          "modes": [
-            "peripheral",
-            "central"
-          ],
-          "bluetoothAlwaysPermission": "Allow MyQuattro to connect to bluetooth devices"
-        }
-      ],
-      "react-native-ble-manager"
+      "react-native-ble-manager",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true,
-      "bluetoothAlwaysPermission": "Allow MyQuattro to connect to bluetooth devices"
+      "reactCompiler": true
     },
     "extra": {
       "router": {},
