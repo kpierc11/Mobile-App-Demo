@@ -78,11 +78,14 @@ export default function HomeScreen() {
         ({ value, peripheral }: any) => {
           const returnData = new Uint8Array(value);
 
-          const latestPacket = packet.parsePacket(returnData);
-
-          setTimeout(() => {
-            sendNewPacket(peripheral, latestPacket);
-          }, 3000);
+          packet.parsePacket(returnData).then((parsedPacket) => {
+            if (parsedPacket) {
+              setUnitData([...packet.register.currentRegisterData]);
+            }
+            setTimeout(() => {
+              sendNewPacket(peripheral, parsedPacket);
+            }, 3000);
+          });
         },
       );
 
@@ -149,7 +152,7 @@ export default function HomeScreen() {
 
       await BleManager.connect(device.id);
 
-      setConnectedDevice({device:device, data:[]})
+      setConnectedDevice({ device: device, data: [] });
 
       setFoundDeviceList(foundDeviceList.filter((a) => a.id !== device.id));
 
@@ -253,38 +256,141 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={{ flex: 1, paddingHorizontal: 20 }}>
-        <Text style={styles.deviceTitle}>HBS Devices</Text>
-        <ScrollView
-          contentContainerStyle={styles.scrollView}
-          refreshControl={
-            <RefreshControl
-              refreshing={isScanning}
-              onRefresh={handleDeviceListRefresh}
-            />
-          }
-        >
-          {connectedDevice  && (
-            <>
-              {/* Header */}
-              <View style={{ alignSelf: "flex-start" }}>
-                <Text style={styles.subHeading}>Connected Device</Text>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.deviceTitle}>HBS Devices</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollView}
+        refreshControl={
+          <RefreshControl
+            refreshing={isScanning}
+            onRefresh={handleDeviceListRefresh}
+          />
+        }
+      >
+        {connectedDevice && (
+          <>
+            {/* Header */}
+            <View style={{ alignSelf: "flex-start" }}>
+              <Text style={styles.subHeading}>Connected Device</Text>
+            </View>
+
+            {/* Device cards */}
+
+            <View style={styles.card}>
+              {/* RSSI */}
+              <View style={{ width: "100%", alignItems: "flex-end" }}>
+                <MaterialCommunityIcons
+                  name={getSignalIcon(connectedDevice.device.rssi)}
+                  size={20}
+                  color="#215387"
+                />
               </View>
 
-              {/* Device cards */}
-             
-                <View style={styles.card}>
+              {/* Device Info */}
+              <View style={{ flexDirection: "row", gap: 30 }}>
+                <Image
+                  style={styles.image}
+                  source={require("../../assets/images/solaraft-qdb-transparent.png")}
+                  contentFit="cover"
+                />
+
+                <View>
+                  <Text style={{ fontWeight: "bold" }}>
+                    {formatDeviceID(connectedDevice.device.id)}
+                  </Text>
+                  <Text style={{ maxWidth: 150 }}>
+                    {formatBleNameToMac(connectedDevice.device.name) ??
+                      "Unknown"}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Disconnect */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <View style={{ marginRight: "auto" }}>
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => disconnectDevice(connectedDevice.device)}
+                  >
+                    <Text style={{ color: "white", fontSize: 12 }}>
+                      Disconnect
+                    </Text>
+                    <AntDesign name="disconnect" size={14} color="white" />
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/device/[id]",
+                      params: {
+                        id: connectedDevice.device.id,
+                        deviceDetails: JSON.stringify({
+                          ...connectedDevice.device,
+                          parsedRegisterData,
+                        }),
+                      },
+                    })
+                  }
+                >
+                  <Text style={{ color: "white", fontSize: 12 }}>
+                    DeviceDetails
+                  </Text>
+                  <MaterialCommunityIcons
+                    name="arrow-right"
+                    size={12}
+                    color="white"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
+        )}
+        {foundDeviceList.length > 0 ? (
+          <>
+            {/* Title */}
+            <View style={{ alignSelf: "flex-start", marginBottom: 8 }}>
+              <Text style={styles.subHeading}>Found Devices</Text>
+            </View>
+
+            {isConnecting ? (
+              <View style={{ flex: 1, paddingHorizontal: 20 }}>
+                <Text
+                  style={{
+                    textAlign: "center",
+                    marginTop: 20,
+                    fontSize: 18,
+                  }}
+                >
+                  Connecting to Device...
+                </Text>
+                <ActivityIndicator style={{ marginTop: 20 }} size="large" />
+              </View>
+            ) : (
+              <></>
+            )}
+
+            {/* Device list */}
+            {foundDeviceList
+              .sort((a, b) => b.rssi - a.rssi)
+              .map((device: Peripheral) => (
+                <View key={device.id} style={styles.card}>
                   {/* RSSI */}
                   <View style={{ width: "100%", alignItems: "flex-end" }}>
                     <MaterialCommunityIcons
-                      name={getSignalIcon(connectedDevice.device.rssi)}
+                      name={getSignalIcon(device.rssi)}
                       size={20}
                       color="#215387"
                     />
                   </View>
 
-                  {/* Device Info */}
+                  {/* Device info */}
                   <View style={{ flexDirection: "row", gap: 30 }}>
                     <Image
                       style={styles.image}
@@ -294,151 +400,45 @@ export default function HomeScreen() {
 
                     <View>
                       <Text style={{ fontWeight: "bold" }}>
-                        {formatDeviceID(connectedDevice.device.id)}
+                        {formatDeviceID(device.id)}
                       </Text>
                       <Text style={{ maxWidth: 150 }}>
-                        {formatBleNameToMac(connectedDevice.device.name) ?? "Unknown"}
+                        {formatBleNameToMac(device.name) ?? "Unknown"}
                       </Text>
                     </View>
                   </View>
 
-                  {/* Disconnect */}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 5,
-                    }}
-                  >
-                    <View style={{ marginRight: "auto" }}>
+                  {/* Connect button */}
+                  <View style={{ flexDirection: "row", gap: 5, marginTop: 5 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 5,
+                        marginRight: "auto",
+                      }}
+                    >
                       <TouchableOpacity
                         style={styles.button}
-                        onPress={() => disconnectDevice(connectedDevice.device)}
+                        onPress={() => connectToDevice(device)}
                       >
                         <Text style={{ color: "white", fontSize: 12 }}>
-                          Disconnect
+                          Connect
                         </Text>
-                        <AntDesign name="disconnect" size={14} color="white" />
+                        <MaterialCommunityIcons
+                          name="connection"
+                          size={14}
+                          color="white"
+                        />
                       </TouchableOpacity>
                     </View>
-                    <TouchableOpacity
-                      style={styles.button}
-                      onPress={() =>
-                        router.navigate({
-                          pathname: "/device-details",
-                          params: {
-                            deviceDetails: JSON.stringify(
-                              connectedDevice.device,
-                              parsedRegisterData,
-                            ),
-                          },
-                        })
-                      }
-                    >
-                      <Text style={{ color: "white", fontSize: 12 }}>
-                        DeviceDetails
-                      </Text>
-                      <MaterialCommunityIcons
-                        name="arrow-right"
-                        size={12}
-                        color="white"
-                      />
-                    </TouchableOpacity>
                   </View>
                 </View>
-       
-            </>
-          )}
-          {foundDeviceList.length > 0 ? (
-            <>
-              {/* Title */}
-              <View style={{ alignSelf: "flex-start", marginBottom: 8 }}>
-                <Text style={styles.subHeading}>Found Devices</Text>
-              </View>
-
-              {isConnecting ? (
-                <View style={{ flex: 1, paddingHorizontal: 20 }}>
-                  <Text
-                    style={{
-                      textAlign: "center",
-                      marginTop: 20,
-                      fontSize: 18,
-                    }}
-                  >
-                    Connecting to Device...
-                  </Text>
-                  <ActivityIndicator style={{ marginTop: 20 }} size="large" />
-                </View>
-              ) : (
-                <></>
-              )}
-
-              {/* Device list */}
-              {foundDeviceList
-                .sort((a, b) => b.rssi - a.rssi)
-                .map((device: Peripheral) => (
-                  <View key={device.id} style={styles.card}>
-                    {/* RSSI */}
-                    <View style={{ width: "100%", alignItems: "flex-end" }}>
-                      <MaterialCommunityIcons
-                        name={getSignalIcon(device.rssi)}
-                        size={20}
-                        color="#215387"
-                      />
-                    </View>
-
-                    {/* Device info */}
-                    <View style={{ flexDirection: "row", gap: 30 }}>
-                      <Image
-                        style={styles.image}
-                        source={require("../../assets/images/solaraft-qdb-transparent.png")}
-                        contentFit="cover"
-                      />
-
-                      <View>
-                        <Text style={{ fontWeight: "bold" }}>
-                          {formatDeviceID(device.id)}
-                        </Text>
-                        <Text style={{ maxWidth: 150 }}>
-                          {formatBleNameToMac(device.name) ?? "Unknown"}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Connect button */}
-                    <View
-                      style={{ flexDirection: "row", gap: 5, marginTop: 5 }}
-                    >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          gap: 5,
-                          marginRight: "auto",
-                        }}
-                      >
-                        <TouchableOpacity
-                          style={styles.button}
-                          onPress={() => connectToDevice(device)}
-                        >
-                          <Text style={{ color: "white", fontSize: 12 }}>
-                            Connect
-                          </Text>
-                          <MaterialCommunityIcons
-                            name="connection"
-                            size={14}
-                            color="white"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                ))}
-            </>
-          ) : (
-            <></>
-          )}
-        </ScrollView>
-      </View>
+              ))}
+          </>
+        ) : (
+          <></>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -447,9 +447,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    paddingTop: StatusBar.currentHeight,
-    borderTopWidth: 2,
-    borderTopColor: "black",
+    paddingHorizontal: 20,
   },
 
   scrollView: {
@@ -462,8 +460,8 @@ const styles = StyleSheet.create({
 
   deviceTitle: {
     fontSize: 25,
-    fontWeight: "400",
-    textAlign: "center",
+    fontWeight: "bold",
+    textAlign: "left",
     color: "black",
   },
 

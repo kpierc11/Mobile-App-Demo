@@ -1,9 +1,15 @@
+import { ParsedRegisterData } from "@/interfaces/parsedRegisterData";
 import { Register } from "./Register";
 
 interface CUID {
   fID: number;
   hID: number;
   serNum: number;
+}
+
+interface ParsedPacket {
+  type:string;
+  parsedPacket: { registerName: string | undefined; value: number; }[];
 }
 
 enum PacketCmds {
@@ -204,7 +210,7 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
-  parsePacket(packet: Uint8Array) {
+  async parsePacket(packet: Uint8Array) :ParsedPacket {
     console.log("Parsing Packet... ");
     let packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
 
@@ -213,8 +219,12 @@ export class Packet {
 
     let pckCMD = packet[24];
 
+    let parsedPacket:ParsedPacket = {}
+
     if (pckCMD == PacketCmds.CBIN_PACKET_SET_ACK) {
-      packet = this.sendGetSensorData();
+      parsedPacket.type = "acknowledge";
+      parsedPacket.parsedPacket = packet =
+      this.sendGetSensorData();
     }
 
     // if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
@@ -225,7 +235,7 @@ export class Packet {
       packet = this.parseRegisterData(packetDataView);
     }
 
-    return packet;
+    return {reg};
   }
 
   /**
@@ -279,8 +289,9 @@ export class Packet {
     byteOffset += 4;
   }
 
-  parseRegisterData(packet: DataView) {
+  parseRegisterData(packet: DataView) :ParsedPacket {
     let byteOffset = 16 + 8 + 1;
+    let data = [];
 
     for (let i = byteOffset; i < this.header.length + 16; ) {
       const registerID = packet.getUint16(i, true);
@@ -308,15 +319,16 @@ export class Packet {
           throw new Error(`Unsupported register size: ${registerByteLength}`);
       }
 
-      this.register.parseRegister(
+     const parsedReg = this.register.parseRegister(
         this.header.source.hID,
         registerID,
         registerByteLength,
         registerValue,
       );
+      data.push(parsedReg);
     }
 
-    return this.sendGetSensorData();
+    return {type:"registerData", parsedPacket:data }
   }
 
   logHeaderDetails() {

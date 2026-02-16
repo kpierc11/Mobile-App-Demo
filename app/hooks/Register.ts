@@ -112,15 +112,10 @@ export class Register {
     registerByteLength: number,
     data: number,
   ) {
-    
-    this.registerMap.get(hID)?.forEach((reg) => {
-      if (reg.id == registerID) {
-        this.currentRegisterData.push({
-          registerName: reg.name,
-          value: data,
-        });
-        console.log(reg.name, data)
-      }
-    });
+    const reg = this.registerMap
+      .get(hID)
+      ?.find((register) => register.id == registerID);
+
+    return { registerName: reg?.name, value: data };
   }
 }

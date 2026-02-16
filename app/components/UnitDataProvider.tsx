@@ -1,12 +1,13 @@
+import { ParsedRegisterData } from "@/interfaces/parsedRegisterData";
 import { createContext, useState, ReactNode } from "react";
 
 type UnitDataContextType = {
-  unitData: Map<string, number>;
-  setUnitData: (data: Map<string, number>) => void;
+  unitData: ParsedRegisterData[];
+  setUnitData: (data: ParsedRegisterData[]) => void;
 };
 
 export const UnitDataContext = createContext<UnitDataContextType>({
-  unitData: new Map<string, number>(),
+  unitData: [],
   setUnitData: () => {},
 });
 
@@ -15,9 +16,7 @@ export default function UnitDataProvider({
 }: {
   children: ReactNode;
 }) {
-  const [unitData, setUnitData] = useState<Map<string, number>>(
-    new Map<string, number>(),
-  );
+  const [unitData, setUnitData] = useState<ParsedRegisterData[]>([]);
 
   return (
     <UnitDataContext value={{ unitData, setUnitData }}>

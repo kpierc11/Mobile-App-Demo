@@ -1,8 +1,15 @@
 import { UnitDataContext } from "@/components/UnitDataProvider";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useContext, useEffect } from "react";
-import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Image,
+  Pressable,
+} from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -29,20 +36,20 @@ export default function DeviceDetails() {
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.header}>
           <Image
-            source={require("../assets/images/solaraft-qdb-transparent.png")}
+            source={require("../../assets/images/solaraft-qdb-transparent.png")}
             style={styles.image}
             resizeMode="cover"
           />
         </View>
-        <View style={{ display: "flex", alignItems: "flex-start", gap: 5 }}>
+        <View style={{ display: "flex", justifyContent: "flex-start", gap: 5 }}>
           <Text style={{ fontSize: 20 }}>Device ID:</Text>
           <Text style={styles.header}>{name}</Text>
         </View>
         <View
           style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}
         >
-          {Array.from(unitData.entries()).map(([key, value]) => (
-            <View key={key} style={styles.card}>
+          {unitData.map(({registerName, value}, index) => (
+            <View key={registerName} style={styles.card}>
               <View style={styles.iconContainer}>
                 <View style={styles.icon}>
                   <MaterialIcons
@@ -53,11 +60,11 @@ export default function DeviceDetails() {
                 </View>
               </View>
 
-              <Text style={styles.subHeading}>{key}</Text>
+              <Text style={styles.subHeading}>{registerName}</Text>
               <Text style={styles.deviceInfoText}>{value}</Text>
             </View>
           ))}
-          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -66,10 +73,7 @@ export default function DeviceDetails() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-
-    borderTopWidth: 2,
-    borderTopColor: "black",
+    justifyContent: "flex-start",
   },
   iconContainer: {
     display: "flex",

@@ -7,9 +7,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Image, Text } from "react-native";
 import UnitDataProvider from "@/components/UnitDataProvider";
-import { Drawer } from 'expo-router/drawer';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -17,21 +15,14 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "light" ? DarkTheme : DefaultTheme}>
       <UnitDataProvider>
-        <Stack
-          screenOptions={{
-            headerTintColor: "#215387",
-            headerTitleAlign: "left",
-            headerTitle: "MyQuattro™",
-          }}
-        >
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(drawer)" options={{title:"Scan Devices"}}  />
           <Stack.Screen
-            name="(tabs)"
+            name="device/[id]"
             options={{
               headerShown: true,
-              title: "Devices",
-              contentStyle: {
-                paddingTop: 0,
-              },
+              title: "Device Readings",
+              headerTintColor: "#215387",
             }}
           />
         </Stack>
