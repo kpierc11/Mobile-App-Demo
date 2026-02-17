@@ -22,6 +22,7 @@ export default function DeviceDetails() {
     : deviceDetails;
 
   console.log("Device Details:", deviceDetails);
+  console.log("Unit Readings: " + unitData);
 
   if (!deviceString) return <Text>No device data</Text>;
 

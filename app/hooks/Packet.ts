@@ -8,8 +8,8 @@ interface CUID {
 }
 
 interface ParsedPacket {
-  type:string;
-  parsedPacket: { registerName: string | undefined; value: number; }[];
+  type: string;
+  packet: Uint8Array;
 }
 
 enum PacketCmds {
@@ -155,6 +155,47 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
+  stopIdentifyUnit() {
+    let byteOffset = 16;
+    let adjustedHeaderSize = 0;
+    this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
+
+    //8 random bytes
+    for (let i = 0; i < 8; i++) {
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
+      adjustedHeaderSize += 1;
+    }
+
+    //Set Command
+    this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_IDENTIFY_MODE);
+    adjustedHeaderSize += 1;
+
+    //
+    this.dataView.setUint8(byteOffset++, -120);
+    this.dataView.setUint8(byteOffset++, 20);
+    this.dataView.setUint8(byteOffset++, 0);
+    this.dataView.setUint8(byteOffset++, 0);
+    adjustedHeaderSize += 4;
+
+    //Update Header Length
+    this.dataView.setUint8(2, adjustedHeaderSize);
+
+    let ck = 0;
+    for (let i = 0; i < byteOffset; i++) {
+      ck -= this.dataView.getInt8(i);
+    }
+
+    //Add Checksum
+    this.dataView.setUint8(byteOffset++, ck & 0xff);
+
+    console.log(
+      "Send Identify Unit Packet:" +
+        new Uint8Array(this.dataView.buffer, 0, byteOffset),
+    );
+
+    return new Uint8Array(this.dataView.buffer, 0, byteOffset);
+  }
+
   sendGetSensorData() {
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
@@ -210,7 +251,7 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
-  async parsePacket(packet: Uint8Array) :ParsedPacket {
+  async parsePacket(packet: Uint8Array) {
     console.log("Parsing Packet... ");
     let packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
 
@@ -219,12 +260,8 @@ export class Packet {
 
     let pckCMD = packet[24];
 
-    let parsedPacket:ParsedPacket = {}
-
     if (pckCMD == PacketCmds.CBIN_PACKET_SET_ACK) {
-      parsedPacket.type = "acknowledge";
-      parsedPacket.parsedPacket = packet =
-      this.sendGetSensorData();
+      packet = this.sendGetSensorData();
     }
 
     // if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
@@ -235,7 +272,7 @@ export class Packet {
       packet = this.parseRegisterData(packetDataView);
     }
 
-    return {reg};
+    return packet;
   }
 
   /**
@@ -289,7 +326,7 @@ export class Packet {
     byteOffset += 4;
   }
 
-  parseRegisterData(packet: DataView) :ParsedPacket {
+  parseRegisterData(packet: DataView) {
     let byteOffset = 16 + 8 + 1;
     let data = [];
 
@@ -319,7 +356,7 @@ export class Packet {
           throw new Error(`Unsupported register size: ${registerByteLength}`);
       }
 
-     const parsedReg = this.register.parseRegister(
+      const parsedReg = this.register.parseRegister(
         this.header.source.hID,
         registerID,
         registerByteLength,
@@ -328,7 +365,7 @@ export class Packet {
       data.push(parsedReg);
     }
 
-    return {type:"registerData", parsedPacket:data }
+    return this.sendGetSensorData()
   }
 
   logHeaderDetails() {

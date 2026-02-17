@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "myQuattro",
-    "slug": "mobile-app",
+    "slug": "myquattro",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/appstore.png",
@@ -59,9 +59,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "86315fcd-e168-4115-9024-eeaf6e0ec326"
+        "projectId": "82bb2cac-a8a8-4656-8555-c8383a94c02d"
       }
     },
-    "owner": "kpierc11s-organization"
+    "owner": "devdpis-organization"
   }
 }

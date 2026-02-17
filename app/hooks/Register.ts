@@ -116,6 +116,8 @@ export class Register {
       .get(hID)
       ?.find((register) => register.id == registerID);
 
+      console.log({ registerName: reg?.name, value: data })
+
     return { registerName: reg?.name, value: data };
   }
 }

@@ -80,7 +80,7 @@ export default function HomeScreen() {
 
           packet.parsePacket(returnData).then((parsedPacket) => {
             if (parsedPacket) {
-              setUnitData([...packet.register.currentRegisterData]);
+              setUnitData(packet.register.currentRegisterData);
             }
             setTimeout(() => {
               sendNewPacket(peripheral, parsedPacket);
@@ -149,12 +149,22 @@ export default function HomeScreen() {
 
     try {
       if (connectedDevice?.device.id === device.id) return;
-
       await BleManager.connect(device.id);
 
-      setConnectedDevice({ device: device, data: [] });
+      setFoundDeviceList((prev) => {
+        let next = prev.filter((d) => d.id !== device.id);
 
-      setFoundDeviceList(foundDeviceList.filter((a) => a.id !== device.id));
+        if (connectedDevice?.device) {
+          const exists = next.some((d) => d.id === connectedDevice.device.id);
+          if (!exists) {
+            next = [connectedDevice.device, ...next];
+          }
+        }
+
+        return next;
+      });
+
+      setConnectedDevice({ device: device, data: [] });
 
       startDeviceNotify(device, packet.sendSetTime());
     } catch (error) {
@@ -169,7 +179,11 @@ export default function HomeScreen() {
       await BleManager.disconnect(device.id);
 
       setConnectedDevice(undefined);
-      setFoundDeviceList([...foundDeviceList, device]);
+      setFoundDeviceList((prev) => {
+        const exists = prev.some((d) => d.id === device.id);
+        if (exists) return prev;
+        return [device, ...prev];
+      });
 
       await BleManager.stopNotification(device.id, SERVICE_UUID, WRITE_CHAR);
     } catch (error) {
