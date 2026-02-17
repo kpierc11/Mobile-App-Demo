@@ -12,7 +12,7 @@ export default function CustomDrawerContent(props:any) {
     <DrawerContentScrollView {...props}>
       <View style={styles.header}>
         <Image
-          source={require('../assets/images/hbs-spash.png')}
+          source={require('../assets/images/hbs-splash.png')}
           style={styles.avatar}
         />
       </View>
