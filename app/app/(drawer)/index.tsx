@@ -14,7 +14,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { router } from "expo-router";
 import { Image } from "expo-image";
-import { Packet } from "@/hooks/Packet";
+import { Packet, PacketTypes } from "@/hooks/Packet";
 import { UnitDataContext } from "@/components/UnitDataProvider";
 
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
@@ -82,11 +82,13 @@ export default function HomeScreen() {
         ({ value, peripheral }: any) => {
           const returnData = new Uint8Array(value);
           packet.parsePacket(returnData).then((parsedPacket) => {
-            if (parsedPacket) {
-              setUnitData(packet.register.currentRegisterData);
+            const { type, currentPacket, regData } = parsedPacket;
+            if (type == PacketTypes.PARSE_SENSOR_DATA) {
+              console.log("Packet type is parse register.");
+              setUnitData(regData);
             }
             setTimeout(() => {
-              sendNewPacket(peripheral, parsedPacket);
+              sendNewPacket(peripheral, currentPacket);
             }, 3000);
           });
           //setImageLink(imageMap[packet.header.source.hID]);
@@ -155,19 +157,6 @@ export default function HomeScreen() {
       if (connectedDevice?.device.id === device.id) return;
       await BleManager.connect(device.id);
 
-      setFoundDeviceList((prev) => {
-        let next = prev.filter((d) => d.id !== device.id);
-
-        if (connectedDevice?.device) {
-          const exists = next.some((d) => d.id === connectedDevice.device.id);
-          if (!exists) {
-            next = [connectedDevice.device, ...next];
-          }
-        }
-
-        return next;
-      });
-
       setConnectedDevice({ device: device, data: [] });
 
       startDeviceNotify(device, packet.sendSetTime());
@@ -183,11 +172,6 @@ export default function HomeScreen() {
       await BleManager.disconnect(device.id);
 
       setConnectedDevice(undefined);
-      setFoundDeviceList((prev) => {
-        const exists = prev.some((d) => d.id === device.id);
-        if (exists) return prev;
-        return [device, ...prev];
-      });
 
       await BleManager.stopNotification(device.id, SERVICE_UUID, WRITE_CHAR);
     } catch (error) {

@@ -1,4 +1,3 @@
-import { ParsedRegisterData } from "@/interfaces/parsedRegisterData";
 import { Register } from "./Register";
 
 interface CUID {
@@ -7,9 +6,11 @@ interface CUID {
   serNum: number;
 }
 
-interface ParsedPacket {
-  type: string;
-  packet: Uint8Array;
+export enum PacketTypes {
+  SET_TIME,
+  IDENTIFY,
+  GET_SENSOR_DATA,
+  PARSE_SENSOR_DATA,
 }
 
 enum PacketCmds {
@@ -34,7 +35,6 @@ export class Packet {
 
   buffer: ArrayBuffer;
   dataView: DataView;
-
   register: Register;
 
   constructor() {
@@ -114,6 +114,10 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
+  /**
+   * Sends an Identify packet to the unit. The light should blink several times.
+   * @returns Uint8Array
+   */
   sendIdentifyUnit() {
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
@@ -155,6 +159,10 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
+  /**
+   * Sends a stop identify packet to shut off the identify mode.
+   * @returns Uint8Array
+   */
   stopIdentifyUnit() {
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
@@ -196,6 +204,12 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
+  /**
+   * The registers that are available for the device are determined by the hid.
+   * This checks the current hid and finds the available registers located in the register class.
+   * Once found, a packet is built to request the registers from the firmware.
+   * @returns Uint8Array
+   */
   sendGetSensorData() {
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
@@ -251,6 +265,13 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
+  /**
+   * Takes in a packet to parse.
+   * The set time packet is the first initial packet sent on ble connection.
+   * This take the response packet and determines what type of packet to send in response based on CMD in the header portion.
+   * @param packet
+   * @returns
+   */
   async parsePacket(packet: Uint8Array) {
     console.log("Parsing Packet... ");
     let packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
@@ -259,20 +280,22 @@ export class Packet {
     this.parseHeaderChunk(packetDataView);
 
     let pckCMD = packet[24];
+    let packetType: PacketTypes = PacketTypes.SET_TIME;
+    let parsedRegData:any [];
 
     if (pckCMD == PacketCmds.CBIN_PACKET_SET_ACK) {
       packet = this.sendGetSensorData();
+      packetType = PacketTypes.GET_SENSOR_DATA;
     }
-
-    // if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
-    //   packet = this.sendGetSensorData();
-    // }
 
     if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
-      packet = this.parseRegisterData(packetDataView);
+      const {newPacket,registerData} = this.parseRegisterData(packetDataView);
+      packet= newPacket;
+      parsedRegData = registerData
+      packetType = PacketTypes.PARSE_SENSOR_DATA;
     }
 
-    return packet;
+    return { type: packetType, currentPacket: packet, regData:parsedRegData };
   }
 
   /**
@@ -302,6 +325,10 @@ export class Packet {
     byteOffset += 4;
   }
 
+  /**
+   * This function parses the header chunk for incoming packets and sets the state of the 
+   * signature, length, source and destination.
+   */
   parseHeaderChunk(dataView: DataView) {
     let byteOffset = 0;
 
@@ -326,9 +353,15 @@ export class Packet {
     byteOffset += 4;
   }
 
+  /**
+   * Parses the return packet that is recieved from sending the sendGetSensors function.
+   * Creates  
+   * @param packet 
+   * @returns 
+   */
   parseRegisterData(packet: DataView) {
     let byteOffset = 16 + 8 + 1;
-    let data = [];
+    let regData = [];
 
     for (let i = byteOffset; i < this.header.length + 16; ) {
       const registerID = packet.getUint16(i, true);
@@ -362,10 +395,10 @@ export class Packet {
         registerByteLength,
         registerValue,
       );
-      data.push(parsedReg);
+      regData.push(parsedReg);
     }
 
-    return this.sendGetSensorData()
+    return {newPacket:this.sendGetSensorData(), registerData:regData};
   }
 
   logHeaderDetails() {
