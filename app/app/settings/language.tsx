@@ -3,19 +3,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Checkbox } from "expo-checkbox";
 
-export default function Appearance() {
+export default function Language() {
   const [isChecked, setChecked] = useState(true);
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Appearance</Text>
+      <Text style={styles.title}>Language</Text>
       <View style={styles.settingsCard}>
         <View style={styles.iconMainContainer}>
           <TouchableOpacity
             style={styles.iconContainer}
             onPress={() => setChecked(true)}
           >
-            <Text style={{ marginRight: "auto" }}>Light Mode</Text>
+            <Text style={{ marginRight: "auto" }}>English</Text>
             <Checkbox
               style={styles.checkbox}
               value={isChecked}

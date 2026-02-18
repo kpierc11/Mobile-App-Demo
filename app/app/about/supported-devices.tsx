@@ -1,18 +1,7 @@
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  Linking,
-  ScrollView,
-} from "react-native";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router } from "expo-router";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Image } from "expo-image";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 export default function SupportedDevices() {
   return (

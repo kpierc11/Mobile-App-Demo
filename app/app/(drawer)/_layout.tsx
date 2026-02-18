@@ -80,13 +80,6 @@ export default function DrawerLayout() {
           ),
         }}
       />
-      {/* <Drawer.Screen
-        name="device"
-        options={{
-          title: "Device Information",
-          drawerItemStyle: { display: "none" },
-        }}
-      /> */}
     </Drawer>
   );
 }

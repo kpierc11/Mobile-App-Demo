@@ -33,6 +33,14 @@ export default function RootLayout() {
               headerTintColor: "#215387",
             }}
           />
+          <Stack.Screen
+            name="settings/language"
+            options={{
+              headerShown: true,
+              title: "Language",
+              headerTintColor: "#215387",
+            }}
+          />
 
           <Stack.Screen
             name="about/supported-devices"

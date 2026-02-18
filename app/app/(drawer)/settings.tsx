@@ -9,8 +9,7 @@ import {
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
-import Ionicons from '@expo/vector-icons/Ionicons';
-
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function Settings() {
   const [value, setValue] = useState("");
@@ -39,8 +38,11 @@ export default function Settings() {
               color="black"
             />
           </TouchableOpacity>
-          <View style={styles.iconContainer}>
-           <Ionicons name="language-outline" size={24} color="black" />
+          <TouchableOpacity
+            style={styles.iconContainer}
+            onPress={() => router.navigate("/settings/language")}
+          >
+            <Ionicons name="language-outline" size={24} color="black" />
             <Text style={{ marginRight: "auto" }}>Language</Text>
             <MaterialIcons
               style={{ alignContent: "flex-end" }}
@@ -48,7 +50,7 @@ export default function Settings() {
               size={20}
               color="black"
             />
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -86,13 +88,13 @@ const styles = StyleSheet.create({
     marginRight: "auto",
     gap: 30,
     width: "100%",
-    paddingTop:10,
-    paddingBottom:10,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   iconContainer: {
     display: "flex",
     justifyContent: "flex-start",
-    alignItems:"center",
+    alignItems: "center",
     flexDirection: "row",
     gap: 10,
   },

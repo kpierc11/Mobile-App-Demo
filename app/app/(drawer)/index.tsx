@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  StatusBar,
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
@@ -29,7 +28,11 @@ interface HbsDevice {
   data: any[];
 }
 
-let packetQueue = null;
+const imageMap: Record<number, any> = {
+  24: require("../../assets/images/devices/solar-controller.png"),
+  25: require("../../assets/images/devices/ac-power-supply.png"),
+  40: require("../../assets/images/devices/24-volt-ac-dc-power.png"),
+};
 
 export default function HomeScreen() {
   const [foundDeviceList, setFoundDeviceList] = useState<Peripheral[]>([]);
@@ -39,8 +42,9 @@ export default function HomeScreen() {
   const [connectedDevice, setConnectedDevice] = useState<HbsDevice>();
   const [parsedRegisterData, setParsedRegisterData] = useState<any>([]);
   const { unitData, setUnitData } = useContext(UnitDataContext);
+  const [imageLink, setImageLink] = useState("");
 
-  foundDeviceList.sort((a, b) => b.rssi - a.rssi);
+  const sortedDevices = [...foundDeviceList].sort((a, b) => b.rssi - a.rssi);
 
   const packet = new Packet();
 
@@ -77,7 +81,6 @@ export default function HomeScreen() {
       BleManager.onDidUpdateValueForCharacteristic(
         ({ value, peripheral }: any) => {
           const returnData = new Uint8Array(value);
-
           packet.parsePacket(returnData).then((parsedPacket) => {
             if (parsedPacket) {
               setUnitData(packet.register.currentRegisterData);
@@ -86,6 +89,7 @@ export default function HomeScreen() {
               sendNewPacket(peripheral, parsedPacket);
             }, 3000);
           });
+          //setImageLink(imageMap[packet.header.source.hID]);
         },
       );
 
@@ -304,7 +308,7 @@ export default function HomeScreen() {
               <View style={{ flexDirection: "row", gap: 30 }}>
                 <Image
                   style={styles.image}
-                  source={require("../../assets/images/solaraft-qdb-transparent.png")}
+                  source={imageLink}
                   contentFit="cover"
                 />
 
@@ -366,7 +370,7 @@ export default function HomeScreen() {
             </View>
           </>
         )}
-        {foundDeviceList.length > 0 ? (
+        {sortedDevices.length > 0 ? (
           <>
             {/* Title */}
             <View style={{ alignSelf: "flex-start", marginBottom: 8 }}>
@@ -391,7 +395,7 @@ export default function HomeScreen() {
             )}
 
             {/* Device list */}
-            {foundDeviceList
+            {sortedDevices
               .sort((a, b) => b.rssi - a.rssi)
               .map((device: Peripheral) => (
                 <View key={device.id} style={styles.card}>
