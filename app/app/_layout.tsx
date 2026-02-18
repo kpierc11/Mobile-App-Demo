@@ -16,12 +16,29 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === "light" ? DarkTheme : DefaultTheme}>
       <UnitDataProvider>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(drawer)" options={{title:"Scan Devices"}}  />
+          <Stack.Screen name="(drawer)" options={{ title: "Scan Devices" }} />
           <Stack.Screen
             name="device/[id]"
             options={{
               headerShown: true,
               title: "Device Readings",
+              headerTintColor: "#215387",
+            }}
+          />
+          <Stack.Screen
+            name="settings/appearance"
+            options={{
+              headerShown: true,
+              title: "Appearance",
+              headerTintColor: "#215387",
+            }}
+          />
+
+          <Stack.Screen
+            name="about/supported-devices"
+            options={{
+              headerShown: true,
+              title: "Supported Devices",
               headerTintColor: "#215387",
             }}
           />

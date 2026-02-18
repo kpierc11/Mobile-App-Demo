@@ -1,7 +1,16 @@
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, TextInput, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { router } from "expo-router";
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 
 export default function Settings() {
   const [value, setValue] = useState("");
@@ -16,12 +25,30 @@ export default function Settings() {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>App Settings</Text>
       <View style={styles.settingsCard}>
-        <View style={styles.iconContainer}>
-          <MaterialIcons style={{}} name="sunny" size={20} color="black" />
-          <Text>Appearance</Text>
-        </View>
-        <View>
-          <MaterialIcons name="chevron-right" size={20} color="black" />
+        <View style={styles.iconMainContainer}>
+          <TouchableOpacity
+            style={styles.iconContainer}
+            onPress={() => router.navigate("/settings/appearance")}
+          >
+            <MaterialIcons style={{}} name="sunny" size={20} color="black" />
+            <Text style={{ marginRight: "auto" }}>Appearance</Text>
+            <MaterialIcons
+              style={{ alignContent: "flex-end" }}
+              name="chevron-right"
+              size={20}
+              color="black"
+            />
+          </TouchableOpacity>
+          <View style={styles.iconContainer}>
+           <Ionicons name="language-outline" size={24} color="black" />
+            <Text style={{ marginRight: "auto" }}>Language</Text>
+            <MaterialIcons
+              style={{ alignContent: "flex-end" }}
+              name="chevron-right"
+              size={20}
+              color="black"
+            />
+          </View>
         </View>
       </View>
     </SafeAreaView>
@@ -54,10 +81,19 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 
+  iconMainContainer: {
+    display: "flex",
+    marginRight: "auto",
+    gap: 30,
+    width: "100%",
+    paddingTop:10,
+    paddingBottom:10,
+  },
   iconContainer: {
     display: "flex",
+    justifyContent: "flex-start",
+    alignItems:"center",
     flexDirection: "row",
-    alignItems: "center",
-    marginRight: "auto",
+    gap: 10,
   },
 });

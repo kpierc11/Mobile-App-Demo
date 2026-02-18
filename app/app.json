@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "MyQuattro",
-    "slug": "MyQuattro",
+    "slug": "myquattro",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/myquattro-app-icon.png",
