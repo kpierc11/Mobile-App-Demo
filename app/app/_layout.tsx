@@ -13,47 +13,45 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === "light" ? DarkTheme : DefaultTheme}>
-      <UnitDataProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(drawer)" options={{ title: "Scan Devices" }} />
-          <Stack.Screen
-            name="device/[id]"
-            options={{
-              headerShown: true,
-              title: "Device Readings",
-              headerTintColor: "#215387",
-            }}
-          />
-          <Stack.Screen
-            name="settings/appearance"
-            options={{
-              headerShown: true,
-              title: "Appearance",
-              headerTintColor: "#215387",
-            }}
-          />
-          <Stack.Screen
-            name="settings/language"
-            options={{
-              headerShown: true,
-              title: "Language",
-              headerTintColor: "#215387",
-            }}
-          />
+    <UnitDataProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(drawer)" options={{ title: "Scan Devices" }} />
+        <Stack.Screen
+          name="device/[id]"
+          options={{
+            headerShown: true,
+            title: "Device Readings",
+            headerTintColor: "#215387",
+          }}
+        />
+        <Stack.Screen
+          name="settings/appearance"
+          options={{
+            headerShown: true,
+            title: "Appearance",
+            headerTintColor: "#215387",
+          }}
+        />
+        <Stack.Screen
+          name="settings/language"
+          options={{
+            headerShown: true,
+            title: "Language",
+            headerTintColor: "#215387",
+          }}
+        />
 
-          <Stack.Screen
-            name="about/supported-devices"
-            options={{
-              headerShown: true,
-              title: "Supported Devices",
-              headerTintColor: "#215387",
-            }}
-          />
-        </Stack>
+        <Stack.Screen
+          name="about/supported-devices"
+          options={{
+            headerShown: true,
+            title: "Supported Devices",
+            headerTintColor: "#215387",
+          }}
+        />
+      </Stack>
 
-        <StatusBar style={colorScheme === "light" ? "light" : "dark"} />
-      </UnitDataProvider>
-    </ThemeProvider>
+      <StatusBar style={colorScheme === "light" ? "light" : "dark"} />
+    </UnitDataProvider>
   );
 }
