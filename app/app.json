@@ -4,7 +4,7 @@
     "slug": "myquattro",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/myquattro-app-icon.png",
+    "icon": "./assets/images/myquattro-app-icon-light-blue.png",
     "scheme": "app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

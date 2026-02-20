@@ -110,14 +110,34 @@ export class Register {
     hID: number,
     registerID: number,
     registerByteLength: number,
-    data: number,
+    data: any,
   ) {
     const reg = this.registerMap
       .get(hID)
       ?.find((register) => register.id == registerID);
 
-      console.log({ registerName: reg?.name, value: data })
+    console.log({ registerName: reg?.name, value: data });
 
-    return { registerName: reg?.name, value: data };
+    if (!reg) {
+      return;
+    }
+
+    if (data == 0) {
+      data = "Disabled";
+    }
+
+    if (data == 1) {
+      data = "Enabled";
+    }
+
+    if (reg.name == "Internal Temperature (C)") {
+      data = data / 100;
+    }
+
+    if (reg.name.includes("Voltage")) {
+      data = data / 1000;
+    }
+
+    return { registerName: reg?.name, value: data, hardwareID: hID };
   }
 }

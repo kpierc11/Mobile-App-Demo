@@ -83,16 +83,16 @@ export class Packet {
 
     // Set Time
     const now = new Date();
-    const localTimestamp = Math.floor(
-      (now.getTime() - now.getTimezoneOffset() * 60000) / 1000,
-    );
-    const timeBuffer = new ArrayBuffer(4);
-    const timeView = new DataView(timeBuffer);
-    timeView.setUint32(0, localTimestamp);
-    const timeValue = timeView.getUint32(0, true);
+    const hours = now.getHours() - 12;
+    const minutes = now.getMinutes() /60;
 
-    this.dataView.setUint32(byteOffset, timeValue);
-    byteOffset += 4;
+    console.log("Date:",now.getHours() - 12)
+
+    // Write as 4-byte big-endian integer
+    this.dataView.setUint16(byteOffset, hours, true);
+    byteOffset +=2; 
+    this.dataView.setUint16(byteOffset, minutes, true);
+    byteOffset += 2;
     adjustedHeaderSize += 7;
 
     //Update Header Length
@@ -281,21 +281,27 @@ export class Packet {
 
     let pckCMD = packet[24];
     let packetType: PacketTypes = PacketTypes.SET_TIME;
-    let parsedRegData:any [];
+    let parsedRegData: any = [];
 
     if (pckCMD == PacketCmds.CBIN_PACKET_SET_ACK) {
       packet = this.sendGetSensorData();
       packetType = PacketTypes.GET_SENSOR_DATA;
     }
 
+    if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
+      packet = this.sendGetSensorData();
+      packetType = PacketTypes.GET_SENSOR_DATA;
+    }
+
     if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
-      const {newPacket,registerData} = this.parseRegisterData(packetDataView);
-      packet= newPacket;
-      parsedRegData = registerData
+      const { newPacket, registerData } =
+        this.parseRegisterData(packetDataView);
+      packet = newPacket;
+      parsedRegData = registerData;
       packetType = PacketTypes.PARSE_SENSOR_DATA;
     }
 
-    return { type: packetType, currentPacket: packet, regData:parsedRegData };
+    return { type: packetType, currentPacket: packet, regData: parsedRegData };
   }
 
   /**
@@ -326,7 +332,7 @@ export class Packet {
   }
 
   /**
-   * This function parses the header chunk for incoming packets and sets the state of the 
+   * This function parses the header chunk for incoming packets and sets the state of the
    * signature, length, source and destination.
    */
   parseHeaderChunk(dataView: DataView) {
@@ -355,9 +361,9 @@ export class Packet {
 
   /**
    * Parses the return packet that is recieved from sending the sendGetSensors function.
-   * Creates  
-   * @param packet 
-   * @returns 
+   * Creates
+   * @param packet
+   * @returns
    */
   parseRegisterData(packet: DataView) {
     let byteOffset = 16 + 8 + 1;
@@ -398,7 +404,7 @@ export class Packet {
       regData.push(parsedReg);
     }
 
-    return {newPacket:this.sendGetSensorData(), registerData:regData};
+    return { newPacket: this.sendGetSensorData(), registerData: regData };
   }
 
   logHeaderDetails() {

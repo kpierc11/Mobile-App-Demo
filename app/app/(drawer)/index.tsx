@@ -41,7 +41,8 @@ export default function HomeScreen() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevice, setConnectedDevice] = useState<HbsDevice>();
   const [parsedRegisterData, setParsedRegisterData] = useState<any>([]);
-  const { unitData, setUnitData } = useContext(UnitDataContext);
+  const { unitData, setUnitData, setUnitImageURL, unitImageURL } =
+    useContext(UnitDataContext);
   const [imageLink, setImageLink] = useState("");
 
   const sortedDevices = [...foundDeviceList].sort((a, b) => b.rssi - a.rssi);
@@ -83,6 +84,9 @@ export default function HomeScreen() {
           const returnData = new Uint8Array(value);
           packet.parsePacket(returnData).then((parsedPacket) => {
             const { type, currentPacket, regData } = parsedPacket;
+            setImageLink(imageMap[packet.header.source.hID]);
+            setUnitImageURL(imageLink);
+            console.log("Image Link:", unitImageURL);
             if (type == PacketTypes.PARSE_SENSOR_DATA) {
               console.log("Packet type is parse register.");
               setUnitData(regData);
@@ -144,10 +148,10 @@ export default function HomeScreen() {
 
   const getSignalIcon = (rssi: number) => {
     if (rssi >= -50) return "wifi-strength-4";
-    if (rssi >= -65) return "wifi-strength-3";
-    if (rssi >= -75) return "wifi-strength-2";
-    if (rssi >= -85) return "wifi-strength-1";
-    return "wifi-strength-outline";
+    if (rssi >= -61) return "wifi-strength-3";
+    if (rssi >= -71) return "wifi-strength-2";
+    if (rssi >= -81) return "wifi-strength-1";
+    return "wifi-strength-outline"; // Out of usable range
   };
 
   const connectToDevice = async (device: Peripheral) => {
@@ -155,6 +159,9 @@ export default function HomeScreen() {
 
     try {
       if (connectedDevice?.device.id === device.id) return;
+      if (connectedDevice) {
+        await disconnectDevice(connectedDevice.device);
+      }
       await BleManager.connect(device.id);
 
       setConnectedDevice({ device: device, data: [] });
@@ -169,13 +176,14 @@ export default function HomeScreen() {
 
   const disconnectDevice = async (device: Peripheral) => {
     try {
+      await BleManager.stopNotification(device.id, SERVICE_UUID, WRITE_CHAR);
       await BleManager.disconnect(device.id);
+      setImageLink("");
+      setUnitData([]);
 
       setConnectedDevice(undefined);
-
-      await BleManager.stopNotification(device.id, SERVICE_UUID, WRITE_CHAR);
     } catch (error) {
-      console.log("Couldn't dissconnect device", error);
+      console.log("Couldn't disconnect device", error);
     }
   };
 
@@ -280,21 +288,59 @@ export default function HomeScreen() {
 
             <View style={styles.card}>
               {/* RSSI */}
-              <View style={{ width: "100%", alignItems: "flex-end" }}>
-                <MaterialCommunityIcons
-                  name={getSignalIcon(connectedDevice.device.rssi)}
-                  size={20}
-                  color="#215387"
-                />
+              <View
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flexDirection: "row",
+                  width: "100%",
+                  marginBottom: 20,
+                }}
+              >
+                <TouchableOpacity
+                  style={{ marginRight: "auto" }}
+                  onPress={() =>
+                    sendNewPacket(
+                      connectedDevice.device.id,
+                      packet.sendIdentifyUnit(),
+                    )
+                  }
+                >
+                  <MaterialCommunityIcons
+                    name={"lightbulb-on-10"}
+                    size={30}
+                    color="#215387"
+                  />
+                </TouchableOpacity>
+                <View>
+                  <MaterialCommunityIcons
+                    name={getSignalIcon(connectedDevice.device.rssi)}
+                    size={20}
+                    color="#215387"
+                  />
+                </View>
               </View>
 
               {/* Device Info */}
               <View style={{ flexDirection: "row", gap: 30 }}>
-                <Image
-                  style={styles.image}
-                  source={imageLink}
-                  contentFit="cover"
-                />
+                {imageLink ? (
+                  <Image
+                    style={styles.connectedDeviceImage}
+                    source={imageLink}
+                    contentFit="cover"
+                  />
+                ) : (
+                  <View
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      height: 120,
+                      width: 120,
+                    }}
+                  >
+                    <ActivityIndicator style={{ marginTop: 20 }} size="large" />
+                  </View>
+                )}
 
                 <View>
                   <Text style={{ fontWeight: "bold" }}>
@@ -372,7 +418,10 @@ export default function HomeScreen() {
                 >
                   Connecting to Device...
                 </Text>
-                <ActivityIndicator style={{ marginTop: 20 }} size="large" />
+                <ActivityIndicator
+                  style={{ marginTop: 20, marginBottom: 40 }}
+                  size="large"
+                />
               </View>
             ) : (
               <></>
@@ -395,8 +444,8 @@ export default function HomeScreen() {
                   {/* Device info */}
                   <View style={{ flexDirection: "row", gap: 30 }}>
                     <Image
-                      style={styles.image}
-                      source={require("../../assets/images/solaraft-qdb-transparent.png")}
+                      style={styles.foundDeviceImage}
+                      source={require("../../assets/images/hbs-splash.png")}
                       contentFit="cover"
                     />
 
@@ -501,10 +550,25 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 20,
   },
-  image: {
+  connectedDeviceImage: {
     flex: 1,
     width: "auto",
-    height: 100,
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    objectFit: "contain",
+    height: 120,
+    borderRadius: 15,
+  },
+  foundDeviceImage: {
+    flex: 1,
+    width: "auto",
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    objectFit: "contain",
+    height: 80,
+    borderRadius: 15,
   },
   modalView: {
     margin: 20,

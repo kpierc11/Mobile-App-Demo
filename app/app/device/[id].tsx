@@ -1,70 +1,72 @@
 import { UnitDataContext } from "@/components/UnitDataProvider";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router, useLocalSearchParams } from "expo-router";
-import { useContext, useEffect } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   Image,
-  Pressable,
+  ActivityIndicator,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function DeviceDetails() {
   const { deviceDetails } = useLocalSearchParams();
-  const { unitData } = useContext(UnitDataContext);
+  const { unitData, unitImageURL } = useContext(UnitDataContext);
 
-  const deviceString = Array.isArray(deviceDetails)
-    ? deviceDetails[0]
-    : deviceDetails;
+  const parsedDetails = deviceDetails
+    ? JSON.parse(deviceDetails as string)
+    : {};
 
-  console.log("Device Details:", deviceDetails);
-  console.log("Unit Readings: " + unitData);
+  console.log(parsedDetails);
+  
 
-  if (!deviceString) return <Text>No device data</Text>;
+  const { name } = parsedDetails;
 
-  const device = JSON.parse(deviceString);
+  console.log("Unit Image url:",unitImageURL);
 
-  const { id, name, type } = device;
-
-  //const batteryVoltage = unitData.size ? unitData.get("Battery Voltage") : 0;
+  if (!deviceDetails) return <Text>No device data available..</Text>;
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.header}>
-          <Image
-            source={require("../../assets/images/solaraft-qdb-transparent.png")}
-            style={styles.image}
-            resizeMode="cover"
-          />
+          {/* {unitImageURL ? (
+            <Image
+              source={require(unitImageURL)}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          ) : (
+            <></>
+          )} */}
         </View>
-        <View style={{ display: "flex", justifyContent: "flex-start", gap: 5 }}>
-          <Text style={{ fontSize: 20 }}>Device ID:</Text>
-          <Text style={styles.header}>{name}</Text>
+        <View style={styles.deviceMainInfo}>
+          <Text style={styles.deviceMainText}>Device ID:</Text>
+          <Text style={styles.deviceMainText}>{name}</Text>
         </View>
         <View
           style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}
         >
-          {unitData.map(({registerName, value}, index) => (
-            <View key={registerName} style={styles.card}>
-              <View style={styles.iconContainer}>
-                <View style={styles.icon}>
-                  <MaterialIcons
-                    name="battery-charging-full"
-                    size={20}
-                    color="white"
-                  />
-                </View>
+          {unitData.length > 0 ? (
+            unitData.map(({ registerName, value }) => (
+              <View key={registerName} style={styles.card}>
+                <Text style={styles.subHeading}>{registerName}</Text>
+                <Text style={styles.deviceInfoText}>{value}</Text>
               </View>
-
-              <Text style={styles.subHeading}>{registerName}</Text>
-              <Text style={styles.deviceInfoText}>{value}</Text>
+            ))
+          ) : (
+            <View style={{ flex: 1, paddingHorizontal: 20 }}>
+              <Text
+                style={{ textAlign: "center", marginTop: 20, fontSize: 18 }}
+              >
+                Loading Device Data...
+              </Text>
+              <ActivityIndicator style={{ marginTop: 20 }} size="large" />
             </View>
-          ))}
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -105,6 +107,22 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: "400",
     textAlign: "center",
+    color: "black",
+  },
+
+  deviceMainInfo: {
+    display: "flex",
+    justifyContent: "flex-start",
+    textAlign: "left",
+
+    width: "80%",
+    padding: 20,
+    borderRadius: 15,
+    marginBottom: 20,
+  },
+
+  deviceMainText: {
+    fontSize: 18,
     color: "black",
   },
 
