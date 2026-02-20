@@ -84,10 +84,8 @@ export class Register {
       "Sonic 2 Status",
       "Sonic 2 Voltage",
       "Sonic Power",
-      "Time",
     ];
     this.exposedUniversalPSUReg = [
-      "Time",
       "Sonic Power",
       "Internal Temperature (C)",
       "Sonic Voltage",
@@ -95,7 +93,6 @@ export class Register {
       "Sonic 2 Status",
     ];
     this.exposedACDCReg = [
-      "Time",
       "Sonic Power",
       "Internal Temperature (C)",
       "Input voltage",
@@ -118,26 +115,20 @@ export class Register {
 
     console.log({ registerName: reg?.name, value: data });
 
-    if (!reg) {
-      return;
+    if (!reg) return;
+
+    let formattedValue: string | number = data;
+
+    if (data === 0 && !reg.name.includes("Voltage")) {
+      formattedValue = "Disabled";
+    } else if (data === 1) {
+      formattedValue = "Enabled";
+    } else if (reg.name.includes("Temperature")) {
+      formattedValue = (data / 100).toFixed(2) + " (c)";
+    } else if (reg.name.includes("Voltage")) {
+      formattedValue = (data / 1000).toFixed(3) + " (v)";
     }
 
-    if (data == 0) {
-      data = "Disabled";
-    }
-
-    if (data == 1) {
-      data = "Enabled";
-    }
-
-    if (reg.name == "Internal Temperature (C)") {
-      data = data / 100;
-    }
-
-    if (reg.name.includes("Voltage")) {
-      data = data / 1000;
-    }
-
-    return { registerName: reg?.name, value: data, hardwareID: hID };
+    return { registerName: reg?.name, value: formattedValue, hardwareID: hID };
   }
 }

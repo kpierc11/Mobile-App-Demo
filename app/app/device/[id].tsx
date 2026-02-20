@@ -9,6 +9,7 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
+import * as Progress from "react-native-progress";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -20,12 +21,7 @@ export default function DeviceDetails() {
     ? JSON.parse(deviceDetails as string)
     : {};
 
-  console.log(parsedDetails);
-  
-
-  const { name } = parsedDetails;
-
-  console.log("Unit Image url:",unitImageURL);
+  const { name, imageURL } = parsedDetails;
 
   if (!deviceDetails) return <Text>No device data available..</Text>;
 
@@ -33,15 +29,15 @@ export default function DeviceDetails() {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.header}>
-          {/* {unitImageURL ? (
+          {imageURL ? (
             <Image
-              source={require(unitImageURL)}
+              source={require("../../assets/images/hbs-splash.png")}
               style={styles.image}
               resizeMode="cover"
             />
           ) : (
             <></>
-          )} */}
+          )}
         </View>
         <View style={styles.deviceMainInfo}>
           <Text style={styles.deviceMainText}>Device ID:</Text>
@@ -53,6 +49,22 @@ export default function DeviceDetails() {
           {unitData.length > 0 ? (
             unitData.map(({ registerName, value }) => (
               <View key={registerName} style={styles.card}>
+                {value === "Enabled" ? (
+                  <View style={styles.statusEnabled}></View>
+                ) : (
+                  <></>
+                )}
+                {value === "Disabled" ? (
+                  <View style={styles.statusDisabled}></View>
+                ) : (
+                  <></>
+                )}
+
+                {registerName.includes("Voltage") ? (
+                  <Progress.Bar progress={0.8} width={100} />
+                ) : (
+                  <></>
+                )}
                 <Text style={styles.subHeading}>{registerName}</Text>
                 <Text style={styles.deviceInfoText}>{value}</Text>
               </View>
@@ -91,12 +103,12 @@ const styles = StyleSheet.create({
 
   header: {
     alignItems: "flex-start",
-    paddingVertical: 10,
+    paddingVertical: 2,
     fontSize: 20,
   },
 
   scrollView: {
-    marginTop: 2,
+    marginTop: 0,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
@@ -158,9 +170,21 @@ const styles = StyleSheet.create({
     height: "auto",
     maxHeight: 250,
   },
-
   image: {
     width: 150,
     height: 150,
+  },
+
+  statusEnabled: {
+    backgroundColor: "#8FBC8B",
+    borderRadius: 99,
+    width: 15,
+    height: 15,
+  },
+  statusDisabled: {
+    backgroundColor: "#CD5C5C",
+    borderRadius: 99,
+    width: 15,
+    height: 15,
   },
 });

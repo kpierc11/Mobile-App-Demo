@@ -32,7 +32,7 @@ export default function About() {
         />
         <View style={{ marginTop: 10, alignItems: "center" }}>
           <Text>MyQuattro</Text>
-          <Text>version: 1.0.0</Text>
+          <Text>Version: Beta 1.0.0</Text>
         </View>
       </View>
       <View style={styles.settingsCard}>

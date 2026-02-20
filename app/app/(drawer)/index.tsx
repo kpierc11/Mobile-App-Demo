@@ -28,6 +28,8 @@ interface HbsDevice {
   data: any[];
 }
 
+let currentQueuedPacket: Uint8Array = new Uint8Array();
+
 const imageMap: Record<number, any> = {
   24: require("../../assets/images/devices/solar-controller.png"),
   25: require("../../assets/images/devices/ac-power-supply.png"),
@@ -82,20 +84,7 @@ export default function HomeScreen() {
       BleManager.onDidUpdateValueForCharacteristic(
         ({ value, peripheral }: any) => {
           const returnData = new Uint8Array(value);
-          packet.parsePacket(returnData).then((parsedPacket) => {
-            const { type, currentPacket, regData } = parsedPacket;
-            setImageLink(imageMap[packet.header.source.hID]);
-            setUnitImageURL(imageLink);
-            console.log("Image Link:", unitImageURL);
-            if (type == PacketTypes.PARSE_SENSOR_DATA) {
-              console.log("Packet type is parse register.");
-              setUnitData(regData);
-            }
-            setTimeout(() => {
-              sendNewPacket(peripheral, currentPacket);
-            }, 3000);
-          });
-          //setImageLink(imageMap[packet.header.source.hID]);
+          handleResponsePacket(returnData, peripheral);
         },
       );
 
@@ -207,6 +196,7 @@ export default function HomeScreen() {
         await BleManager.write(device.id, SERVICE_UUID, WRITE_CHAR, [
           ...packet,
         ]);
+        currentQueuedPacket = packet;
       }
     } catch (error) {
       console.log("Couldn't start device notification", error);
@@ -214,10 +204,48 @@ export default function HomeScreen() {
   };
 
   const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
+    if (packet == currentQueuedPacket) {
+      console.log("Current packet the same not qued.");
+      return;
+    }
     try {
       await BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet]);
     } catch (error) {
       console.log("Couldn't send new packet:", error);
+    }
+
+    currentQueuedPacket = packet;
+  };
+
+  const handleResponsePacket = async (
+    returnData: Uint8Array<any>,
+    id: string,
+  ) => {
+    try {
+      const parsedReturnData = await packet.parsePacket(returnData);
+      let sendPacket = null;
+      const { type, currentPacket, regData } = parsedReturnData;
+
+      setImageLink(imageMap[packet.header.source.hID]);
+      setUnitImageURL(imageLink);
+
+      if (type == PacketTypes.GET_SENSOR_DATA) {
+        sendPacket = currentPacket;
+      }
+
+      if (type == PacketTypes.PARSE_SENSOR_DATA) {
+        console.log("Packet type is parse register.");
+        setUnitData(regData);
+        sendPacket = packet.sendGetSensorData();
+      }
+
+      if (sendPacket) {
+        setTimeout(() => {
+          sendNewPacket(id, sendPacket);
+        }, 3000);
+      }
+    } catch (error) {
+      console.log("Couldn't parse packet...", error);
     }
   };
 
@@ -302,16 +330,32 @@ export default function HomeScreen() {
                   onPress={() =>
                     sendNewPacket(
                       connectedDevice.device.id,
+                      packet.sendStopIdentifyUnit(),
+                    )
+                  }
+                >
+                  <MaterialCommunityIcons
+                    name={"lightbulb-off-outline"}
+                    size={28}
+                    color="#215387"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() =>
+                    sendNewPacket(
+                      connectedDevice.device.id,
                       packet.sendIdentifyUnit(),
                     )
                   }
                 >
                   <MaterialCommunityIcons
+                    style={{ marginRight: 20 }}
                     name={"lightbulb-on-10"}
-                    size={30}
+                    size={28}
                     color="#215387"
                   />
                 </TouchableOpacity>
+
                 <View>
                   <MaterialCommunityIcons
                     name={getSignalIcon(connectedDevice.device.rssi)}
@@ -374,18 +418,19 @@ export default function HomeScreen() {
                 </View>
                 <TouchableOpacity
                   style={styles.button}
-                  onPress={() =>
+                  onPress={() => {
                     router.push({
                       pathname: "/device/[id]",
                       params: {
                         id: connectedDevice.device.id,
                         deviceDetails: JSON.stringify({
                           ...connectedDevice.device,
+                          imageURL:imageLink,
                           parsedRegisterData,
                         }),
                       },
-                    })
-                  }
+                    });
+                  }}
                 >
                   <Text style={{ color: "white", fontSize: 12 }}>
                     DeviceDetails

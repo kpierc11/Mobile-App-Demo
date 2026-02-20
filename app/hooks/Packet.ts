@@ -84,14 +84,14 @@ export class Packet {
     // Set Time
     const now = new Date();
     const hours = now.getHours() - 12;
-    const minutes = now.getMinutes() /60;
+    const minutes = now.getMinutes() / 60;
 
-    console.log("Date:",now.getHours() - 12)
+    console.log("Date:", now.getHours() - 12);
 
     // Write as 4-byte big-endian integer
-    this.dataView.setUint16(byteOffset, hours, true);
-    byteOffset +=2; 
-    this.dataView.setUint16(byteOffset, minutes, true);
+    this.dataView.setUint16(byteOffset, hours);
+    byteOffset += 2;
+    this.dataView.setUint16(byteOffset, minutes);
     byteOffset += 2;
     adjustedHeaderSize += 7;
 
@@ -163,7 +163,7 @@ export class Packet {
    * Sends a stop identify packet to shut off the identify mode.
    * @returns Uint8Array
    */
-  stopIdentifyUnit() {
+  sendStopIdentifyUnit() {
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
     this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
@@ -179,8 +179,8 @@ export class Packet {
     adjustedHeaderSize += 1;
 
     //
-    this.dataView.setUint8(byteOffset++, -120);
-    this.dataView.setUint8(byteOffset++, 20);
+    this.dataView.setUint8(byteOffset++, 0);
+    this.dataView.setUint8(byteOffset++, 0);
     this.dataView.setUint8(byteOffset++, 0);
     this.dataView.setUint8(byteOffset++, 0);
     adjustedHeaderSize += 4;
@@ -197,7 +197,7 @@ export class Packet {
     this.dataView.setUint8(byteOffset++, ck & 0xff);
 
     console.log(
-      "Send Identify Unit Packet:" +
+      "Send Stop Identify Unit Packet:" +
         new Uint8Array(this.dataView.buffer, 0, byteOffset),
     );
 
@@ -288,18 +288,20 @@ export class Packet {
       packetType = PacketTypes.GET_SENSOR_DATA;
     }
 
-    if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
-      packet = this.sendGetSensorData();
-      packetType = PacketTypes.GET_SENSOR_DATA;
-    }
+    // if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
+    //   packet = this.sendGetSensorData();
+    //   packetType = PacketTypes.GET_SENSOR_DATA;
+    // }
 
     if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
       const { newPacket, registerData } =
-        this.parseRegisterData(packetDataView);
+      this.parseRegisterData(packetDataView);
       packet = newPacket;
       parsedRegData = registerData;
       packetType = PacketTypes.PARSE_SENSOR_DATA;
     }
+
+  
 
     return { type: packetType, currentPacket: packet, regData: parsedRegData };
   }
@@ -404,7 +406,7 @@ export class Packet {
       regData.push(parsedReg);
     }
 
-    return { newPacket: this.sendGetSensorData(), registerData: regData };
+    return { newPacket: new Uint8Array(), registerData: regData };
   }
 
   logHeaderDetails() {
