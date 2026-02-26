@@ -65,7 +65,8 @@ export default function HomeScreen() {
     const onDiscoveredPeripheralListener = BleManager.onDiscoverPeripheral(
       (peripheral: Peripheral) => {
         const { name, advertising, rssi } = peripheral;
-        const { isConnectable } = advertising;
+        const { isConnectable, localName } = advertising;
+        console.log(localName);
 
         if (
           rssi > -85 &&

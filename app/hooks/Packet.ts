@@ -205,6 +205,51 @@ export class Packet {
   }
 
   /**
+   * Sends a packet to set an alias name for the device.
+   * @returns Uint8Array
+   */
+  sendSetAlias() {
+    let byteOffset = 16;
+    let adjustedHeaderSize = 0;
+    this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
+
+    //8 random bytes
+    for (let i = 0; i < 8; i++) {
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
+      adjustedHeaderSize += 1;
+    }
+
+    //Set Command
+    this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_SET);
+    adjustedHeaderSize += 1;
+
+    //
+    this.dataView.setUint8(byteOffset++, -120);
+    this.dataView.setUint8(byteOffset++, 20);
+    this.dataView.setUint8(byteOffset++, 0);
+    this.dataView.setUint8(byteOffset++, 0);
+    adjustedHeaderSize += 4;
+
+    //Update Header Length
+    this.dataView.setUint8(2, adjustedHeaderSize);
+
+    let ck = 0;
+    for (let i = 0; i < byteOffset; i++) {
+      ck -= this.dataView.getInt8(i);
+    }
+
+    //Add Checksum
+    this.dataView.setUint8(byteOffset++, ck & 0xff);
+
+    console.log(
+      "Send Identify Unit Packet:" +
+        new Uint8Array(this.dataView.buffer, 0, byteOffset),
+    );
+
+    return new Uint8Array(this.dataView.buffer, 0, byteOffset);
+  }
+
+  /**
    * The registers that are available for the device are determined by the hid.
    * This checks the current hid and finds the available registers located in the register class.
    * Once found, a packet is built to request the registers from the firmware.

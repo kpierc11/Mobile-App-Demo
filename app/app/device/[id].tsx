@@ -1,4 +1,6 @@
+import AliasModalScreen from "@/components/alias-modal";
 import { UnitDataContext } from "@/components/UnitDataProvider";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
@@ -8,6 +10,10 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
+  Pressable,
+  Alert,
+  Modal,
+  TextInput,
 } from "react-native";
 import * as Progress from "react-native-progress";
 
@@ -16,6 +22,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function DeviceDetails() {
   const { deviceDetails } = useLocalSearchParams();
   const { unitData, unitImageURL } = useContext(UnitDataContext);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [text, onChangeText] = useState("Useless Text");
+  const [number, onChangeNumber] = useState("");
 
   const parsedDetails = deviceDetails
     ? JSON.parse(deviceDetails as string)
@@ -25,21 +34,24 @@ export default function DeviceDetails() {
 
   if (!deviceDetails) return <Text>No device data available..</Text>;
 
+  const handleModalSubmit = () => {
+    setModalVisible(!modalVisible);
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.header}>
-          {imageURL ? (
-            <Image
-              source={require("../../assets/images/hbs-splash.png")}
-              style={styles.image}
-              resizeMode="cover"
-            />
-          ) : (
-            <></>
-          )}
+          <Image
+            source={require("../../assets/images/hbs-splash.png")}
+            style={styles.image}
+            resizeMode="cover"
+          />
         </View>
         <View style={styles.deviceMainInfo}>
+          <Pressable style={{}} onPress={() => setModalVisible(true)}>
+            <Text style={{}}>Show Modal</Text>
+          </Pressable>
           <Text style={styles.deviceMainText}>Device ID:</Text>
           <Text style={styles.deviceMainText}>{name}</Text>
         </View>
@@ -81,6 +93,47 @@ export default function DeviceDetails() {
           )}
         </View>
       </ScrollView>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          Alert.alert("Modal has been closed.");
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Pressable
+              onPress={() => setModalVisible(false)}
+              style={{
+                display: "flex",
+                justifyContent: "flex-start",
+                alignItems: "flex-start",
+                width: "100%",
+              }}
+            >
+              <MaterialCommunityIcons
+                name="close-thick"
+                size={20}
+                color="black"
+              />
+            </Pressable>
+            <TextInput
+              style={styles.input}
+              onChangeText={onChangeText}
+              value={text}
+              placeholder={"My Device"}
+            />
+            <Pressable
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => handleModalSubmit}
+            >
+              <Text style={styles.textStyle}>Set Alias</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -126,8 +179,7 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "flex-start",
     textAlign: "left",
-
-    width: "80%",
+    width: "100%",
     padding: 20,
     borderRadius: 15,
     marginBottom: 20,
@@ -186,5 +238,62 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     width: 15,
     height: 15,
+  },
+
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    display: "flex",
+    justifyContent: "flex-start",
+    borderRadius: 10,
+    width: 300,
+    height: 200,
+    padding: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  button: {
+    backgroundColor: "#215387",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderRadius: 5,
+    padding: 12,
+    marginTop: 20,
+  },
+  buttonClose: {
+    backgroundColor: "#215387",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  input: {
+    height: 60,
+    margin: 12,
+    width:200,
+    fontSize: 20,
+    borderWidth: 1,
+    borderRadius:10,
+    borderColor: "#DCDCDC",
+    padding: 10,
   },
 });
