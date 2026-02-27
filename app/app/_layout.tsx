@@ -8,6 +8,9 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import UnitDataProvider from "@/components/UnitDataProvider";
+import {createAsyncStorage} from "@react-native-async-storage/async-storage"
+
+export const storage = createAsyncStorage("myQuattroDB");
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -46,6 +49,14 @@ export default function RootLayout() {
           options={{
             headerShown: true,
             title: "Supported Devices",
+            headerTintColor: "#215387",
+          }}
+        />
+        <Stack.Screen
+          name="device/edit-alias"
+          options={{
+            headerShown: true,
+            title: "Edit Device Name",
             headerTintColor: "#215387",
           }}
         />

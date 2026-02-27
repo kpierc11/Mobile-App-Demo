@@ -18,6 +18,8 @@ import {
 import * as Progress from "react-native-progress";
 
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { storage } from "../_layout";
 
 export default function DeviceDetails() {
   const { deviceDetails } = useLocalSearchParams();
@@ -25,6 +27,7 @@ export default function DeviceDetails() {
   const [modalVisible, setModalVisible] = useState(false);
   const [text, onChangeText] = useState("Useless Text");
   const [number, onChangeNumber] = useState("");
+  const [storedDeviceName, setStoredDeviceName] = useState("");
 
   const parsedDetails = deviceDetails
     ? JSON.parse(deviceDetails as string)
@@ -38,6 +41,20 @@ export default function DeviceDetails() {
     setModalVisible(!modalVisible);
   };
 
+  const getStoredDeviceName = async () => {
+    const storedName = await storage.getItem(name);
+    if (!storedName) {
+      return "";
+    }
+    return storedName;
+  };
+
+  useEffect(() => {
+    getStoredDeviceName().then((storedDeviceName) =>
+      setStoredDeviceName(storedDeviceName),
+    );
+  });
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scrollView}>
@@ -49,11 +66,29 @@ export default function DeviceDetails() {
           />
         </View>
         <View style={styles.deviceMainInfo}>
-          <Pressable style={{}} onPress={() => setModalVisible(true)}>
-            <Text style={{}}>Show Modal</Text>
+          <View>
+            <Text style={styles.deviceMainText}>Device Name:</Text>
+            <Text style={styles.deviceMainText}>
+              {storedDeviceName != "" ? storedDeviceName : name}
+            </Text>
+          </View>
+          <Pressable
+            style={{}}
+            onPress={() =>
+              router.push({
+                pathname: "/device/edit-alias",
+                params: {
+                  currentDeviceID: name,
+                },
+              })
+            }
+          >
+            <MaterialCommunityIcons
+              name="pencil-outline"
+              size={24}
+              color="black"
+            />
           </Pressable>
-          <Text style={styles.deviceMainText}>Device ID:</Text>
-          <Text style={styles.deviceMainText}>{name}</Text>
         </View>
         <View
           style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}
@@ -93,47 +128,6 @@ export default function DeviceDetails() {
           )}
         </View>
       </ScrollView>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          Alert.alert("Modal has been closed.");
-          setModalVisible(!modalVisible);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Pressable
-              onPress={() => setModalVisible(false)}
-              style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                alignItems: "flex-start",
-                width: "100%",
-              }}
-            >
-              <MaterialCommunityIcons
-                name="close-thick"
-                size={20}
-                color="black"
-              />
-            </Pressable>
-            <TextInput
-              style={styles.input}
-              onChangeText={onChangeText}
-              value={text}
-              placeholder={"My Device"}
-            />
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => handleModalSubmit}
-            >
-              <Text style={styles.textStyle}>Set Alias</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -156,7 +150,8 @@ const styles = StyleSheet.create({
 
   header: {
     alignItems: "flex-start",
-    paddingVertical: 2,
+    justifyContent: "center",
+    paddingVertical: 1,
     fontSize: 20,
   },
 
@@ -178,7 +173,11 @@ const styles = StyleSheet.create({
   deviceMainInfo: {
     display: "flex",
     justifyContent: "flex-start",
+    flexWrap: "wrap",
     textAlign: "left",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
     width: "100%",
     padding: 20,
     borderRadius: 15,
@@ -223,6 +222,9 @@ const styles = StyleSheet.create({
     maxHeight: 250,
   },
   image: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     width: 150,
     height: 150,
   },
@@ -289,10 +291,10 @@ const styles = StyleSheet.create({
   input: {
     height: 60,
     margin: 12,
-    width:200,
+    width: 200,
     fontSize: 20,
     borderWidth: 1,
-    borderRadius:10,
+    borderRadius: 10,
     borderColor: "#DCDCDC",
     padding: 10,
   },

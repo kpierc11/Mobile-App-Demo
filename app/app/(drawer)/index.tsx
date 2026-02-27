@@ -16,6 +16,7 @@ import { router } from "expo-router";
 import { Image } from "expo-image";
 import { Packet, PacketTypes } from "@/hooks/Packet";
 import { UnitDataContext } from "@/components/UnitDataProvider";
+import { storage } from "../_layout";
 
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
@@ -25,7 +26,7 @@ const SCAN_DURATION = 5;
 
 interface HbsDevice {
   device: Peripheral;
-  data: any[];
+  storedDeviceName: string;
 }
 
 let currentQueuedPacket: Uint8Array = new Uint8Array();
@@ -37,7 +38,7 @@ const imageMap: Record<number, any> = {
 };
 
 export default function HomeScreen() {
-  const [foundDeviceList, setFoundDeviceList] = useState<Peripheral[]>([]);
+  const [foundDeviceList, setFoundDeviceList] = useState<HbsDevice[]>([]);
   const [restartScan, setRestartScan] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -46,9 +47,9 @@ export default function HomeScreen() {
   const { unitData, setUnitData, setUnitImageURL, unitImageURL } =
     useContext(UnitDataContext);
   const [imageLink, setImageLink] = useState("");
-
-  const sortedDevices = [...foundDeviceList].sort((a, b) => b.rssi - a.rssi);
-
+  const sortedDevices = [...foundDeviceList].sort(
+    (a, b) => b.device.rssi - a.device.rssi,
+  );
   const packet = new Packet();
 
   useEffect(() => {
@@ -66,16 +67,26 @@ export default function HomeScreen() {
       (peripheral: Peripheral) => {
         const { name, advertising, rssi } = peripheral;
         const { isConnectable, localName } = advertising;
-        console.log(localName);
 
         if (
           rssi > -85 &&
           isConnectable &&
           name?.toLowerCase().includes("ble#")
         ) {
-          setFoundDeviceList((prev) => {
-            if (prev.find((p) => p.id === peripheral.id)) return prev;
-            return [peripheral, ...prev];
+          getStoredDeviceName(name).then((storedName) => {
+            setFoundDeviceList((prev) => {
+              // Check if device is already in the list
+              const exists = prev.some(
+                (item) => item.device.id === peripheral.id,
+              );
+              if (exists) {
+                return prev;
+              }
+              return [
+                ...prev,
+                { device: peripheral, storedDeviceName: storedName },
+              ];
+            });
           });
         }
       },
@@ -96,19 +107,21 @@ export default function HomeScreen() {
     };
   }, []);
 
-  const formatBleNameToMac = (
-    name: string | null | undefined,
-  ): string | undefined => {
-    if (!name) {
-      return;
+  const getStoredDeviceName = async (deviceMac: string) => {
+    const storedName = await storage.getItem(deviceMac);
+    if (!storedName) {
+      return deviceMac;
     }
+    return storedName;
+  };
 
+  const formatBleNameToMac = (name: string): string => {
     let hex = name.replace(/^BLE#0x/, "");
     hex = hex.toUpperCase();
 
     const match = hex.match(/.{1,2}/g);
     if (!match) {
-      return;
+      return name;
     }
 
     return match.join(":");
@@ -141,7 +154,7 @@ export default function HomeScreen() {
     if (rssi >= -61) return "wifi-strength-3";
     if (rssi >= -71) return "wifi-strength-2";
     if (rssi >= -81) return "wifi-strength-1";
-    return "wifi-strength-outline"; // Out of usable range
+    return "wifi-strength-outline";
   };
 
   const connectToDevice = async (device: Peripheral) => {
@@ -154,7 +167,18 @@ export default function HomeScreen() {
       }
       await BleManager.connect(device.id);
 
-      setConnectedDevice({ device: device, data: [] });
+      let deviceMac = "";
+
+      if (device.name) {
+        deviceMac = device.name;
+      }
+
+      const storedDeviceName = await getStoredDeviceName(deviceMac);
+
+      setConnectedDevice({
+        device: device,
+        storedDeviceName: storedDeviceName,
+      });
 
       startDeviceNotify(device, packet.sendSetTime());
     } catch (error) {
@@ -392,8 +416,7 @@ export default function HomeScreen() {
                     {formatDeviceID(connectedDevice.device.id)}
                   </Text>
                   <Text style={{ maxWidth: 150 }}>
-                    {formatBleNameToMac(connectedDevice.device.name) ??
-                      "Unknown"}
+                    {connectedDevice.storedDeviceName}
                   </Text>
                 </View>
               </View>
@@ -426,7 +449,7 @@ export default function HomeScreen() {
                         id: connectedDevice.device.id,
                         deviceDetails: JSON.stringify({
                           ...connectedDevice.device,
-                          imageURL:imageLink,
+                          imageURL: imageLink,
                           parsedRegisterData,
                         }),
                       },
@@ -475,13 +498,13 @@ export default function HomeScreen() {
 
             {/* Device list */}
             {sortedDevices
-              .sort((a, b) => b.rssi - a.rssi)
-              .map((device: Peripheral) => (
-                <View key={device.id} style={styles.card}>
+              .sort((a, b) => b.device.rssi - a.device.rssi)
+              .map((item: HbsDevice) => (
+                <View key={item.device.id} style={styles.card}>
                   {/* RSSI */}
                   <View style={{ width: "100%", alignItems: "flex-end" }}>
                     <MaterialCommunityIcons
-                      name={getSignalIcon(device.rssi)}
+                      name={getSignalIcon(item.device.rssi)}
                       size={20}
                       color="#215387"
                     />
@@ -497,10 +520,10 @@ export default function HomeScreen() {
 
                     <View>
                       <Text style={{ fontWeight: "bold" }}>
-                        {formatDeviceID(device.id)}
+                        {formatDeviceID(item.device.id)}
                       </Text>
                       <Text style={{ maxWidth: 150 }}>
-                        {formatBleNameToMac(device.name) ?? "Unknown"}
+                        {item.storedDeviceName}
                       </Text>
                     </View>
                   </View>
@@ -516,7 +539,7 @@ export default function HomeScreen() {
                     >
                       <TouchableOpacity
                         style={styles.button}
-                        onPress={() => connectToDevice(device)}
+                        onPress={() => connectToDevice(item.device)}
                       >
                         <Text style={{ color: "white", fontSize: 12 }}>
                           Connect
@@ -598,22 +621,21 @@ const styles = StyleSheet.create({
   },
   connectedDeviceImage: {
     flex: 1,
-    width: "auto",
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    objectFit: "contain",
+    width: 120,
+    height: 120,
+    borderRadius: 15,
+  },
+  foundDeviceImage: {
+    width: 120,
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "flex-start",
     objectFit: "contain",
     height: 120,
-    borderRadius: 15,
-  },
-  foundDeviceImage: {
-    flex: 1,
-    width: "auto",
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    objectFit: "contain",
-    height: 80,
     borderRadius: 15,
   },
   modalView: {

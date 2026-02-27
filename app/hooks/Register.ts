@@ -113,8 +113,6 @@ export class Register {
       .get(hID)
       ?.find((register) => register.id == registerID);
 
-    console.log({ registerName: reg?.name, value: data });
-
     if (!reg) return;
 
     let formattedValue: string | number = data;
