@@ -196,11 +196,6 @@ export class Packet {
     //Add Checksum
     this.dataView.setUint8(byteOffset++, ck & 0xff);
 
-    console.log(
-      "Send Stop Identify Unit Packet:" +
-        new Uint8Array(this.dataView.buffer, 0, byteOffset),
-    );
-
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
@@ -240,11 +235,6 @@ export class Packet {
 
     //Add Checksum
     this.dataView.setUint8(byteOffset++, ck & 0xff);
-
-    console.log(
-      "Send Identify Unit Packet:" +
-        new Uint8Array(this.dataView.buffer, 0, byteOffset),
-    );
 
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
@@ -302,11 +292,6 @@ export class Packet {
 
     this.dataView.setUint8(byteOffset++, ck & 0xff);
 
-    console.log(
-      "Send Get Registers Packet:" +
-        new Uint8Array(this.dataView.buffer, 0, byteOffset),
-    );
-
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
@@ -318,10 +303,9 @@ export class Packet {
    * @returns
    */
   async parsePacket(packet: Uint8Array) {
-    console.log("Parsing Packet... ");
+
     let packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
 
-    console.log("Parsing Header....");
     this.parseHeaderChunk(packetDataView);
 
     let pckCMD = packet[24];

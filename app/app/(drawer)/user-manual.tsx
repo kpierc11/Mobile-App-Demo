@@ -13,9 +13,6 @@ export default function UserManual() {
       <Pdf
         source={source}
         style={styles.pdf}
-        onLoadComplete={(numberOfPages, filePath) => {
-          console.log(`Loaded ${numberOfPages} pages from ${filePath}`);
-        }}
         onError={(error) => {
           console.log(error);
         }}
