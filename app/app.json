@@ -4,13 +4,13 @@
     "slug": "myquattro",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/myquattro-app-icon-light-blue.png",
+    "icon": "./assets/images/myquattro-app-icon-sky-blue.png",
     "scheme": "app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kpierc11sorganization.mobileapp",
+      "bundleIdentifier": "com.hydrobioscience.myquattro",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -26,9 +26,10 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.BLUETOOTH",
-        "android.permission.BLUETOOTH_ADMIN",
-        "android.permission.BLUETOOTH_CONNECT"
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_ADVERTISE",
+        "ACCESS_FINE_LOCATION"
       ]
     },
     "web": {
@@ -42,7 +43,7 @@
         {
           "image": "./assets/images/hbs-splash.png",
           "imageWidth": 200,
-          "resizeMode": "contain",
+          "resizeMode": "cover",
           "backgroundColor": "#FFFFFF",
           "dark": {
             "backgroundColor": "#FFFFFF"
@@ -50,7 +51,8 @@
         }
       ],
       "react-native-ble-manager",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

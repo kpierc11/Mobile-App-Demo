@@ -106,11 +106,6 @@ export class Packet {
     //Add Checksum
     this.dataView.setUint8(byteOffset++, ck & 0xff);
 
-    console.log(
-      "Send Set Time Packet:" +
-        new Uint8Array(this.dataView.buffer, 0, byteOffset),
-    );
-
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
@@ -150,11 +145,6 @@ export class Packet {
 
     //Add Checksum
     this.dataView.setUint8(byteOffset++, ck & 0xff);
-
-    console.log(
-      "Send Identify Unit Packet:" +
-        new Uint8Array(this.dataView.buffer, 0, byteOffset),
-    );
 
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
@@ -303,7 +293,6 @@ export class Packet {
    * @returns
    */
   async parsePacket(packet: Uint8Array) {
-
     let packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
 
     this.parseHeaderChunk(packetDataView);
@@ -324,13 +313,11 @@ export class Packet {
 
     if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
       const { newPacket, registerData } =
-      this.parseRegisterData(packetDataView);
+        this.parseRegisterData(packetDataView);
       packet = newPacket;
       parsedRegData = registerData;
       packetType = PacketTypes.PARSE_SENSOR_DATA;
     }
-
-  
 
     return { type: packetType, currentPacket: packet, regData: parsedRegData };
   }

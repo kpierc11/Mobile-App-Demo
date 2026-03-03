@@ -1,56 +1,41 @@
-import AliasModalScreen from "@/components/alias-modal";
 import { UnitDataContext } from "@/components/UnitDataProvider";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams } from "expo-router";
 import { useContext, useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  Image,
-  ActivityIndicator,
-  Pressable,
-  Alert,
-  Modal,
-  TextInput,
-} from "react-native";
+import { View, StyleSheet, TextInput } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
-import { storage } from "../_layout";
-import { NavigationMetaContext } from "@react-navigation/native";
+import { SettingsStore } from "@/hooks/use-storage";
 
 export default function EditAlias() {
-  const { currentDeviceID } = useLocalSearchParams();
-  const { unitData, unitImageURL } = useContext(UnitDataContext);
+  const { deviceDetails } = useLocalSearchParams();
   const [deviceName, setDeviceName] = useState("");
 
-  const deviceMacName: string = currentDeviceID.toString();
+  const parsedDetails = deviceDetails
+    ? JSON.parse(deviceDetails as string)
+    : {};
 
-  const storeDeviceName = async () => {
+    console.log(deviceDetails);
+  const {currentDeviceID } = parsedDetails;
+
+  console.log(currentDeviceID);
+
+  const getSavedName = async () => {
     try {
-      await storage.setItem(deviceMacName, deviceName);
+      const savedName = await SettingsStore.getValueFor(currentDeviceID);
+
+      if (savedName) {
+        setDeviceName(savedName);
+      }
+      else {
+        SettingsStore.save(currentDeviceID, deviceName);
+      }
     } catch (error) {
       console.log(error);
     }
   };
 
-  const getStoredDeviceName = async () => {
-    const storedName = await storage.getItem(deviceMacName);
-    if (!storedName) {
-      return "";
-    }
-    return storedName;
-  };
-
   useEffect(() => {
-    getStoredDeviceName().then((storedDeviceName) => {
-      setDeviceName(storedDeviceName);
-    });
-  }, []);
-
-  useEffect(() => {
-    storeDeviceName();
+    getSavedName();
   }, [deviceName]);
 
   return (
@@ -63,12 +48,6 @@ export default function EditAlias() {
           placeholderTextColor={"#C2C2C2"}
           placeholder={"Device Name..."}
         />
-        {/* <Pressable
-          style={[styles.button, styles.buttonClose]}
-          onPress={() => handleModalSubmit}
-        >
-          <Text style={styles.textStyle}>Set Alias</Text>
-        </Pressable> */}
       </View>
     </SafeAreaView>
   );

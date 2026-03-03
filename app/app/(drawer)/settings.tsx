@@ -3,7 +3,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
 } from "react-native";

@@ -16,7 +16,7 @@ import { router } from "expo-router";
 import { Image } from "expo-image";
 import { Packet, PacketTypes } from "@/hooks/Packet";
 import { UnitDataContext } from "@/components/UnitDataProvider";
-import { storage } from "../_layout";
+import { SettingsStore } from "@/hooks/use-storage";
 
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
@@ -65,15 +65,22 @@ export default function HomeScreen() {
 
     const onDiscoveredPeripheralListener = BleManager.onDiscoverPeripheral(
       (peripheral: Peripheral) => {
-        const { name, advertising, rssi } = peripheral;
+        const { name, advertising, rssi, id } = peripheral;
         const { isConnectable, localName } = advertising;
+        console.log(name)
 
         if (
           rssi > -85 &&
           isConnectable &&
           name?.toLowerCase().includes("ble#")
         ) {
-          getStoredDeviceName(name).then((storedName) => {
+          getStoredDeviceName(id).then((storedName) => {
+
+            if(!storedName)
+            {
+              storedName = "";
+            }
+
             setFoundDeviceList((prev) => {
               // Check if device is already in the list
               const exists = prev.some(
@@ -108,11 +115,14 @@ export default function HomeScreen() {
   }, []);
 
   const getStoredDeviceName = async (deviceMac: string) => {
-    const storedName = await storage.getItem(deviceMac);
-    if (!storedName) {
-      return deviceMac;
+    try {
+      const storedName = await SettingsStore.getValueFor(deviceMac);
+      return storedName ? storedName : deviceMac;
     }
-    return storedName;
+    catch (error) {
+      console.log(error)
+    }
+
   };
 
   const formatBleNameToMac = (name: string): string => {
@@ -167,17 +177,24 @@ export default function HomeScreen() {
       }
       await BleManager.connect(device.id);
 
-      let deviceMac = "";
+      let deviceID = "";
 
-      if (device.name) {
-        deviceMac = device.name;
+      if (device.id) {
+        deviceID = device.id;
       }
 
-      const storedDeviceName = await getStoredDeviceName(deviceMac);
+      const storedDeviceName = await getStoredDeviceName(deviceID);
+
+      let storedName = ""
+
+      if(storedDeviceName)
+      {
+        storedName = storedDeviceName;
+      }
 
       setConnectedDevice({
         device: device,
-        storedDeviceName: storedDeviceName,
+        storedDeviceName: storedName,
       });
 
       startDeviceNotify(device, packet.sendSetTime());
@@ -259,7 +276,6 @@ export default function HomeScreen() {
       }
 
       if (type == PacketTypes.PARSE_SENSOR_DATA) {
-        console.log("Packet type is parse register.");
         setUnitData(regData);
         sendPacket = packet.sendGetSensorData();
       }
