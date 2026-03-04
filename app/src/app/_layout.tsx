@@ -3,21 +3,29 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { useColorScheme } from "react-native";
 import UnitDataProvider from "../components/UnitDataProvider";
-import { ThemeProvider } from "../components/ThemeProvider";
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider>
+    <ThemeProvider value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}>
       <UnitDataProvider>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(drawer)" options={{ title: "Scan Devices" }} />
+          <Stack.Screen name="(drawer)" />
           <Stack.Screen
             name="device/[id]"
             options={{
               headerShown: true,
               title: "Device Readings",
+              headerTintColor: "#215387",
+            }}
+          />
+          <Stack.Screen
+            name="settings"
+            options={{
+              headerShown: true,
+              title: "Settings",
               headerTintColor: "#215387",
             }}
           />

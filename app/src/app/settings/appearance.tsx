@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Checkbox } from "expo-checkbox";
 
 export default function Appearance() {
-  const [isChecked, setChecked] = useState(true);
+  const [isDarkMode, setDarkMode] = useState(false);
+  const [isLightMode, setLightMode] = useState(true);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -13,14 +14,28 @@ export default function Appearance() {
         <View style={styles.iconMainContainer}>
           <TouchableOpacity
             style={styles.iconContainer}
-            onPress={() => setChecked(true)}
+            onPress={() => {setLightMode(true); setDarkMode(false);}}
           >
             <Text style={{ marginRight: "auto" }}>Light Mode</Text>
             <Checkbox
               style={styles.checkbox}
-              value={isChecked}
-              onValueChange={setChecked}
-              color={isChecked ? "#215387" : ""}
+              value={isLightMode}
+              onValueChange={setLightMode}
+              color={isLightMode ? "#215387" : ""}
+            />
+          </TouchableOpacity>
+        </View>
+         <View style={styles.iconMainContainer}>
+          <TouchableOpacity
+            style={styles.iconContainer}
+            onPress={() => {setDarkMode(true); setLightMode(false)}}
+          >
+            <Text style={{ marginRight: "auto" }}>Dark Mode</Text>
+            <Checkbox
+              style={styles.checkbox}
+              value={isDarkMode}
+              onValueChange={setDarkMode}
+              color={isDarkMode ? "#215387" : ""}
             />
           </TouchableOpacity>
         </View>

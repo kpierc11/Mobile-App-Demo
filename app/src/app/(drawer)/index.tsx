@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  useColorScheme,
 } from "react-native";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,6 +18,7 @@ import { Image } from "expo-image";
 import { Packet, PacketTypes } from "@/src/utils/Packet";
 import { UnitDataContext } from "@/src/components/UnitDataProvider";
 import { SettingsStore } from "@/src/hooks/useStorage";
+import { useTheme } from "@react-navigation/native";
 
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
@@ -50,6 +52,8 @@ export default function HomeScreen() {
   const sortedDevices = [...foundDeviceList].sort(
     (a, b) => b.device.rssi - a.device.rssi,
   );
+
+  const { colors } = useTheme();
   const packet = new Packet();
 
   useEffect(() => {
@@ -302,7 +306,7 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <View style={{ flex: 1, paddingHorizontal: 20 }}>
-          <Text style={{ textAlign: "center", marginTop: 20, fontSize: 18 }}>
+          <Text style={[{ textAlign: "center", marginTop: 20, fontSize: 18 }, {color:colors.text}]}>
             Scanning for Devices:
           </Text>
           <ActivityIndicator style={{ marginTop: 20 }} size="large" />
@@ -491,7 +495,7 @@ export default function HomeScreen() {
           <>
             {/* Title */}
             <View style={{ alignSelf: "flex-start", marginBottom: 8 }}>
-              <Text style={styles.subHeading}>Found Devices</Text>
+              <Text style={[styles.subHeading]}>Found Devices</Text>
             </View>
 
             {isConnecting ? (
@@ -615,7 +619,7 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     marginBottom: 20,
     padding: 20,
-    backgroundColor:"white",
+    backgroundColor: "white",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.25,

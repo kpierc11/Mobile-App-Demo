@@ -27,7 +27,7 @@ export default function About() {
       >
         <Image
           style={styles.image}
-          source={require("../../../assets/images/myquattro-app-icon.png")}
+          source={require("../../../assets/images/myquattro-app-icon-sky-blue.png")}
           contentFit="cover"
         />
         <View style={{ marginTop: 10, alignItems: "center" }}>

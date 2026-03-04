@@ -2,13 +2,15 @@ import { Drawer } from "expo-router/drawer";
 import CustomDrawerContent from "@/src/components/CustomDrawerContent";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useTheme } from "@react-navigation/native";
 
 export default function DrawerLayout() {
+  const theme = useTheme();
   return (
     <Drawer
       screenOptions={{
         headerShown: true,
-        headerTintColor: "#215387",
+        headerTintColor: theme.colors.text,
         drawerActiveTintColor: "#215387",
       }}
       drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -46,6 +48,7 @@ export default function DrawerLayout() {
         name="settings"
         options={{
           title: "Settings",
+          headerShown:false,
           drawerLabel: "Settings",
           drawerIcon: ({ size, color }) => (
             <MaterialIcons name="settings" size={size} color={color} />
