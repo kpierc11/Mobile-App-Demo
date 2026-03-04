@@ -1,10 +1,9 @@
-import { UnitDataContext } from "@/components/UnitDataProvider";
 import { useLocalSearchParams } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import { View, StyleSheet, TextInput } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SettingsStore } from "@/hooks/use-storage";
+import { SettingsStore } from "@/src/hooks/useStorage";
 
 export default function EditAlias() {
   const { deviceDetails } = useLocalSearchParams();

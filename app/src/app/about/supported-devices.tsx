@@ -10,7 +10,7 @@ export default function SupportedDevices() {
       <ScrollView contentContainerStyle={styles.scrollView}>
         <Image
           style={styles.image}
-          source={require("../../assets/images/devices/solar-controller.png")}
+          source={require("../../../assets/images/devices/solar-controller.png")}
           contentFit="cover"
         />
         <View style={styles.subTitleContainer}>
@@ -21,7 +21,7 @@ export default function SupportedDevices() {
         </View>
         <Image
           style={styles.image}
-          source={require("../../assets/images/devices/ac-power-supply.png")}
+          source={require("../../../assets/images/devices/ac-power-supply.png")}
           contentFit="cover"
         />
         <View style={styles.subTitleContainer}>
@@ -32,7 +32,7 @@ export default function SupportedDevices() {
         </View>
         <Image
           style={styles.image}
-          source={require("../../assets/images/devices/24-volt-ac-dc-power.png")}
+          source={require("../../../assets/images/devices/24-volt-ac-dc-power.png")}
           contentFit="cover"
         />
         <View style={styles.subTitleContainer}>

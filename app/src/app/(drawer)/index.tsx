@@ -14,9 +14,9 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { router } from "expo-router";
 import { Image } from "expo-image";
-import { Packet, PacketTypes } from "@/hooks/Packet";
-import { UnitDataContext } from "@/components/UnitDataProvider";
-import { SettingsStore } from "@/hooks/use-storage";
+import { Packet, PacketTypes } from "@/src/utils/Packet";
+import { UnitDataContext } from "@/src/components/UnitDataProvider";
+import { SettingsStore } from "@/src/hooks/useStorage";
 
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
@@ -32,9 +32,9 @@ interface HbsDevice {
 let currentQueuedPacket: Uint8Array = new Uint8Array();
 
 const imageMap: Record<number, any> = {
-  24: require("../../assets/images/devices/solar-controller.png"),
-  25: require("../../assets/images/devices/ac-power-supply.png"),
-  40: require("../../assets/images/devices/24-volt-ac-dc-power.png"),
+  24: require("../../../assets/images/devices/solar-controller.png"),
+  25: require("../../../assets/images/devices/ac-power-supply.png"),
+  40: require("../../../assets/images/devices/24-volt-ac-dc-power.png"),
 };
 
 export default function HomeScreen() {
@@ -67,7 +67,6 @@ export default function HomeScreen() {
       (peripheral: Peripheral) => {
         const { name, advertising, rssi, id } = peripheral;
         const { isConnectable, localName } = advertising;
-        console.log(name)
 
         if (
           rssi > -85 &&
@@ -75,9 +74,7 @@ export default function HomeScreen() {
           name?.toLowerCase().includes("ble#")
         ) {
           getStoredDeviceName(id).then((storedName) => {
-
-            if(!storedName)
-            {
+            if (!storedName) {
               storedName = "";
             }
 
@@ -118,11 +115,9 @@ export default function HomeScreen() {
     try {
       const storedName = await SettingsStore.getValueFor(deviceMac);
       return storedName ? storedName : deviceMac;
+    } catch (error) {
+      console.log(error);
     }
-    catch (error) {
-      console.log(error)
-    }
-
   };
 
   const formatBleNameToMac = (name: string): string => {
@@ -169,14 +164,22 @@ export default function HomeScreen() {
 
   const connectToDevice = async (device: Peripheral) => {
     setIsConnecting(true);
-
+    const CONNECTION_TIMEOUT = 6000; // 10 seconds, adjust as needed
     try {
       if (connectedDevice?.device.id === device.id) return;
       if (connectedDevice) {
         await disconnectDevice(connectedDevice.device);
       }
-      await BleManager.connect(device.id);
 
+      await Promise.race([
+        BleManager.connect(device.id),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Connection timed out")),
+            CONNECTION_TIMEOUT,
+          ),
+        ),
+      ]);
       let deviceID = "";
 
       if (device.id) {
@@ -185,10 +188,9 @@ export default function HomeScreen() {
 
       const storedDeviceName = await getStoredDeviceName(deviceID);
 
-      let storedName = ""
+      let storedName = "";
 
-      if(storedDeviceName)
-      {
+      if (storedDeviceName) {
         storedName = storedDeviceName;
       }
 
@@ -530,7 +532,7 @@ export default function HomeScreen() {
                   <View style={{ flexDirection: "row", gap: 30 }}>
                     <Image
                       style={styles.foundDeviceImage}
-                      source={require("../../assets/images/hbs-splash.png")}
+                      source={require("../../../assets/images/hbs-splash.png")}
                       contentFit="cover"
                     />
 
@@ -538,9 +540,7 @@ export default function HomeScreen() {
                       <Text style={{ fontWeight: "bold" }}>
                         {formatDeviceID(item.device.id)}
                       </Text>
-                      <Text style={{ maxWidth: 150 }}>
-                        {item.storedDeviceName}
-                      </Text>
+                      <Text style={{ maxWidth: 150 }}>{item.device.name}</Text>
                     </View>
                   </View>
 
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     marginBottom: 20,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor:"white",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.25,

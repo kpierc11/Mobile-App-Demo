@@ -1,4 +1,3 @@
-import { Link } from "expo-router";
 import { ActivityIndicator, Modal, StyleSheet, Text, View } from "react-native";
 
 export default function AliasModalScreen({ text }: any) {

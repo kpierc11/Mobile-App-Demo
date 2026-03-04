@@ -95,7 +95,7 @@ export class Register {
     this.exposedACDCReg = [
       "Sonic Power",
       "Internal Temperature (C)",
-      "Input voltage",
+      "Input Voltage",
       "Sonic 1 Voltage",
       "Sonic 2 Voltage",
       "Sonic 1 Status",

@@ -1,34 +1,29 @@
-// CustomDrawer.js
-import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, Image } from "react-native";
 import {
   DrawerContentScrollView,
   DrawerItemList,
-  DrawerItem,
-} from '@react-navigation/drawer';
+} from "@react-navigation/drawer";
 
-export default function CustomDrawerContent(props:any) {
+export default function CustomDrawerContent(props: any) {
   return (
     <DrawerContentScrollView {...props}>
       <View style={styles.header}>
         <Image
-          source={require('../assets/images/hbs-splash.png')}
+          source={require("../../assets/images/hbs-splash.png")}
           style={styles.avatar}
         />
       </View>
 
       <DrawerItemList {...props} />
-
-     
     </DrawerContentScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    display:"flex", 
-    
-    width:"100%",
+    display: "flex",
+
+    width: "100%",
     padding: 10,
   },
   avatar: {
@@ -38,8 +33,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   username: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

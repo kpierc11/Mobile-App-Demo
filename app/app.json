@@ -12,7 +12,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.hydrobioscience.myquattro",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSBluetoothAlwaysUsageDescription": "This app uses Bluetooth to connect to Hydro BioScience devices.",
+        "NSBluetoothPeripheralUsageDescription": "Bluetooth is required to communicate with your device.",
+        "NSLocationWhenInUseUsageDescription": "Location is required for Bluetooth device scanning."
       }
     },
     "android": {

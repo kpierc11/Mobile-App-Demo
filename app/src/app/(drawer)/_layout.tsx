@@ -1,5 +1,5 @@
 import { Drawer } from "expo-router/drawer";
-import CustomDrawerContent from "@/components/custom-drawer-content";
+import CustomDrawerContent from "@/src/components/CustomDrawerContent";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 

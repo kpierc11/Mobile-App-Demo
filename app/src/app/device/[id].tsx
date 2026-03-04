@@ -1,4 +1,4 @@
-import { UnitDataContext } from "@/components/UnitDataProvider";
+import { UnitDataContext } from "@/src/components/UnitDataProvider";
 import { useLocalSearchParams, router } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import * as Progress from "react-native-progress";
 import Feather from "@expo/vector-icons/Feather";
-import { SettingsStore } from "@/hooks/use-storage";
+import { SettingsStore } from "@/src/hooks/useStorage";
 
 export default function DeviceDetails() {
   const { deviceDetails } = useLocalSearchParams();
@@ -42,7 +42,7 @@ export default function DeviceDetails() {
   return (
     <ScrollView contentContainerStyle={styles.scrollView}>
       <Image
-        source={require("../../assets/images/hbs-splash.png")}
+        source={require("../../../assets/images/hbs-splash.png")}
         style={styles.image}
         resizeMode="contain"
       />
