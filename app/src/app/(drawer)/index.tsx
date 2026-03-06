@@ -461,7 +461,7 @@ export default function HomeScreen() {
               </View>
 
               {/* Device Info */}
-              <View style={{ flexDirection: "row", gap: 30 }}>
+              <View style={{ flexDirection: "row", gap: 30, }}>
                 {imageLink ? (
                   <Image
                     style={styles.connectedDeviceImage}
@@ -481,7 +481,7 @@ export default function HomeScreen() {
                   </View>
                 )}
 
-                <View>
+                <View style={{flexBasis:"50%"}}>
                   <Text
                     style={{ fontWeight: "bold", color: theme.colors.text }}
                   >
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "flex-start",
     objectFit: "cover",
-    width: 120,
+    width: "auto",
     height: 120,
     borderRadius: 15,
   },
@@ -715,6 +715,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "flex-start",
     objectFit: "contain",
+    
     height: 120,
     borderRadius: 15,
   },

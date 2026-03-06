@@ -1,7 +1,6 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
-import { useColorScheme } from "react-native";
 import UnitDataProvider from "../components/UnitDataProvider";
 import { ThemeProvider } from "@react-navigation/native";
 import { HbsTheme, HbsDarkTheme } from "../constants/theme";
