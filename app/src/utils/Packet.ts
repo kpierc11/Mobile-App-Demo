@@ -81,17 +81,17 @@ export class Packet {
     //Number of bytes for the time value
     this.dataView.setUint8(byteOffset++, 4);
 
-    // Set Time
     const now = new Date();
-    const hours = now.getHours() - 12;
-    const minutes = now.getMinutes() / 60;
+    const hours = now.getHours();
+    const minutes = now.getMinutes(); 
 
-    console.log("Date:", now.getHours() - 12);
+    // Convert to total minutes
+    const totalMinutes = hours * 60 + minutes;
 
-    // Write as 4-byte big-endian integer
-    this.dataView.setUint16(byteOffset, hours);
+    // Write as 4 bytes: 2-byte little-endian total minutes + 2-byte padding
+    this.dataView.setUint16(byteOffset, totalMinutes, true);
     byteOffset += 2;
-    this.dataView.setUint16(byteOffset, minutes);
+    this.dataView.setUint16(byteOffset, 0, true);
     byteOffset += 2;
     adjustedHeaderSize += 7;
 
@@ -305,11 +305,6 @@ export class Packet {
       packet = this.sendGetSensorData();
       packetType = PacketTypes.GET_SENSOR_DATA;
     }
-
-    // if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
-    //   packet = this.sendGetSensorData();
-    //   packetType = PacketTypes.GET_SENSOR_DATA;
-    // }
 
     if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
       const { newPacket, registerData } =

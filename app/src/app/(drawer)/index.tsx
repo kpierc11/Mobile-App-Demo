@@ -6,6 +6,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  PermissionsAndroid,
+  Platform,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -38,7 +40,6 @@ const imageMap: Record<number, any> = {
   40: require("../../../assets/images/devices/24-volt-ac-dc-power.png"),
 };
 
-
 export default function HomeScreen() {
   const [foundDeviceList, setFoundDeviceList] = useState<HbsDevice[]>([]);
   const [restartScan, setRestartScan] = useState<boolean>(false);
@@ -55,71 +56,100 @@ export default function HomeScreen() {
 
   const theme = useTheme();
   const packet = new Packet();
-  const foundDeviceImage = theme.dark ? require("../../../assets/images/hbs-logo-white.png") : require("../../../assets/images/hbs-splash.png");
-
+  const foundDeviceImage = theme.dark
+    ? require("../../../assets/images/hbs-logo-white.png")
+    : require("../../../assets/images/hbs-splash.png");
 
   useEffect(() => {
-    BleManager.start({ showAlert: true }).then(() => {
+    const initBLE = async () => {
+      const permissionsGranted = await requestBLEPermissions();
+      if (!permissionsGranted) {
+        console.log("BLE permissions not granted");
+        return;
+      }
+
+      await BleManager.start({ showAlert: true });
+
       getConnectedDevices();
       startScanningDevices();
-    });
 
-    const onStopListener = BleManager.onStopScan(() => {
-      setRestartScan(false);
-      setIsScanning(false);
-    });
+      const onStopListener = BleManager.onStopScan(() => {
+        setRestartScan(false);
+        setIsScanning(false);
+      });
 
-    const onDiscoveredPeripheralListener = BleManager.onDiscoverPeripheral(
-      (peripheral: Peripheral) => {
-        const { name, advertising, rssi, id } = peripheral;
-        const { isConnectable, localName } = advertising;
+      const onDiscoveredPeripheralListener = BleManager.onDiscoverPeripheral(
+        (peripheral: Peripheral) => {
+          const { name, advertising, rssi, id} = peripheral;
+          const { isConnectable } = advertising;
 
-        if (
-          rssi > -85 &&
-          isConnectable &&
-          name?.toLowerCase().includes("ble#")
-        ) {
-          getStoredDeviceName(id).then((storedName) => {
-            if (!storedName) {
-              storedName = "";
-            }
-
-            setFoundDeviceList((prev) => {
-              const exists = prev.some(
-                (item) => item.device.id === peripheral.id,
-              );
-              if (exists) {
-                return prev;
-              }
-              return [
-                ...prev,
-                { device: peripheral, storedDeviceName: storedName },
-              ];
+          if (
+            rssi > -85 &&
+            isConnectable &&
+            name?.toLowerCase().includes("ble#")
+          ) {
+            getStoredDeviceName(id).then((storedName) => {
+              setFoundDeviceList((prev) => {
+                const exists = prev.some((item) => item.device.id === id);
+                if (exists) return prev;
+                return [
+                  ...prev,
+                  { device: peripheral, storedDeviceName: storedName || "" },
+                ];
+              });
             });
-          });
-        }
-      },
-    );
-
-    const onDidUpdateValueForCharacteristicListener =
-      BleManager.onDidUpdateValueForCharacteristic(
-        ({ value, peripheral }: any) => {
-          const returnData = new Uint8Array(value);
-          handleResponsePacket(returnData, peripheral);
+          }
         },
       );
 
-    return () => {
-      onStopListener.remove();
-      onDiscoveredPeripheralListener.remove();
-      onDidUpdateValueForCharacteristicListener.remove();
+      const onDidUpdateValueForCharacteristicListener =
+        BleManager.onDidUpdateValueForCharacteristic(
+          ({ value, peripheral }: any) => {
+            const returnData = new Uint8Array(value);
+            handleResponsePacket(returnData, peripheral);
+          },
+        );
+
+      return () => {
+        onStopListener.remove();
+        onDiscoveredPeripheralListener.remove();
+        onDidUpdateValueForCharacteristicListener.remove();
+      };
     };
+
+    initBLE();
   }, []);
 
-  const getStoredDeviceName = async (deviceMac: string) => {
+  async function requestBLEPermissions() {
+    if (Platform.OS === "android" && Platform.Version >= 31) {
+      // Android 12+
+      const granted = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      ]);
+      return granted;
+    } else if (Platform.OS === "android") {
+      // Android <12
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: "Location Permission",
+          message: "BLE scanning requires location permission",
+          buttonNeutral: "Ask Me Later",
+          buttonNegative: "Cancel",
+          buttonPositive: "OK",
+        },
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    return true;
+  }
+
+  const getStoredDeviceName = async (deviceID: string) => {
     try {
-      const storedName = await SettingsStore.getValueFor(deviceMac);
-      return storedName ? storedName : deviceMac;
+      const storedName = await SettingsStore.getValueFor(deviceID);
+      return storedName ? storedName : deviceID;
     } catch (error) {
       console.log(error);
     }
@@ -479,11 +509,7 @@ export default function HomeScreen() {
                     <Text style={{ color: "white", fontSize: 12 }}>
                       Disconnect
                     </Text>
-                    <AntDesign
-                      name="disconnect"
-                      size={14}
-                      color={"white"}
-                    />
+                    <AntDesign name="disconnect" size={14} color={"white"} />
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity
@@ -531,7 +557,7 @@ export default function HomeScreen() {
                     textAlign: "center",
                     marginTop: 20,
                     fontSize: 18,
-                    color:theme.colors.text
+                    color: theme.colors.text,
                   }}
                 >
                   Connecting to Device...
@@ -595,9 +621,7 @@ export default function HomeScreen() {
                         style={styles.button}
                         onPress={() => connectToDevice(item.device)}
                       >
-                        <Text
-                          style={{ color: "white", fontSize: 12 }}
-                        >
+                        <Text style={{ color: "white", fontSize: 12 }}>
                           Connect
                         </Text>
                         <MaterialCommunityIcons
