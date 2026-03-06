@@ -1,22 +1,19 @@
-import React, { useState } from "react";
+import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  Linking,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useTheme } from "@react-navigation/native";
 
 export default function About() {
+  const theme = useTheme();
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>About</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>About</Text>
+
       <View
         style={{
           display: "flex",
@@ -27,15 +24,16 @@ export default function About() {
       >
         <Image
           style={styles.image}
-          source={require("../../../assets/images/myquattro-app-icon-sky-blue.png")}
+          source={require("../../../../assets/images/myquattro-app-icon-sky-blue.png")}
           contentFit="cover"
         />
         <View style={{ marginTop: 10, alignItems: "center" }}>
-          <Text>MyQuattro</Text>
-          <Text>Version: Beta 1.0.0</Text>
+          <Text style={{ color: theme.colors.text }}>MyQuattro</Text>
+          <Text style={{ color: theme.colors.text }}>Version: Beta 1.0.0</Text>
         </View>
       </View>
-      <View style={styles.settingsCard}>
+
+      <View style={[styles.settingsCard, { backgroundColor: theme.colors.card }]}>
         <View style={styles.iconMainContainer}>
           <TouchableOpacity
             style={styles.iconContainer}
@@ -43,37 +41,39 @@ export default function About() {
               Linking.openURL("https://www.hydro-bioscience.com/about-us/")
             }
           >
-            <MaterialCommunityIcons name="web" size={24} color="black" />
-            <Text style={{ marginRight: "auto" }}>Who We Are</Text>
+            <MaterialCommunityIcons name="web" size={24} color={theme.colors.text} />
+            <Text style={{ marginRight: "auto", color: theme.colors.text }}>Who We Are</Text>
             <MaterialIcons
               style={{ alignContent: "flex-end" }}
               name="chevron-right"
               size={20}
-              color="black"
+              color={theme.colors.text}
             />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.iconContainer}
-            onPress={() =>
-                router.navigate("/about/supported-devices")
-            }
+            onPress={() => router.navigate("/about/supported-devices")}
           >
-            <MaterialIcons name="device-hub" size={24} color="black" />
-            <Text style={{ marginRight: "auto" }}>Supported Devices</Text>
+            <MaterialIcons name="device-hub" size={24} color={theme.colors.text} />
+            <Text style={{ marginRight: "auto", color: theme.colors.text }}>
+              Supported Devices
+            </Text>
             <MaterialIcons
               style={{ alignContent: "flex-end" }}
               name="chevron-right"
               size={20}
-              color="black"
+              color={theme.colors.text}
             />
           </TouchableOpacity>
         </View>
       </View>
-      <View
-        style={{ display: "flex", alignItems: "center", marginTop: "100%" }}
-      >
-        <Text>©{new Date().getFullYear()} Hydro Bioscience</Text>
+
+      
+      <View style={{ alignItems: "center", marginTop: "100%" }}>
+        <Text style={{ color: theme.colors.text }}>
+          ©{new Date().getFullYear()} Hydro Bioscience
+        </Text>
       </View>
     </SafeAreaView>
   );
@@ -83,7 +83,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    backgroundColor: "#f5f5f5",
   },
   title: {
     fontSize: 24,
@@ -101,14 +100,13 @@ const styles = StyleSheet.create({
     width: "100%",
     borderWidth: 0,
     padding: 10,
-    backgroundColor: "#fff",
     borderRadius: 10,
   },
 
   iconMainContainer: {
     display: "flex",
     marginRight: "auto",
-    gap: 20,
+    gap: 10,
     width: "100%",
   },
   iconContainer: {

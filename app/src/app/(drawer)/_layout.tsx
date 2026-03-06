@@ -6,12 +6,15 @@ import { useTheme } from "@react-navigation/native";
 
 export default function DrawerLayout() {
   const theme = useTheme();
+
   return (
     <Drawer
       screenOptions={{
         headerShown: true,
-        headerTintColor: theme.colors.text,
-        drawerActiveTintColor: "#215387",
+        headerTintColor: theme.colors.primary,
+        drawerActiveTintColor: theme.colors.primary,
+        drawerInactiveTintColor: theme.colors.text,
+        drawerStyle: { backgroundColor: theme.colors.card },
       }}
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
@@ -34,22 +37,19 @@ export default function DrawerLayout() {
         options={{
           title: "About",
           drawerLabel: "About",
+          headerShown: false,
           drawerIcon: ({ size, color }) => (
-            <MaterialCommunityIcons
-              name="file-document"
-              size={size}
-              color={color}
-            />
+            <MaterialCommunityIcons name="file-document" size={size} color={color} />
           ),
         }}
       />
-
       <Drawer.Screen
         name="settings"
         options={{
           title: "Settings",
-          headerShown:false,
+          headerShown: false,
           drawerLabel: "Settings",
+          headerBackButtonDisplayMode: "default",
           drawerIcon: ({ size, color }) => (
             <MaterialIcons name="settings" size={size} color={color} />
           ),
@@ -61,11 +61,7 @@ export default function DrawerLayout() {
           title: "Privacy Policy",
           drawerLabel: "Privacy Policy",
           drawerIcon: ({ size, color }) => (
-            <MaterialCommunityIcons
-              name="file-document"
-              size={size}
-              color={color}
-            />
+            <MaterialCommunityIcons name="file-document" size={size} color={color} />
           ),
         }}
       />
@@ -75,11 +71,7 @@ export default function DrawerLayout() {
           title: "User Manual",
           drawerLabel: "User Manual",
           drawerIcon: ({ size, color }) => (
-            <MaterialCommunityIcons
-              name="file-document"
-              size={size}
-              color={color}
-            />
+            <MaterialCommunityIcons name="file-document" size={size} color={color} />
           ),
         }}
       />

@@ -6,9 +6,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BleManager, { Peripheral } from "react-native-ble-manager";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -39,6 +38,7 @@ const imageMap: Record<number, any> = {
   40: require("../../../assets/images/devices/24-volt-ac-dc-power.png"),
 };
 
+
 export default function HomeScreen() {
   const [foundDeviceList, setFoundDeviceList] = useState<HbsDevice[]>([]);
   const [restartScan, setRestartScan] = useState<boolean>(false);
@@ -53,8 +53,10 @@ export default function HomeScreen() {
     (a, b) => b.device.rssi - a.device.rssi,
   );
 
-  const { colors } = useTheme();
+  const theme = useTheme();
   const packet = new Packet();
+  const foundDeviceImage = theme.dark ? require("../../../assets/images/hbs-logo-white.png") : require("../../../assets/images/hbs-splash.png");
+
 
   useEffect(() => {
     BleManager.start({ showAlert: true }).then(() => {
@@ -83,7 +85,6 @@ export default function HomeScreen() {
             }
 
             setFoundDeviceList((prev) => {
-              // Check if device is already in the list
               const exists = prev.some(
                 (item) => item.device.id === peripheral.id,
               );
@@ -168,7 +169,7 @@ export default function HomeScreen() {
 
   const connectToDevice = async (device: Peripheral) => {
     setIsConnecting(true);
-    const CONNECTION_TIMEOUT = 6000; // 10 seconds, adjust as needed
+    const CONNECTION_TIMEOUT = 6000;
     try {
       if (connectedDevice?.device.id === device.id) return;
       if (connectedDevice) {
@@ -306,7 +307,12 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <View style={{ flex: 1, paddingHorizontal: 20 }}>
-          <Text style={[{ textAlign: "center", marginTop: 20, fontSize: 18 }, {color:colors.text}]}>
+          <Text
+            style={[
+              { textAlign: "center", marginTop: 20, fontSize: 18 },
+              { color: theme.colors.text },
+            ]}
+          >
             Scanning for Devices:
           </Text>
           <ActivityIndicator style={{ marginTop: 20 }} size="large" />
@@ -319,7 +325,9 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <View style={{ flex: 1, paddingHorizontal: 20 }}>
-          <Text style={styles.deviceTitle}>HBS Devices</Text>
+          <Text style={[styles.deviceTitle, { color: theme.colors.text }]}>
+            HBS Devices
+          </Text>
           <ScrollView
             contentContainerStyle={styles.scrollView}
             refreshControl={
@@ -329,10 +337,16 @@ export default function HomeScreen() {
               />
             }
           >
-            <View style={styles.card}>
-              <Text style={styles.subHeading}>No devices found.</Text>
-              <Text>Pull down to scan for devices.</Text>
-              <Text>Make sure Bluetooth is turned on.</Text>
+            <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
+              <Text style={[styles.subHeading, { color: theme.colors.text }]}>
+                No devices found.
+              </Text>
+              <Text style={{ color: theme.colors.text }}>
+                Pull down to scan for devices.
+              </Text>
+              <Text style={{ color: theme.colors.text }}>
+                Make sure Bluetooth is turned on.
+              </Text>
             </View>
           </ScrollView>
         </View>
@@ -342,7 +356,9 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.deviceTitle}>HBS Devices</Text>
+      <Text style={[styles.deviceTitle, { color: theme.colors.text }]}>
+        HBS Devices
+      </Text>
       <ScrollView
         contentContainerStyle={styles.scrollView}
         refreshControl={
@@ -356,12 +372,14 @@ export default function HomeScreen() {
           <>
             {/* Header */}
             <View style={{ alignSelf: "flex-start" }}>
-              <Text style={styles.subHeading}>Connected Device</Text>
+              <Text style={[styles.subHeading, { color: theme.colors.text }]}>
+                Connected Device
+              </Text>
             </View>
 
             {/* Device cards */}
 
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
               {/* RSSI */}
               <View
                 style={{
@@ -384,7 +402,7 @@ export default function HomeScreen() {
                   <MaterialCommunityIcons
                     name={"lightbulb-off-outline"}
                     size={28}
-                    color="#215387"
+                    color={theme.colors.primary}
                   />
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -399,7 +417,7 @@ export default function HomeScreen() {
                     style={{ marginRight: 20 }}
                     name={"lightbulb-on-10"}
                     size={28}
-                    color="#215387"
+                    color={theme.colors.primary}
                   />
                 </TouchableOpacity>
 
@@ -407,7 +425,7 @@ export default function HomeScreen() {
                   <MaterialCommunityIcons
                     name={getSignalIcon(connectedDevice.device.rssi)}
                     size={20}
-                    color="#215387"
+                    color={theme.colors.primary}
                   />
                 </View>
               </View>
@@ -426,7 +444,7 @@ export default function HomeScreen() {
                       display: "flex",
                       justifyContent: "center",
                       height: 120,
-                      width: 120,
+                      width: 100,
                     }}
                   >
                     <ActivityIndicator style={{ marginTop: 20 }} size="large" />
@@ -434,10 +452,12 @@ export default function HomeScreen() {
                 )}
 
                 <View>
-                  <Text style={{ fontWeight: "bold" }}>
+                  <Text
+                    style={{ fontWeight: "bold", color: theme.colors.text }}
+                  >
                     {formatDeviceID(connectedDevice.device.id)}
                   </Text>
-                  <Text style={{ maxWidth: 150 }}>
+                  <Text style={{ maxWidth: 150, color: theme.colors.text }}>
                     {connectedDevice.storedDeviceName}
                   </Text>
                 </View>
@@ -459,7 +479,11 @@ export default function HomeScreen() {
                     <Text style={{ color: "white", fontSize: 12 }}>
                       Disconnect
                     </Text>
-                    <AntDesign name="disconnect" size={14} color="white" />
+                    <AntDesign
+                      name="disconnect"
+                      size={14}
+                      color={"white"}
+                    />
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity
@@ -484,7 +508,7 @@ export default function HomeScreen() {
                   <MaterialCommunityIcons
                     name="arrow-right"
                     size={12}
-                    color="white"
+                    color={"white"}
                   />
                 </TouchableOpacity>
               </View>
@@ -495,7 +519,9 @@ export default function HomeScreen() {
           <>
             {/* Title */}
             <View style={{ alignSelf: "flex-start", marginBottom: 8 }}>
-              <Text style={[styles.subHeading]}>Found Devices</Text>
+              <Text style={[styles.subHeading, { color: theme.colors.text }]}>
+                Found Devices
+              </Text>
             </View>
 
             {isConnecting ? (
@@ -505,6 +531,7 @@ export default function HomeScreen() {
                     textAlign: "center",
                     marginTop: 20,
                     fontSize: 18,
+                    color:theme.colors.text
                   }}
                 >
                   Connecting to Device...
@@ -522,13 +549,16 @@ export default function HomeScreen() {
             {sortedDevices
               .sort((a, b) => b.device.rssi - a.device.rssi)
               .map((item: HbsDevice) => (
-                <View key={item.device.id} style={styles.card}>
+                <View
+                  key={item.device.id}
+                  style={[styles.card, { backgroundColor: theme.colors.card }]}
+                >
                   {/* RSSI */}
                   <View style={{ width: "100%", alignItems: "flex-end" }}>
                     <MaterialCommunityIcons
                       name={getSignalIcon(item.device.rssi)}
                       size={20}
-                      color="#215387"
+                      color={theme.colors.primary}
                     />
                   </View>
 
@@ -536,15 +566,19 @@ export default function HomeScreen() {
                   <View style={{ flexDirection: "row", gap: 30 }}>
                     <Image
                       style={styles.foundDeviceImage}
-                      source={require("../../../assets/images/hbs-splash.png")}
+                      source={foundDeviceImage}
                       contentFit="cover"
                     />
 
                     <View>
-                      <Text style={{ fontWeight: "bold" }}>
+                      <Text
+                        style={{ fontWeight: "bold", color: theme.colors.text }}
+                      >
                         {formatDeviceID(item.device.id)}
                       </Text>
-                      <Text style={{ maxWidth: 150 }}>{item.device.name}</Text>
+                      <Text style={{ maxWidth: 150, color: theme.colors.text }}>
+                        {item.device.name}
+                      </Text>
                     </View>
                   </View>
 
@@ -561,13 +595,15 @@ export default function HomeScreen() {
                         style={styles.button}
                         onPress={() => connectToDevice(item.device)}
                       >
-                        <Text style={{ color: "white", fontSize: 12 }}>
+                        <Text
+                          style={{ color: "white", fontSize: 12 }}
+                        >
                           Connect
                         </Text>
                         <MaterialCommunityIcons
                           name="connection"
                           size={14}
-                          color="white"
+                          color={"white"}
                         />
                       </TouchableOpacity>
                     </View>
@@ -644,7 +680,7 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "flex-start",
-    objectFit: "contain",
+    objectFit: "cover",
     width: 120,
     height: 120,
     borderRadius: 15,

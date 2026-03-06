@@ -3,18 +3,23 @@ import {
   DrawerContentScrollView,
   DrawerItemList,
 } from "@react-navigation/drawer";
+import { useTheme } from "@react-navigation/native";
 
 export default function CustomDrawerContent(props: any) {
+  const theme = useTheme(); 
+
+  const drawerImage = theme.dark ? require("../../assets/images/hbs-logo-white.png") : require("../../assets/images/hbs-splash.png");
+  
   return (
     <DrawerContentScrollView {...props}>
       <View style={styles.header}>
         <Image
-          source={require("../../assets/images/hbs-splash.png")}
+          source={drawerImage}
           style={styles.avatar}
         />
       </View>
 
-      <DrawerItemList {...props} />
+      <DrawerItemList style={{color:theme.colors.text}} {...props} />
     </DrawerContentScrollView>
   );
 }

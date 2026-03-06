@@ -3,69 +3,47 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { useColorScheme } from "react-native";
 import UnitDataProvider from "../components/UnitDataProvider";
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { ThemeProvider } from "@react-navigation/native";
+import { HbsTheme, HbsDarkTheme } from "../constants/theme";
+import { useEffect, useState } from "react";
+import { SettingsStore } from "../hooks/useStorage";
+import { ThemeContext, ThemeMode } from "../components/ThemeContext";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const [mode, setMode] = useState<ThemeMode>("dark");
+  const theme = mode === "dark" ? HbsDarkTheme : HbsTheme;
+
+  const getCurrentThemeMode = async () => {
+    try {
+      const colorMode = await SettingsStore.getValueFor("themeColorMode");
+
+      if (colorMode === "light" || colorMode === "dark") {
+        setMode(colorMode);
+      }
+    } catch (error) {
+      console;
+    }
+  };
+
+  useEffect(() => {
+    getCurrentThemeMode();
+  }, []);
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DefaultTheme : DefaultTheme}>
-      <UnitDataProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(drawer)" />
-          <Stack.Screen
-            name="device/[id]"
-            options={{
-              headerShown: true,
-              title: "Device Readings",
-              headerTintColor: "#215387",
+    <ThemeContext value={{ mode, setMode }}>
+      <ThemeProvider value={theme}>
+        <UnitDataProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              headerTintColor: theme.colors.primary,
             }}
-          />
-          <Stack.Screen
-            name="settings"
-            options={{
-              headerShown: true,
-              title: "Settings",
-              headerTintColor: "#215387",
-            }}
-          />
-          <Stack.Screen
-            name="settings/appearance"
-            options={{
-              headerShown: true,
-              title: "Appearance",
-              headerTintColor: "#215387",
-            }}
-          />
-          <Stack.Screen
-            name="settings/language"
-            options={{
-              headerShown: true,
-              title: "Language",
-              headerTintColor: "#215387",
-            }}
-          />
-
-          <Stack.Screen
-            name="about/supported-devices"
-            options={{
-              headerShown: true,
-              title: "Supported Devices",
-              headerTintColor: "#215387",
-            }}
-          />
-          <Stack.Screen
-            name="device/edit-alias"
-            options={{
-              headerShown: true,
-              title: "Edit Device Name",
-              headerTintColor: "#215387",
-            }}
-          />
-        </Stack>
-
-        <StatusBar style={colorScheme === "light" ? "light" : "dark"} />
-      </UnitDataProvider>
-    </ThemeProvider>
+          >
+            <Stack.Screen name="(drawer)" />
+          </Stack>
+          <StatusBar style={mode === "dark" ? "light" : "dark"} />
+        </UnitDataProvider>
+      </ThemeProvider>
+    </ThemeContext>
   );
 }

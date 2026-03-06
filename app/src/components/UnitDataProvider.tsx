@@ -1,6 +1,6 @@
-import { ParsedRegisterData } from "@/interfaces/parsedRegisterData";
+import { ParsedRegisterData } from "../types/parsedRegisterData";
 import { createContext, useState, ReactNode } from "react";
-
+ 
 type UnitDataContextType = {
   unitData: ParsedRegisterData[];
   unitImageURL: string;

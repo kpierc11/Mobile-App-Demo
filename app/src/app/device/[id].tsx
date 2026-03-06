@@ -13,11 +13,16 @@ import {
 import * as Progress from "react-native-progress";
 import Feather from "@expo/vector-icons/Feather";
 import { SettingsStore } from "@/src/hooks/useStorage";
+import { useTheme } from "@react-navigation/native";
 
 export default function DeviceDetails() {
+  const theme = useTheme();
   const { deviceDetails } = useLocalSearchParams();
   const { unitData } = useContext(UnitDataContext);
   const [storedDeviceName, setStoredDeviceName] = useState("");
+  const foundDeviceImage = theme.dark
+    ? require("../../../assets/images/hbs-logo-white.png")
+    : require("../../../assets/images/hbs-splash.png");
 
   const parsedDetails = deviceDetails
     ? JSON.parse(deviceDetails as string)
@@ -27,27 +32,43 @@ export default function DeviceDetails() {
 
   const getStoredDeviceName = async () => {
     try {
-      const storedName = await SettingsStore.getValueFor(name);
-
-      return storedName;
+      const storedName = await SettingsStore.getValueFor(id);
+      if (storedName) {
+        setStoredDeviceName(storedName);
+      }
     } catch (error) {
       console.log(error);
     }
   };
 
+  useEffect(() => {
+    getStoredDeviceName();
+  });
+
   if (!deviceDetails) {
-    return <Text>No device data available.</Text>;
+    return (
+      <Text style={{ color: theme.colors.text }}>
+        No device data available.
+      </Text>
+    );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollView}>
+    <ScrollView
+      contentContainerStyle={[
+        styles.scrollView,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
       <Image
-        source={require("../../../assets/images/hbs-splash.png")}
+        source={foundDeviceImage}
         style={styles.image}
         resizeMode="contain"
       />
 
-      <View style={styles.settingsCard}>
+      <View
+        style={[styles.settingsCard, { backgroundColor: theme.colors.card }]}
+      >
         <View style={styles.iconMainContainer}>
           {/* Device Name */}
           <TouchableOpacity
@@ -55,21 +76,31 @@ export default function DeviceDetails() {
             onPress={() =>
               router.push({
                 pathname: "/device/edit-alias",
-                params: { currentDeviceID: id },
+                params: { currentDeviceID: id, currentDeviceName: name },
               })
             }
           >
             <View style={styles.row}>
-              <Text style={styles.label}>Name:</Text>
-              <Text style={styles.value}>{storedDeviceName || name}</Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                Name:
+              </Text>
+              <Text style={[styles.value, { color: theme.colors.text }]}>
+                {storedDeviceName ? storedDeviceName : name}
+              </Text>
             </View>
-            <Feather name="edit" size={18} color="black" />
+            <Feather name="edit" size={18} color={theme.colors.text} />
           </TouchableOpacity>
 
           {/* Device ID */}
-          <View style={styles.iconContainer}>
-            <Text style={styles.label}>ID:</Text>
-            <Text style={styles.value}>{id}</Text>
+          <View style={{display:"flex", flexDirection:"row", gap:2}}>
+            <Text style={[styles.label, { color: theme.colors.text, marginRight:5, }]}>
+              ID:
+            </Text>
+            <View style={{display:"flex", flexWrap:"wrap"}}>
+            <Text style={[styles.value, { color: theme.colors.text, flexWrap:"wrap", width:250}]}>
+              {id}
+            </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -78,22 +109,48 @@ export default function DeviceDetails() {
       <View style={styles.cardWrapper}>
         {unitData.length > 0 ? (
           unitData.map(({ registerName, value }) => (
-            <View key={registerName} style={styles.card}>
-              {value === "Enabled" && <View style={styles.statusEnabled} />}
-              {value === "Disabled" && <View style={styles.statusDisabled} />}
-
-              {registerName.includes("Voltage") && (
-                <Progress.Bar progress={0.8} width={100} />
+            <View
+              key={registerName}
+              style={[styles.card, { backgroundColor: theme.colors.card }]}
+            >
+              {value === "Enabled" && (
+                <View
+                  style={[styles.statusEnabled, { backgroundColor: "#8FBC8B" }]}
+                />
+              )}
+              {value === "Disabled" && (
+                <View
+                  style={[
+                    styles.statusDisabled,
+                    { backgroundColor: "#CD5C5C" },
+                  ]}
+                />
               )}
 
-              <Text style={styles.subHeading}>{registerName}</Text>
-              <Text style={styles.deviceInfoText}>{value}</Text>
+              {registerName.includes("Voltage") && (
+                <Progress.Bar
+                  progress={0.8}
+                  width={100}
+                  color={theme.colors.primary}
+                />
+              )}
+
+              <Text style={[styles.subHeading, { color: theme.colors.text }]}>
+                {registerName}
+              </Text>
+              <Text
+                style={[styles.deviceInfoText, { color: theme.colors.text }]}
+              >
+                {value}
+              </Text>
             </View>
           ))
         ) : (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading Device Data...</Text>
-            <ActivityIndicator size="large" />
+            <Text style={[styles.loadingText, { color: theme.colors.text }]}>
+              Loading Device Data...
+            </Text>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
         )}
       </View>
@@ -109,18 +166,18 @@ const styles = StyleSheet.create({
   },
 
   image: {
-    width: 150,
-    height: 150,
+    width: 200,
+    height: 200,
     marginBottom: 10,
   },
 
   settingsCard: {
-    width: "auto",
+    width: "95%",
     padding: 10,
-    backgroundColor: "#fff",
     borderRadius: 10,
     margin: 20,
-    marginBottom: 20,
+    marginTop: 0,
+    marginBottom: 40,
   },
 
   iconMainContainer: {
@@ -144,12 +201,11 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "black",
+    gap: 10,
   },
 
   value: {
     fontSize: 16,
-    color: "black",
   },
 
   cardWrapper: {
@@ -162,7 +218,6 @@ const styles = StyleSheet.create({
     margin: "1%",
     marginBottom: 20,
     padding: 20,
-    backgroundColor: "#fff",
     borderRadius: 10,
     elevation: 2,
     maxHeight: 250,

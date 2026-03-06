@@ -1,33 +1,35 @@
 import { useLocalSearchParams } from "expo-router";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, StyleSheet, TextInput } from "react-native";
-
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SettingsStore } from "@/src/hooks/useStorage";
+import { useTheme } from "@react-navigation/native";
 
 export default function EditAlias() {
-  const { deviceDetails } = useLocalSearchParams();
-  const [deviceName, setDeviceName] = useState("");
-
-  const parsedDetails = deviceDetails
-    ? JSON.parse(deviceDetails as string)
-    : {};
-
-    console.log(deviceDetails);
-  const {currentDeviceID } = parsedDetails;
-
-  console.log(currentDeviceID);
+  const theme = useTheme();
+  const { currentDeviceID, currentDeviceName } = useLocalSearchParams();
+  const [deviceName, setDeviceName] = useState(currentDeviceName);
 
   const getSavedName = async () => {
     try {
-      const savedName = await SettingsStore.getValueFor(currentDeviceID);
+      const savedName = await SettingsStore.getValueFor(
+        currentDeviceID.toString(),
+      );
 
       if (savedName) {
         setDeviceName(savedName);
       }
-      else {
-        SettingsStore.save(currentDeviceID, deviceName);
-      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const saveNewName = async () => {
+    try {
+      await SettingsStore.save(
+        currentDeviceID.toString(),
+        deviceName.toString(),
+      );
     } catch (error) {
       console.log(error);
     }
@@ -35,17 +37,30 @@ export default function EditAlias() {
 
   useEffect(() => {
     getSavedName();
+  }, []);
+
+  useEffect(() => {
+    if (deviceName !== currentDeviceName) {
+      saveNewName();
+    }
   }, [deviceName]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.settingsCard}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <View
+        style={[styles.settingsCard, { backgroundColor: theme.colors.card }]}
+      >
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            { color: theme.colors.text, borderColor: theme.colors.border },
+          ]}
           onChangeText={setDeviceName}
-          value={deviceName}
-          placeholderTextColor={"#C2C2C2"}
+          value={deviceName.toString()}
           placeholder={"Device Name..."}
+          placeholderTextColor={theme.colors.border}
         />
       </View>
     </SafeAreaView>
@@ -56,7 +71,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    backgroundColor: "#f5f5f5",
   },
   settingsCard: {
     display: "flex",
@@ -65,13 +79,12 @@ const styles = StyleSheet.create({
     width: "100%",
     borderWidth: 0,
     padding: 1,
-    backgroundColor: "#fff",
     borderRadius: 10,
   },
   input: {
     height: 40,
     margin: 2,
-    width: 200,
+    width: "100%",
     fontSize: 16,
     borderRadius: 10,
     padding: 10,

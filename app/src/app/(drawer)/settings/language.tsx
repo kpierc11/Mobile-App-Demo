@@ -2,25 +2,28 @@ import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Checkbox } from "expo-checkbox";
+import { useTheme } from "@react-navigation/native";
 
 export default function Language() {
   const [isChecked, setChecked] = useState(true);
+  const theme = useTheme();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Language</Text>
-      <View style={styles.settingsCard}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>Language</Text>
+
+      <View style={[styles.settingsCard, { backgroundColor: theme.colors.card }]}>
         <View style={styles.iconMainContainer}>
           <TouchableOpacity
             style={styles.iconContainer}
             onPress={() => setChecked(true)}
           >
-            <Text style={{ marginRight: "auto" }}>English</Text>
+            <Text style={{ marginRight: "auto", color: theme.colors.text }}>English</Text>
             <Checkbox
               style={styles.checkbox}
               value={isChecked}
               onValueChange={setChecked}
-              color={isChecked ? "#215387" : ""}
+              color={isChecked ? theme.colors.primary : undefined}
             />
           </TouchableOpacity>
         </View>
@@ -33,7 +36,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    backgroundColor: "#f5f5f5",
   },
   title: {
     fontSize: 24,
@@ -51,7 +53,6 @@ const styles = StyleSheet.create({
     width: "100%",
     borderWidth: 0,
     padding: 10,
-    backgroundColor: "#fff",
     borderRadius: 10,
   },
 
