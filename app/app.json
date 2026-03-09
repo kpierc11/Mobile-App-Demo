@@ -47,13 +47,14 @@
           "resizeMode": "cover",
           "backgroundColor": "#FFFFFF",
           "dark": {
-            "backgroundColor": "#FFFFFF"
+            "image": "./assets/images/hbs-logo-white.png",
+            "backgroundColor": "#121212"
           }
         }
       ],
       "react-native-ble-manager",
-      "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

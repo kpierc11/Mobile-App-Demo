@@ -295,6 +295,8 @@ export class Packet {
   async parsePacket(packet: Uint8Array) {
     let packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
 
+    console.log(packetDataView);
+
     this.parseHeaderChunk(packetDataView);
 
     let pckCMD = packet[24];

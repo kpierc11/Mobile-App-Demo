@@ -79,7 +79,7 @@ export default function HomeScreen() {
 
       const onDiscoveredPeripheralListener = BleManager.onDiscoverPeripheral(
         (peripheral: Peripheral) => {
-          const { name, advertising, rssi, id} = peripheral;
+          const { name, advertising, rssi, id } = peripheral;
           const { isConnectable } = advertising;
 
           if (
@@ -148,9 +148,8 @@ export default function HomeScreen() {
   const getStoredDeviceName = async (deviceID: string) => {
     try {
       const storedName = await SettingsStore.getValueFor(deviceID);
-      return storedName ? storedName : deviceID;
-    } catch (error) {
-    }
+      return storedName ? storedName : "";
+    } catch (error) {}
   };
 
   const formatBleNameToMac = (name: string): string => {
@@ -182,9 +181,7 @@ export default function HomeScreen() {
         allowDuplicates: false,
       };
       await BleManager.scan(scanOptions);
-    } catch (error) {
-     
-    }
+    } catch (error) {}
   };
 
   const getSignalIcon = (rssi: number) => {
@@ -213,6 +210,19 @@ export default function HomeScreen() {
           ),
         ),
       ]);
+
+      if (Platform.OS === "android" && Platform.Version >= 21) {
+        BleManager.requestMTU(device.id, 512)
+          .then((mtu) => {
+            // Success code
+            console.log("MTU size changed to " + mtu + " bytes");
+          })
+          .catch((error) => {
+            // Failure code
+            console.log(error);
+          });
+      }
+
       let deviceID = "";
 
       if (device.id) {
@@ -234,31 +244,35 @@ export default function HomeScreen() {
 
       startDeviceNotify(device, packet.sendSetTime());
     } catch (error) {
+      console.log(error);
     } finally {
       setIsConnecting(false);
+      console.log("connected");
     }
   };
 
   const disconnectDevice = async (device: Peripheral) => {
     try {
-      await BleManager.stopNotification(device.id, SERVICE_UUID, WRITE_CHAR);
+      try {
+        await BleManager.stopNotification(device.id, SERVICE_UUID, WRITE_CHAR);
+      } catch (e) {
+        console.log("Notification was not active");
+      }
+
       await BleManager.disconnect(device.id);
       setImageLink("");
       setUnitData([]);
 
       setConnectedDevice(undefined);
     } catch (error) {
+      console.log(error);
     }
   };
 
   const getConnectedDevices = async () => {
     try {
-      const peripherals = await BleManager.getConnectedPeripherals([]);
-      // peripherals.map((peripheral) => {
-      //   setConnectedDevice([{ device: peripheral, data: [] }]);
-      // });
-    } catch (error) {
-    }
+      await BleManager.getConnectedPeripherals([]);
+    } catch (error) {}
   };
 
   const startDeviceNotify = async (device: Peripheral, packet: Uint8Array) => {
@@ -272,8 +286,7 @@ export default function HomeScreen() {
         ]);
         currentQueuedPacket = packet;
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
@@ -282,8 +295,7 @@ export default function HomeScreen() {
     }
     try {
       await BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet]);
-    } catch (error) {
-    }
+    } catch (error) {}
 
     currentQueuedPacket = packet;
   };
@@ -314,8 +326,7 @@ export default function HomeScreen() {
           sendNewPacket(id, sendPacket);
         }, 3000);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleDeviceListRefresh = () => {
@@ -452,7 +463,7 @@ export default function HomeScreen() {
               </View>
 
               {/* Device Info */}
-              <View style={{ flexDirection: "row", gap: 30, }}>
+              <View style={{ flexDirection: "row", gap: 30 }}>
                 {imageLink ? (
                   <Image
                     style={styles.connectedDeviceImage}
@@ -472,14 +483,16 @@ export default function HomeScreen() {
                   </View>
                 )}
 
-                <View style={{flexBasis:"50%"}}>
+                <View style={{ flexBasis: "50%" }}>
                   <Text
                     style={{ fontWeight: "bold", color: theme.colors.text }}
                   >
                     {formatDeviceID(connectedDevice.device.id)}
                   </Text>
                   <Text style={{ maxWidth: 150, color: theme.colors.text }}>
-                    {connectedDevice.storedDeviceName}
+                    {connectedDevice.storedDeviceName
+                      ? connectedDevice.storedDeviceName
+                      : connectedDevice.device.name}
                   </Text>
                 </View>
               </View>
@@ -565,7 +578,7 @@ export default function HomeScreen() {
             {/* Device list */}
             {sortedDevices
               .sort((a, b) => b.device.rssi - a.device.rssi)
-              .map((item: HbsDevice) => (
+              .map((item: HbsDevice, index) => (
                 <View
                   key={item.device.id}
                   style={[styles.card, { backgroundColor: theme.colors.card }]}
@@ -586,15 +599,14 @@ export default function HomeScreen() {
                       source={foundDeviceImage}
                       contentFit="cover"
                     />
-
                     <View>
-                      <Text
-                        style={{ fontWeight: "bold", color: theme.colors.text }}
-                      >
+                      <Text style={{ color: theme.colors.text }}>
                         {formatDeviceID(item.device.id)}
                       </Text>
                       <Text style={{ maxWidth: 150, color: theme.colors.text }}>
-                        {item.device.name}
+                        {item.storedDeviceName
+                          ? item.storedDeviceName
+                          : item.device.name}
                       </Text>
                     </View>
                   </View>
@@ -696,8 +708,8 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "flex-start",
     objectFit: "cover",
-    width: "auto",
     height: 120,
+    width: 150,
     borderRadius: 15,
   },
   foundDeviceImage: {
@@ -706,8 +718,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "flex-start",
     objectFit: "contain",
-    
-    height: 120,
+    height: 80,
     borderRadius: 15,
   },
   modalView: {

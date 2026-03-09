@@ -26,7 +26,7 @@ export default function EditAlias() {
   const saveNewName = async () => {
     try {
       await SettingsStore.save(
-        currentDeviceID.toString(),
+        currentDeviceID.toString().replace(":", "-"),
         deviceName.toString(),
       );
     } catch (error) {

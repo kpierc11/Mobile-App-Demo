@@ -36,8 +36,7 @@ export default function DeviceDetails() {
       if (storedName) {
         setStoredDeviceName(storedName);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   useEffect(() => {
@@ -91,14 +90,24 @@ export default function DeviceDetails() {
           </TouchableOpacity>
 
           {/* Device ID */}
-          <View style={{display:"flex", flexDirection:"row", gap:2}}>
-            <Text style={[styles.label, { color: theme.colors.text, marginRight:5, }]}>
+          <View style={{ display: "flex", flexDirection: "row", gap: 2 }}>
+            <Text
+              style={[
+                styles.label,
+                { color: theme.colors.text, marginRight: 5 },
+              ]}
+            >
               ID:
             </Text>
-            <View style={{display:"flex", flexWrap:"wrap"}}>
-            <Text style={[styles.value, { color: theme.colors.text, flexWrap:"wrap", width:250}]}>
-              {id}
-            </Text>
+            <View style={{ display: "flex", flexWrap: "wrap" }}>
+              <Text
+                style={[
+                  styles.value,
+                  { color: theme.colors.text, flexWrap: "wrap", width: 250 },
+                ]}
+              >
+                {id}
+              </Text>
             </View>
           </View>
         </View>
