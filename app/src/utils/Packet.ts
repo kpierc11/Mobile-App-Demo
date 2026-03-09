@@ -419,16 +419,4 @@ export class Packet {
 
     return { newPacket: new Uint8Array(), registerData: regData };
   }
-
-  logHeaderDetails() {
-    console.log(`Signature: ${this.header.signature}`);
-    console.log(`Header Length: ${this.header.length}`);
-    console.log(`Destination fID: ${this.header.destination.fID}`);
-    console.log(`Destination hID: ${this.header.destination.hID}`);
-    console.log(`Destination serNum: ${this.header.destination.serNum}`);
-
-    console.log(`Source fID: ${this.header.source.fID}`);
-    console.log(`Source hID: ${this.header.source.hID}`);
-    console.log(`Source serNum: ${this.header.source.serNum}`);
-  }
 }

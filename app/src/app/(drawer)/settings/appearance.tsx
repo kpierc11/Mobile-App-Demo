@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Checkbox } from "expo-checkbox";
@@ -15,7 +15,6 @@ export default function AppearanceSettings() {
     try {
       await SettingsStore.save("themeColorMode", mode);
     } catch (error) {
-      console.log(error);
     }
   };
 

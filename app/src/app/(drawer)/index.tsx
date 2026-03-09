@@ -64,7 +64,6 @@ export default function HomeScreen() {
     const initBLE = async () => {
       const permissionsGranted = await requestBLEPermissions();
       if (!permissionsGranted) {
-        console.log("BLE permissions not granted");
         return;
       }
 
@@ -151,7 +150,6 @@ export default function HomeScreen() {
       const storedName = await SettingsStore.getValueFor(deviceID);
       return storedName ? storedName : deviceID;
     } catch (error) {
-      console.log(error);
     }
   };
 
@@ -185,7 +183,7 @@ export default function HomeScreen() {
       };
       await BleManager.scan(scanOptions);
     } catch (error) {
-      console.log("Couldn't scan devices:", error);
+     
     }
   };
 
@@ -236,7 +234,6 @@ export default function HomeScreen() {
 
       startDeviceNotify(device, packet.sendSetTime());
     } catch (error) {
-      console.log("Couldn't connect to device", error);
     } finally {
       setIsConnecting(false);
     }
@@ -251,7 +248,6 @@ export default function HomeScreen() {
 
       setConnectedDevice(undefined);
     } catch (error) {
-      console.log("Couldn't disconnect device", error);
     }
   };
 
@@ -262,7 +258,6 @@ export default function HomeScreen() {
       //   setConnectedDevice([{ device: peripheral, data: [] }]);
       // });
     } catch (error) {
-      console.log("Couldn't get connected devices:", error);
     }
   };
 
@@ -278,19 +273,16 @@ export default function HomeScreen() {
         currentQueuedPacket = packet;
       }
     } catch (error) {
-      console.log("Couldn't start device notification", error);
     }
   };
 
   const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
     if (packet == currentQueuedPacket) {
-      console.log("Current packet the same not qued.");
       return;
     }
     try {
       await BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet]);
     } catch (error) {
-      console.log("Couldn't send new packet:", error);
     }
 
     currentQueuedPacket = packet;
@@ -323,7 +315,6 @@ export default function HomeScreen() {
         }, 3000);
       }
     } catch (error) {
-      console.log("Couldn't parse packet...", error);
     }
   };
 

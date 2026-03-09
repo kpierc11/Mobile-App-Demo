@@ -1,4 +1,3 @@
-import React from "react";
 import { ScrollView, View, Text, StyleSheet, Linking } from "react-native";
 import { useTheme } from "@react-navigation/native";
 

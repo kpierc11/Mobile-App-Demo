@@ -20,7 +20,6 @@ export default function EditAlias() {
         setDeviceName(savedName);
       }
     } catch (error) {
-      console.log(error);
     }
   };
 
@@ -31,7 +30,6 @@ export default function EditAlias() {
         deviceName.toString(),
       );
     } catch (error) {
-      console.log(error);
     }
   };
 

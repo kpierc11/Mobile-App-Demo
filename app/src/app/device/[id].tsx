@@ -37,7 +37,6 @@ export default function DeviceDetails() {
         setStoredDeviceName(storedName);
       }
     } catch (error) {
-      console.log(error);
     }
   };
 

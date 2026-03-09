@@ -1,4 +1,3 @@
-import React from "react";
 import { StyleSheet, View, Dimensions } from "react-native";
 import Pdf from "react-native-pdf";
 
@@ -14,7 +13,6 @@ export default function UserManual() {
         source={source}
         style={styles.pdf}
         onError={(error) => {
-          console.log(error);
         }}
       />
     </View>

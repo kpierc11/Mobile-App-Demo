@@ -1,4 +1,4 @@
-import { ActivityIndicator, Modal, StyleSheet, Text, View } from "react-native";
+import { Modal, StyleSheet, Text, View } from "react-native";
 
 export default function AliasModalScreen({ text }: any) {
   return (
