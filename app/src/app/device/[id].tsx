@@ -32,7 +32,7 @@ export default function DeviceDetails() {
 
   const getStoredDeviceName = async () => {
     try {
-      const storedName = await SettingsStore.getValueFor(id);
+      const storedName = await SettingsStore.getValueFor(id.replaceAll(":", "-"));
       if (storedName) {
         setStoredDeviceName(storedName);
       }

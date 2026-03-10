@@ -10,10 +10,12 @@ export default function EditAlias() {
   const { currentDeviceID, currentDeviceName } = useLocalSearchParams();
   const [deviceName, setDeviceName] = useState(currentDeviceName);
 
+  const formattedDeviceID = currentDeviceID.toString().replaceAll(":", "-");
+
   const getSavedName = async () => {
     try {
       const savedName = await SettingsStore.getValueFor(
-        currentDeviceID.toString(),
+        formattedDeviceID,
       );
 
       if (savedName) {
@@ -26,10 +28,11 @@ export default function EditAlias() {
   const saveNewName = async () => {
     try {
       await SettingsStore.save(
-        currentDeviceID.toString().replace(":", "-"),
+        formattedDeviceID,
         deviceName.toString(),
       );
     } catch (error) {
+      console.log(error)
     }
   };
 

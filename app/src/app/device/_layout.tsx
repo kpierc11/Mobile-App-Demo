@@ -33,6 +33,12 @@ export default function DeviceLayout() {
           title: "Edit Alias",
         }}
       />
+      <Stack.Screen
+        name="quattro-schedule"
+        options={{
+          title: "Quattro Schedule",
+        }}
+      />
     </Stack>
   );
 }

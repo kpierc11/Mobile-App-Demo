@@ -147,7 +147,7 @@ export default function HomeScreen() {
 
   const getStoredDeviceName = async (deviceID: string) => {
     try {
-      const storedName = await SettingsStore.getValueFor(deviceID);
+      const storedName = await SettingsStore.getValueFor(deviceID.replaceAll(":", "-"));
       return storedName ? storedName : "";
     } catch (error) {}
   };
@@ -213,12 +213,8 @@ export default function HomeScreen() {
 
       if (Platform.OS === "android" && Platform.Version >= 21) {
         BleManager.requestMTU(device.id, 512)
-          .then((mtu) => {
-            // Success code
-            console.log("MTU size changed to " + mtu + " bytes");
-          })
+          .then((mtu) => {})
           .catch((error) => {
-            // Failure code
             console.log(error);
           });
       }
