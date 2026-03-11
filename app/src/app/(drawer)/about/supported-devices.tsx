@@ -1,8 +1,16 @@
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Linking,
+  TouchableOpacity,
+} from "react-native";
 import { Image } from "expo-image";
 import { useTheme } from "@react-navigation/native";
+import Feather from "@expo/vector-icons/Feather";
 
 export default function SupportedDevices() {
   const theme = useTheme();
@@ -27,6 +35,17 @@ export default function SupportedDevices() {
           <Text style={{ color: theme.colors.text }}>
             Model Number:00QA-40V160A65-01
           </Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              Linking.openURL(
+                "https://www.hydro-bioscience.com/media/MNUL0059-V001.pdf",
+              )
+            }
+          >
+            <Text style={{ color: "white"}}>See Manual</Text>
+            <Feather name="external-link" size={16} color="white" />
+          </TouchableOpacity>
         </View>
 
         <Image
@@ -41,6 +60,17 @@ export default function SupportedDevices() {
           <Text style={{ color: theme.colors.text }}>
             Model Number:44Qx-40V160A65-01
           </Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              Linking.openURL(
+                "https://www.hydro-bioscience.com/media/MNUL0057-V001.pdf",
+              )
+            }
+          >
+            <Text style={{ color: "white"}}>See Manual</Text>
+            <Feather name="external-link" size={16} color="white" />
+          </TouchableOpacity>
         </View>
 
         <Image
@@ -55,6 +85,17 @@ export default function SupportedDevices() {
           <Text style={{ color: theme.colors.text }}>
             Model Number:45QA-40V160A65-01
           </Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              Linking.openURL(
+                "https://www.hydro-bioscience.com/media/MNUL0058-V001.pdf",
+              )
+            }
+          >
+            <Text style={{ color: "white"}}>See Manual</Text>
+            <Feather name="external-link" size={16} color="white" />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -72,7 +113,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   subTitleContainer: {
+    display: "flex",
     marginBottom: 60,
+    justifyContent: "center",
+    alignItems: "flex-start",
   },
   subTitle: {
     fontSize: 18,
@@ -95,5 +139,16 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 20,
     borderRadius: 15,
+  },
+  button: {
+    backgroundColor: "#215387",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 5,
+    padding: 10,
+    marginTop: 20,
+    width: "auto",
   },
 });

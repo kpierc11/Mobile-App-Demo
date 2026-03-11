@@ -1,6 +1,7 @@
 import { DrawerToggleButton } from "@react-navigation/drawer";
 import { useTheme } from "@react-navigation/native";
 import { Stack } from "expo-router";
+import { View } from "react-native";
 
 export default function AboutLayout() {
   const theme = useTheme();
@@ -10,8 +11,10 @@ export default function AboutLayout() {
         name="index"
         options={{
           title: "About",
-          headerLeft: () => (
-            <DrawerToggleButton tintColor={theme.colors.primary} />
+          headerLeft: (props) => (
+            <View style={{ marginLeft: -16 }}>
+              <DrawerToggleButton {...props} tintColor={theme.colors.primary} />
+            </View>
           ),
         }}
       />

@@ -12,25 +12,19 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BleManager, { Peripheral } from "react-native-ble-manager";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import { router } from "expo-router";
-import { Image } from "expo-image";
 import { Packet, PacketTypes } from "@/src/utils/Packet";
 import { UnitDataContext } from "@/src/components/UnitDataProvider";
 import { SettingsStore } from "@/src/hooks/useStorage";
 import { useTheme } from "@react-navigation/native";
+import { HbsDevice } from "@/src/types/hbsDevice";
+import FoundDeviceCard from "@/src/components/FoundDeviceCard";
+import ConnectedDeviceCard from "@/src/components/ConnectedDeviceCard";
 
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
 const READ_CHAR = "00001002-0000-1000-8000-00805f9b34fb";
 const READ_DESC = "00002902-0000-1000-8000-00805f9b34fb";
 const SCAN_DURATION = 5;
-
-interface HbsDevice {
-  device: Peripheral;
-  storedDeviceName: string;
-}
 
 let currentQueuedPacket: Uint8Array = new Uint8Array();
 
@@ -46,7 +40,6 @@ export default function HomeScreen() {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevice, setConnectedDevice] = useState<HbsDevice>();
-  const [parsedRegisterData, setParsedRegisterData] = useState<any>([]);
   const { unitData, setUnitData, setUnitImageURL, unitImageURL } =
     useContext(UnitDataContext);
   const [imageLink, setImageLink] = useState("");
@@ -93,7 +86,11 @@ export default function HomeScreen() {
                 if (exists) return prev;
                 return [
                   ...prev,
-                  { device: peripheral, storedDeviceName: storedName || "" },
+                  {
+                    device: peripheral,
+                    storedDeviceName: storedName || "",
+                    imageLink: "",
+                  },
                 ];
               });
             });
@@ -147,7 +144,9 @@ export default function HomeScreen() {
 
   const getStoredDeviceName = async (deviceID: string) => {
     try {
-      const storedName = await SettingsStore.getValueFor(deviceID.replaceAll(":", "-"));
+      const storedName = await SettingsStore.getValueFor(
+        deviceID.replaceAll(":", "-"),
+      );
       return storedName ? storedName : "";
     } catch (error) {}
   };
@@ -233,9 +232,12 @@ export default function HomeScreen() {
         storedName = storedDeviceName;
       }
 
+      console.log()
+
       setConnectedDevice({
         device: device,
         storedDeviceName: storedName,
+        imageLink: imageMap[packet.header.source.hID],
       });
 
       startDeviceNotify(device, packet.sendSetTime());
@@ -305,8 +307,9 @@ export default function HomeScreen() {
       let sendPacket = null;
       const { type, currentPacket, regData } = parsedReturnData;
 
-      setImageLink(imageMap[packet.header.source.hID]);
-      setUnitImageURL(imageLink);
+      if (connectedDevice) {
+        connectedDevice.imageLink = imageMap[packet.header.source.hID];
+      }
 
       if (type == PacketTypes.GET_SENSOR_DATA) {
         sendPacket = currentPacket;
@@ -405,146 +408,36 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            {/* Device cards */}
-
-            <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
-              {/* RSSI */}
-              <View
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  flexDirection: "row",
-                  width: "100%",
-                  marginBottom: 20,
-                }}
-              >
-                <TouchableOpacity
-                  style={{ marginRight: "auto" }}
-                  onPress={() =>
-                    sendNewPacket(
-                      connectedDevice.device.id,
-                      packet.sendStopIdentifyUnit(),
-                    )
-                  }
-                >
-                  <MaterialCommunityIcons
-                    name={"lightbulb-off-outline"}
-                    size={28}
-                    color={theme.colors.primary}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() =>
-                    sendNewPacket(
-                      connectedDevice.device.id,
-                      packet.sendIdentifyUnit(),
-                    )
-                  }
-                >
-                  <MaterialCommunityIcons
-                    style={{ marginRight: 20 }}
-                    name={"lightbulb-on-10"}
-                    size={28}
-                    color={theme.colors.primary}
-                  />
-                </TouchableOpacity>
-
-                <View>
-                  <MaterialCommunityIcons
-                    name={getSignalIcon(connectedDevice.device.rssi)}
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                </View>
-              </View>
-
-              {/* Device Info */}
-              <View style={{ flexDirection: "row", gap: 30 }}>
-                {imageLink ? (
-                  <Image
-                    style={styles.connectedDeviceImage}
-                    source={imageLink}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <View
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      height: 120,
-                      width: 100,
-                    }}
-                  >
-                    <ActivityIndicator style={{ marginTop: 20 }} size="large" />
-                  </View>
-                )}
-
-                <View style={{ flexBasis: "50%" }}>
-                  <Text
-                    style={{ fontWeight: "bold", color: theme.colors.text }}
-                  >
-                    {formatDeviceID(connectedDevice.device.id)}
-                  </Text>
-                  <Text style={{ maxWidth: 150, color: theme.colors.text }}>
-                    {connectedDevice.storedDeviceName
-                      ? connectedDevice.storedDeviceName
-                      : connectedDevice.device.name}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Disconnect */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                }}
-              >
-                <View style={{ marginRight: "auto" }}>
-                  <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => disconnectDevice(connectedDevice.device)}
-                  >
-                    <Text style={{ color: "white", fontSize: 12 }}>
-                      Disconnect
-                    </Text>
-                    <AntDesign name="disconnect" size={14} color={"white"} />
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => {
-                    router.push({
-                      pathname: "/device/[id]",
-                      params: {
-                        id: connectedDevice.device.id,
-                        deviceDetails: JSON.stringify({
-                          ...connectedDevice.device,
-                          imageURL: imageLink,
-                          parsedRegisterData,
-                        }),
-                      },
-                    });
-                  }}
-                >
-                  <Text style={{ color: "white", fontSize: 12 }}>
-                    DeviceDetails
-                  </Text>
-                  <MaterialCommunityIcons
-                    name="arrow-right"
-                    size={12}
-                    color={"white"}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
+            <ConnectedDeviceCard
+              connectedDevice={connectedDevice}
+              imageLink={connectedDevice.imageLink}
+              getSignalIcon={getSignalIcon(connectedDevice.device.rssi)}
+              identifyUnit={() =>
+                sendNewPacket(
+                  connectedDevice.device.id,
+                  packet.sendIdentifyUnit(),
+                )
+              }
+              stopIdentifyUnit={() =>
+                sendNewPacket(
+                  connectedDevice.device.id,
+                  packet.sendStopIdentifyUnit(),
+                )
+              }
+              disconnectDevice={() => disconnectDevice(connectedDevice.device)}
+            ></ConnectedDeviceCard>
           </>
         )}
         {sortedDevices.length > 0 ? (
           <>
             {/* Title */}
-            <View style={{ alignSelf: "flex-start", marginBottom: 8 }}>
+            <View
+              style={{
+                alignSelf: "flex-start",
+                marginBottom: 2,
+                marginTop: 10,
+              }}
+            >
               <Text style={[styles.subHeading, { color: theme.colors.text }]}>
                 Found Devices
               </Text>
@@ -572,67 +465,14 @@ export default function HomeScreen() {
             )}
 
             {/* Device list */}
-            {sortedDevices
-              .sort((a, b) => b.device.rssi - a.device.rssi)
-              .map((item: HbsDevice, index) => (
-                <View
-                  key={item.device.id}
-                  style={[styles.card, { backgroundColor: theme.colors.card }]}
-                >
-                  {/* RSSI */}
-                  <View style={{ width: "100%", alignItems: "flex-end" }}>
-                    <MaterialCommunityIcons
-                      name={getSignalIcon(item.device.rssi)}
-                      size={20}
-                      color={theme.colors.primary}
-                    />
-                  </View>
-
-                  {/* Device info */}
-                  <View style={{ flexDirection: "row", gap: 30 }}>
-                    <Image
-                      style={styles.foundDeviceImage}
-                      source={foundDeviceImage}
-                      contentFit="cover"
-                    />
-                    <View>
-                      <Text style={{ color: theme.colors.text }}>
-                        {formatDeviceID(item.device.id)}
-                      </Text>
-                      <Text style={{ maxWidth: 150, color: theme.colors.text }}>
-                        {item.storedDeviceName
-                          ? item.storedDeviceName
-                          : item.device.name}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Connect button */}
-                  <View style={{ flexDirection: "row", gap: 5, marginTop: 5 }}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        gap: 5,
-                        marginRight: "auto",
-                      }}
-                    >
-                      <TouchableOpacity
-                        style={styles.button}
-                        onPress={() => connectToDevice(item.device)}
-                      >
-                        <Text style={{ color: "white", fontSize: 12 }}>
-                          Connect
-                        </Text>
-                        <MaterialCommunityIcons
-                          name="connection"
-                          size={14}
-                          color={"white"}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              ))}
+            {sortedDevices.map((item: HbsDevice, index) => (
+              <FoundDeviceCard
+                key={index}
+                peripheral={item}
+                connectToDevice={() => connectToDevice(item.device)}
+                getSignalIcon={getSignalIcon(item.device.rssi)}
+              ></FoundDeviceCard>
+            ))}
           </>
         ) : (
           <></>
@@ -687,54 +527,5 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginLeft: 20,
     marginRight: 20,
-  },
-  button: {
-    backgroundColor: "#215387",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    borderRadius: 5,
-    padding: 10,
-    marginTop: 20,
-  },
-  connectedDeviceImage: {
-    flex: 1,
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    objectFit: "cover",
-    height: 120,
-    width: 150,
-    borderRadius: 15,
-  },
-  foundDeviceImage: {
-    width: 120,
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    objectFit: "contain",
-    height: 80,
-    borderRadius: 15,
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });

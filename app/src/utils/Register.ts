@@ -117,13 +117,13 @@ export class Register {
 
     let formattedValue: string | number = data;
 
-    if (data === 0 && !reg.name.includes("Voltage")) {
-      formattedValue = "Disabled";
+    if (data === 0 && !reg.name.toLowerCase().includes("voltage")) {
+      formattedValue = "Not Detected";
     } else if (data === 1) {
-      formattedValue = "Enabled";
-    } else if (reg.name.includes("Temperature")) {
+      formattedValue = "Detected";
+    } else if (reg.name.toLowerCase().includes("temperature")) {
       formattedValue = (data / 100).toFixed(2) + " (c)";
-    } else if (reg.name.includes("Voltage")) {
+    } else if (reg.name.toLowerCase().includes("voltage")) {
       formattedValue = (data / 1000).toFixed(3) + " (v)";
     }
 

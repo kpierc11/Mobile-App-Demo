@@ -11,7 +11,7 @@ export default function DrawerLayout() {
     <Drawer
       screenOptions={{
         headerShown: true,
-        headerTintColor: theme.colors.primary,
+        headerTintColor: theme.colors.text,
         drawerActiveTintColor: theme.colors.primary,
         drawerInactiveTintColor: theme.colors.text,
         drawerStyle: { backgroundColor: theme.colors.card },
@@ -47,7 +47,7 @@ export default function DrawerLayout() {
         name="settings"
         options={{
           title: "Settings",
-          headerShown: false,
+          headerShown:false,
           drawerLabel: "Settings",
           headerBackButtonDisplayMode: "default",
           drawerIcon: ({ size, color }) => (

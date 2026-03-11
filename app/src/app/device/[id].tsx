@@ -121,12 +121,12 @@ export default function DeviceDetails() {
               key={registerName}
               style={[styles.card, { backgroundColor: theme.colors.card }]}
             >
-              {value === "Enabled" && (
+              {value === "Detected" && (
                 <View
                   style={[styles.statusEnabled, { backgroundColor: "#8FBC8B" }]}
                 />
               )}
-              {value === "Disabled" && (
+              {value === "Not Detected" && (
                 <View
                   style={[
                     styles.statusDisabled,

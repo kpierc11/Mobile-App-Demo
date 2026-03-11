@@ -27,7 +27,6 @@ export default function CustomDrawerContent(props: any) {
 const styles = StyleSheet.create({
   header: {
     display: "flex",
-
     width: "100%",
     padding: 10,
   },
@@ -36,10 +35,5 @@ const styles = StyleSheet.create({
     height: 170,
     borderRadius: 35,
     marginBottom: 10,
-  },
-  username: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
   },
 });

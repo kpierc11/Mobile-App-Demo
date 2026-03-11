@@ -29,7 +29,7 @@ export default function About() {
         />
         <View style={{ marginTop: 10, alignItems: "center" }}>
           <Text style={{ color: theme.colors.text }}>MyQuattro</Text>
-          <Text style={{ color: theme.colors.text }}>Version: Beta 1.0.0</Text>
+          <Text style={{ color: theme.colors.text }}>Version: 1.0.0</Text>
         </View>
       </View>
 

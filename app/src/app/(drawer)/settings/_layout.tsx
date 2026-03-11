@@ -2,20 +2,23 @@ import { DrawerToggleButton } from "@react-navigation/drawer";
 import { useTheme } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsLayout() {
   const theme = useTheme();
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        contentStyle: { width: "100%", margin: 0, padding: 0 },
+      }}
+    >
       <Stack.Screen
         name="index"
         options={{
           title: "Settings",
           headerLeft: (props) => (
-           
-            <DrawerToggleButton {...props} tintColor={theme.colors.primary} />
-        
+            <View style={{ marginLeft: -16 }}>
+              <DrawerToggleButton {...props} tintColor={theme.colors.primary} />
+            </View>
           ),
         }}
       />
