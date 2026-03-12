@@ -7,6 +7,7 @@ import { HbsTheme, HbsDarkTheme } from "../constants/theme";
 import { useEffect, useState } from "react";
 import { SettingsStore } from "../hooks/useStorage";
 import { ThemeContext, ThemeMode } from "../components/ThemeContext";
+import PacketQueueProvider from "../components/PacketQueue";
 
 export default function RootLayout() {
   const [mode, setMode] = useState<ThemeMode>("dark");
@@ -31,17 +32,19 @@ export default function RootLayout() {
   return (
     <ThemeContext value={{ mode, setMode }}>
       <ThemeProvider value={theme}>
-        <UnitDataProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              headerTintColor: theme.colors.primary,
-            }}
-          >
-            <Stack.Screen name="(drawer)" />
-          </Stack>
-          <StatusBar style={mode === "dark" ? "light" : "dark"} />
-        </UnitDataProvider>
+        <PacketQueueProvider>
+          <UnitDataProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                headerTintColor: theme.colors.primary,
+              }}
+            >
+              <Stack.Screen name="(drawer)" />
+            </Stack>
+            <StatusBar style={mode === "dark" ? "light" : "dark"} />
+          </UnitDataProvider>
+        </PacketQueueProvider>
       </ThemeProvider>
     </ThemeContext>
   );

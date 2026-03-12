@@ -14,25 +14,24 @@ import * as Progress from "react-native-progress";
 import Feather from "@expo/vector-icons/Feather";
 import { SettingsStore } from "@/src/hooks/useStorage";
 import { useTheme } from "@react-navigation/native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function DeviceDetails() {
   const theme = useTheme();
   const { deviceDetails } = useLocalSearchParams();
   const { unitData } = useContext(UnitDataContext);
   const [storedDeviceName, setStoredDeviceName] = useState("");
-  const foundDeviceImage = theme.dark
-    ? require("../../../assets/images/hbs-logo-white.png")
-    : require("../../../assets/images/hbs-splash.png");
-
   const parsedDetails = deviceDetails
     ? JSON.parse(deviceDetails as string)
     : {};
 
-  const { name, id } = parsedDetails;
+  const { name, id, imageURL } = parsedDetails;
 
   const getStoredDeviceName = async () => {
     try {
-      const storedName = await SettingsStore.getValueFor(id.replaceAll(":", "-"));
+      const storedName = await SettingsStore.getValueFor(
+        id.replaceAll(":", "-"),
+      );
       if (storedName) {
         setStoredDeviceName(storedName);
       }
@@ -58,10 +57,38 @@ export default function DeviceDetails() {
         { backgroundColor: theme.colors.background },
       ]}
     >
+      <TouchableOpacity
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "flex-end",
+          marginTop: 25,
+          flexDirection: "row",
+          gap: 10,
+          width: "100%",
+        }}
+        onPress={() =>
+          router.push({
+            pathname: "/device/quattro-scheduler",
+            params: { currentDeviceID: id, currentDeviceName: name },
+          })
+        }
+      >
+        <View style={styles.row}>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Quattro Scheduler
+          </Text>
+        </View>
+        <MaterialIcons
+          name="settings"
+          size={20}
+          color={theme.colors.text}
+        />
+      </TouchableOpacity>
       <Image
-        source={foundDeviceImage}
+        source={require("../../../assets/images/devices/24-volt-ac-dc-power.png")}
         style={styles.image}
-        resizeMode="contain"
+        resizeMode="cover"
       />
 
       <View
@@ -172,11 +199,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 10,
   },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
 
   image: {
-    width: 200,
+    width: "80%",
     height: 200,
-    marginBottom: 10,
+    borderRadius:15,
+    marginTop:20,
+    marginBottom:20,
   },
 
   settingsCard: {
@@ -238,7 +272,7 @@ const styles = StyleSheet.create({
 
   deviceInfoText: {
     marginTop: 5,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "500",
   },
 

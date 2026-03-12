@@ -5,7 +5,6 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
-  TouchableOpacity,
   PermissionsAndroid,
   Platform,
 } from "react-native";
@@ -19,6 +18,7 @@ import { useTheme } from "@react-navigation/native";
 import { HbsDevice } from "@/src/types/hbsDevice";
 import FoundDeviceCard from "@/src/components/FoundDeviceCard";
 import ConnectedDeviceCard from "@/src/components/ConnectedDeviceCard";
+import { PacketQueueContext } from "@/src/components/PacketQueue";
 
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
@@ -42,6 +42,7 @@ export default function HomeScreen() {
   const [connectedDevice, setConnectedDevice] = useState<HbsDevice>();
   const { unitData, setUnitData, setUnitImageURL, unitImageURL } =
     useContext(UnitDataContext);
+    const {queuePacket} = useContext(PacketQueueContext);
   const [imageLink, setImageLink] = useState("");
   const sortedDevices = [...foundDeviceList].sort(
     (a, b) => b.device.rssi - a.device.rssi,
@@ -49,71 +50,66 @@ export default function HomeScreen() {
 
   const theme = useTheme();
   const packet = new Packet();
-  const foundDeviceImage = theme.dark
-    ? require("../../../assets/images/hbs-logo-white.png")
-    : require("../../../assets/images/hbs-splash.png");
+
+  const initBLE = async () => {
+    const permissionsGranted = await requestBLEPermissions();
+    if (!permissionsGranted) {
+      return;
+    }
+    await BleManager.start({ showAlert: true });
+    getConnectedDevices();
+    startScanningDevices();
+  };
 
   useEffect(() => {
-    const initBLE = async () => {
-      const permissionsGranted = await requestBLEPermissions();
-      if (!permissionsGranted) {
-        return;
-      }
+    initBLE();
 
-      await BleManager.start({ showAlert: true });
+    const onStopListener = BleManager.onStopScan(() => {
+      setRestartScan(false);
+      setIsScanning(false);
+    });
 
-      getConnectedDevices();
-      startScanningDevices();
+    const onDiscoveredPeripheralListener = BleManager.onDiscoverPeripheral(
+      (peripheral: Peripheral) => {
+        const { name, advertising, rssi, id } = peripheral;
+        const { isConnectable } = advertising;
 
-      const onStopListener = BleManager.onStopScan(() => {
-        setRestartScan(false);
-        setIsScanning(false);
-      });
-
-      const onDiscoveredPeripheralListener = BleManager.onDiscoverPeripheral(
-        (peripheral: Peripheral) => {
-          const { name, advertising, rssi, id } = peripheral;
-          const { isConnectable } = advertising;
-
-          if (
-            rssi > -85 &&
-            isConnectable &&
-            name?.toLowerCase().includes("ble#")
-          ) {
-            getStoredDeviceName(id).then((storedName) => {
-              setFoundDeviceList((prev) => {
-                const exists = prev.some((item) => item.device.id === id);
-                if (exists) return prev;
-                return [
-                  ...prev,
-                  {
-                    device: peripheral,
-                    storedDeviceName: storedName || "",
-                    imageLink: "",
-                  },
-                ];
-              });
+        if (
+          rssi > -85 &&
+          isConnectable &&
+          name?.toLowerCase().includes("ble#")
+        ) {
+          getStoredDeviceName(id).then((storedName) => {
+            setFoundDeviceList((prev) => {
+              const exists = prev.some((item) => item.device.id === id);
+              if (exists) return prev;
+              return [
+                ...prev,
+                {
+                  device: peripheral,
+                  storedDeviceName: storedName || "",
+                  imageLink: "",
+                },
+              ];
             });
-          }
+          });
+        }
+      },
+    );
+
+    const onDidUpdateValueForCharacteristicListener =
+      BleManager.onDidUpdateValueForCharacteristic(
+        ({ value, peripheral }: any) => {
+          const returnData = new Uint8Array(value);
+          handleResponsePacket(returnData, peripheral);
         },
       );
 
-      const onDidUpdateValueForCharacteristicListener =
-        BleManager.onDidUpdateValueForCharacteristic(
-          ({ value, peripheral }: any) => {
-            const returnData = new Uint8Array(value);
-            handleResponsePacket(returnData, peripheral);
-          },
-        );
-
-      return () => {
-        onStopListener.remove();
-        onDiscoveredPeripheralListener.remove();
-        onDidUpdateValueForCharacteristicListener.remove();
-      };
+    return () => {
+      onStopListener.remove();
+      onDiscoveredPeripheralListener.remove();
+      onDidUpdateValueForCharacteristicListener.remove();
     };
-
-    initBLE();
   }, []);
 
   async function requestBLEPermissions() {
@@ -149,22 +145,6 @@ export default function HomeScreen() {
       );
       return storedName ? storedName : "";
     } catch (error) {}
-  };
-
-  const formatBleNameToMac = (name: string): string => {
-    let hex = name.replace(/^BLE#0x/, "");
-    hex = hex.toUpperCase();
-
-    const match = hex.match(/.{1,2}/g);
-    if (!match) {
-      return name;
-    }
-
-    return match.join(":");
-  };
-
-  const formatDeviceID = (deviceName: string) => {
-    return deviceName.slice(0, 7);
   };
 
   const startScanningDevices = async () => {
@@ -218,13 +198,7 @@ export default function HomeScreen() {
           });
       }
 
-      let deviceID = "";
-
-      if (device.id) {
-        deviceID = device.id;
-      }
-
-      const storedDeviceName = await getStoredDeviceName(deviceID);
+      const storedDeviceName = await getStoredDeviceName(device.id);
 
       let storedName = "";
 
@@ -232,12 +206,10 @@ export default function HomeScreen() {
         storedName = storedDeviceName;
       }
 
-      console.log()
-
       setConnectedDevice({
         device: device,
         storedDeviceName: storedName,
-        imageLink: imageMap[packet.header.source.hID],
+        imageLink: imageLink,
       });
 
       startDeviceNotify(device, packet.sendSetTime());
@@ -279,6 +251,9 @@ export default function HomeScreen() {
       if (services) {
         await BleManager.startNotification(device.id, SERVICE_UUID, READ_CHAR);
         await new Promise((res) => setTimeout(res, 200));
+
+        //enqueue packet for writing. 
+          queuePacket(packet);
         await BleManager.write(device.id, SERVICE_UUID, WRITE_CHAR, [
           ...packet,
         ]);
@@ -288,14 +263,9 @@ export default function HomeScreen() {
   };
 
   const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
-    if (packet == currentQueuedPacket) {
-      return;
-    }
     try {
       await BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet]);
     } catch (error) {}
-
-    currentQueuedPacket = packet;
   };
 
   const handleResponsePacket = async (
@@ -306,10 +276,6 @@ export default function HomeScreen() {
       const parsedReturnData = await packet.parsePacket(returnData);
       let sendPacket = null;
       const { type, currentPacket, regData } = parsedReturnData;
-
-      if (connectedDevice) {
-        connectedDevice.imageLink = imageMap[packet.header.source.hID];
-      }
 
       if (type == PacketTypes.GET_SENSOR_DATA) {
         sendPacket = currentPacket;
@@ -410,7 +376,7 @@ export default function HomeScreen() {
 
             <ConnectedDeviceCard
               connectedDevice={connectedDevice}
-              imageLink={connectedDevice.imageLink}
+              imageLink={imageLink}
               getSignalIcon={getSignalIcon(connectedDevice.device.rssi)}
               identifyUnit={() =>
                 sendNewPacket(

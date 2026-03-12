@@ -6,7 +6,7 @@ import { Peripheral } from "react-native-ble-manager";
 
 interface FoundDeviceProps {
   peripheral: HbsDevice;
-  connectToDevice: () => Promise<void>;
+  connectToDevice:()=> Promise<void>;
   getSignalIcon:
     | "wifi-strength-1"
     | "wifi-strength-2"
@@ -15,7 +15,7 @@ interface FoundDeviceProps {
     | "wifi-strength-outline";
 }
 
-export default function FoundDeviceCard(props: FoundDeviceProps) {
+export default function FoundDeviceCard({peripheral,connectToDevice,getSignalIcon}: FoundDeviceProps) {
   const theme = useTheme();
   const foundDeviceImage = theme.dark
     ? require("../../assets/images/hbs-logo-white.png")
@@ -30,7 +30,7 @@ export default function FoundDeviceCard(props: FoundDeviceProps) {
       {/* RSSI */}
       <View style={{ width: "100%", alignItems: "flex-end" }}>
         <MaterialCommunityIcons
-          name={props.getSignalIcon}
+          name={getSignalIcon}
           size={20}
           color={theme.colors.primary}
         />
@@ -41,12 +41,12 @@ export default function FoundDeviceCard(props: FoundDeviceProps) {
         <Image style={styles.foundDeviceImage} source={foundDeviceImage} />
         <View>
           <Text style={{ color: theme.colors.text }}>
-            {formatDeviceID(props.peripheral.device.id)}
+            {formatDeviceID(peripheral.device.id)}
           </Text>
           <Text style={{ maxWidth: 150, color: theme.colors.text }}>
-            {props.peripheral.storedDeviceName
-              ? props.peripheral.storedDeviceName
-              : props.peripheral.device.name}
+            {peripheral.storedDeviceName
+              ? peripheral.storedDeviceName
+              : peripheral.device.name}
           </Text>
         </View>
       </View>
@@ -62,7 +62,7 @@ export default function FoundDeviceCard(props: FoundDeviceProps) {
         >
           <TouchableOpacity
             style={styles.button}
-            onPress={() => props.connectToDevice()}
+            onPress={connectToDevice}
           >
             <Text style={{ color: "white", fontSize: 12 }}>Connect</Text>
             <MaterialCommunityIcons

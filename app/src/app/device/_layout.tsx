@@ -34,9 +34,9 @@ export default function DeviceLayout() {
         }}
       />
       <Stack.Screen
-        name="quattro-schedule"
+        name="quattro-scheduler"
         options={{
-          title: "Quattro Schedule",
+          title: "Quattro Scheduler",
         }}
       />
     </Stack>

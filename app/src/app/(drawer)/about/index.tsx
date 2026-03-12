@@ -1,17 +1,26 @@
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Linking,
+} from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
+import Feather from "@expo/vector-icons/Feather";
 
 export default function About() {
   const theme = useTheme();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <Text style={[styles.title, { color: theme.colors.text }]}>About</Text>
 
       <View
@@ -33,7 +42,9 @@ export default function About() {
         </View>
       </View>
 
-      <View style={[styles.settingsCard, { backgroundColor: theme.colors.card }]}>
+      <View
+        style={[styles.settingsCard, { backgroundColor: theme.colors.card }]}
+      >
         <View style={styles.iconMainContainer}>
           <TouchableOpacity
             style={styles.iconContainer}
@@ -41,12 +52,18 @@ export default function About() {
               Linking.openURL("https://www.hydro-bioscience.com/about-us/")
             }
           >
-            <MaterialCommunityIcons name="web" size={24} color={theme.colors.text} />
-            <Text style={{ marginRight: "auto", color: theme.colors.text }}>Who We Are</Text>
-            <MaterialIcons
+            <MaterialCommunityIcons
+              name="web"
+              size={24}
+              color={theme.colors.text}
+            />
+            <Text style={{ marginRight: "auto", color: theme.colors.text }}>
+              Who We Are
+            </Text>
+            <Feather
               style={{ alignContent: "flex-end" }}
-              name="chevron-right"
-              size={20}
+              name="external-link"
+              size={18}
               color={theme.colors.text}
             />
           </TouchableOpacity>
@@ -55,7 +72,11 @@ export default function About() {
             style={styles.iconContainer}
             onPress={() => router.navigate("/about/supported-devices")}
           >
-            <MaterialIcons name="device-hub" size={24} color={theme.colors.text} />
+            <MaterialIcons
+              name="device-hub"
+              size={24}
+              color={theme.colors.text}
+            />
             <Text style={{ marginRight: "auto", color: theme.colors.text }}>
               Supported Devices
             </Text>
@@ -66,13 +87,31 @@ export default function About() {
               color={theme.colors.text}
             />
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconContainer}
+            onPress={() =>
+              Linking.openURL(
+                "https://www.hydro-bioscience.com/media/MNUL0063-V001.pdf",
+              )
+            }
+          >
+            <MaterialCommunityIcons name="file-document" size={24} color={theme.colors.text}/>
+            <Text style={{ marginRight: "auto", color: theme.colors.text }}>
+              User Manual
+            </Text>
+            <Feather
+              style={{ alignContent: "flex-end" }}
+              name="external-link"
+              size={18}
+              color={theme.colors.text}
+            />
+          </TouchableOpacity>
         </View>
       </View>
 
-      
-      <View style={{ alignItems: "center", marginTop: "100%" }}>
+      <View style={{ alignItems: "center", marginTop:"80%" }}>
         <Text style={{ color: theme.colors.text }}>
-          ©{new Date().getFullYear()} Hydro Bioscience
+          © {new Date().getFullYear()} Hydro Bioscience
         </Text>
       </View>
     </SafeAreaView>

@@ -7,12 +7,12 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  ImageSourcePropType,
 } from "react-native";
 import { HbsDevice } from "../types/hbsDevice";
-import { Peripheral } from "react-native-ble-manager";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { router } from "expo-router";
+import { useContext } from "react";
+import { UnitDataContext } from "./UnitDataProvider";
 
 interface ConnectedCardProps {
   connectedDevice: HbsDevice;
@@ -28,12 +28,21 @@ interface ConnectedCardProps {
   disconnectDevice: () => Promise<void>;
 }
 
-export default function ConnectedDeviceCard(props: ConnectedCardProps) {
+export default function ConnectedDeviceCard({
+  connectedDevice,
+  imageLink,
+  getSignalIcon,
+  identifyUnit,
+  stopIdentifyUnit,
+  disconnectDevice,
+}: ConnectedCardProps) {
   const theme = useTheme();
+  const { unitData, setUnitData, setUnitImageURL, unitImageURL } =
+    useContext(UnitDataContext);
   const formatDeviceID = (deviceName: string) => {
     return deviceName.slice(0, 7);
   };
-  console.log(props.connectedDevice.imageLink)
+  console.log(imageLink);
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
       {/* RSSI */}
@@ -48,7 +57,7 @@ export default function ConnectedDeviceCard(props: ConnectedCardProps) {
       >
         <TouchableOpacity
           style={{ marginRight: "auto" }}
-          onPress={() => props.stopIdentifyUnit()}
+          onPress={stopIdentifyUnit}
         >
           <MaterialCommunityIcons
             name={"lightbulb-off-outline"}
@@ -56,7 +65,7 @@ export default function ConnectedDeviceCard(props: ConnectedCardProps) {
             color={theme.colors.primary}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => props.identifyUnit()}>
+        <TouchableOpacity onPress={identifyUnit}>
           <MaterialCommunityIcons
             style={{ marginRight: 20 }}
             name={"lightbulb-on-10"}
@@ -67,7 +76,7 @@ export default function ConnectedDeviceCard(props: ConnectedCardProps) {
 
         <View>
           <MaterialCommunityIcons
-            name={props.getSignalIcon}
+            name={getSignalIcon}
             size={20}
             color={theme.colors.primary}
           />
@@ -76,8 +85,11 @@ export default function ConnectedDeviceCard(props: ConnectedCardProps) {
 
       {/* Device Info */}
       <View style={{ flexDirection: "row", gap: 30 }}>
-        {props.imageLink ? (
-          <Image style={styles.connectedDeviceImage}  source={{ uri: props.imageLink }} />
+        {imageLink ? (
+          <Image
+            style={styles.connectedDeviceImage}
+            source={{uri:unitImageURL}}
+          />
         ) : (
           <View
             style={{
@@ -93,12 +105,12 @@ export default function ConnectedDeviceCard(props: ConnectedCardProps) {
 
         <View style={{ flexBasis: "50%" }}>
           <Text style={{ fontWeight: "bold", color: theme.colors.text }}>
-            {formatDeviceID(props.connectedDevice.device.id)}
+            {formatDeviceID(connectedDevice.device.id)}
           </Text>
           <Text style={{ maxWidth: 150, color: theme.colors.text }}>
-            {props.connectedDevice.storedDeviceName
-              ? props.connectedDevice.storedDeviceName
-              : props.connectedDevice.device.name}
+            {connectedDevice.storedDeviceName
+              ? connectedDevice.storedDeviceName
+              : connectedDevice.device.name}
           </Text>
         </View>
       </View>
@@ -112,10 +124,7 @@ export default function ConnectedDeviceCard(props: ConnectedCardProps) {
         }}
       >
         <View style={{ marginRight: "auto" }}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => props.disconnectDevice()}
-          >
+          <TouchableOpacity style={styles.button} onPress={disconnectDevice}>
             <Text style={{ color: "white", fontSize: 12 }}>Disconnect</Text>
             <AntDesign name="disconnect" size={14} color={"white"} />
           </TouchableOpacity>
@@ -126,10 +135,10 @@ export default function ConnectedDeviceCard(props: ConnectedCardProps) {
             router.push({
               pathname: "/device/[id]",
               params: {
-                id: props.connectedDevice.device.id,
+                id: connectedDevice.device.id,
                 deviceDetails: JSON.stringify({
-                  ...props.connectedDevice.device,
-                  imageURL: props.imageLink,
+                  ...connectedDevice.device,
+                  imageURL: imageLink,
                 }),
               },
             });

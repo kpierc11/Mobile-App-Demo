@@ -65,16 +65,7 @@ export default function DrawerLayout() {
           ),
         }}
       />
-      <Drawer.Screen
-        name="user-manual"
-        options={{
-          title: "User Manual",
-          drawerLabel: "User Manual",
-          drawerIcon: ({ size, color }) => (
-            <MaterialCommunityIcons name="file-document" size={size} color={color} />
-          ),
-        }}
-      />
+      
     </Drawer>
   );
 }
