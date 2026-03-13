@@ -11,7 +11,7 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BleManager, { Peripheral } from "react-native-ble-manager";
-import { Packet, PacketTypes } from "@/src/utils/Packet";
+import { Packet } from "@/src/utils/Packet";
 import { UnitDataContext } from "@/src/components/UnitDataProvider";
 import { SettingsStore } from "@/src/hooks/useStorage";
 import { useTheme } from "@react-navigation/native";
@@ -26,8 +26,6 @@ const READ_CHAR = "00001002-0000-1000-8000-00805f9b34fb";
 const READ_DESC = "00002902-0000-1000-8000-00805f9b34fb";
 const SCAN_DURATION = 5;
 
-let currentQueuedPacket: Uint8Array = new Uint8Array();
-
 const imageMap: Record<number, any> = {
   24: require("../../../assets/images/devices/solar-controller.png"),
   25: require("../../../assets/images/devices/ac-power-supply.png"),
@@ -40,9 +38,8 @@ export default function HomeScreen() {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevice, setConnectedDevice] = useState<HbsDevice>();
-  const { unitData, setUnitData, setUnitImageURL, unitImageURL } =
-    useContext(UnitDataContext);
-    const {queuePacket} = useContext(PacketQueueContext);
+  const { setUnitData } = useContext(UnitDataContext);
+  const { queuePacket } = useContext(PacketQueueContext);
   const [imageLink, setImageLink] = useState("");
   const sortedDevices = [...foundDeviceList].sort(
     (a, b) => b.device.rssi - a.device.rssi,
@@ -101,7 +98,7 @@ export default function HomeScreen() {
       BleManager.onDidUpdateValueForCharacteristic(
         ({ value, peripheral }: any) => {
           const returnData = new Uint8Array(value);
-          handleResponsePacket(returnData, peripheral);
+          queuePacket(returnData, peripheral);
         },
       );
 
@@ -252,44 +249,8 @@ export default function HomeScreen() {
         await BleManager.startNotification(device.id, SERVICE_UUID, READ_CHAR);
         await new Promise((res) => setTimeout(res, 200));
 
-        //enqueue packet for writing. 
-          queuePacket(packet);
-        await BleManager.write(device.id, SERVICE_UUID, WRITE_CHAR, [
-          ...packet,
-        ]);
-        currentQueuedPacket = packet;
-      }
-    } catch (error) {}
-  };
-
-  const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
-    try {
-      await BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet]);
-    } catch (error) {}
-  };
-
-  const handleResponsePacket = async (
-    returnData: Uint8Array<any>,
-    id: string,
-  ) => {
-    try {
-      const parsedReturnData = await packet.parsePacket(returnData);
-      let sendPacket = null;
-      const { type, currentPacket, regData } = parsedReturnData;
-
-      if (type == PacketTypes.GET_SENSOR_DATA) {
-        sendPacket = currentPacket;
-      }
-
-      if (type == PacketTypes.PARSE_SENSOR_DATA) {
-        setUnitData(regData);
-        sendPacket = packet.sendGetSensorData();
-      }
-
-      if (sendPacket) {
-        setTimeout(() => {
-          sendNewPacket(id, sendPacket);
-        }, 3000);
+        //enqueue packet for writing.
+        queuePacket(packet, device.id);
       }
     } catch (error) {}
   };
@@ -379,15 +340,15 @@ export default function HomeScreen() {
               imageLink={imageLink}
               getSignalIcon={getSignalIcon(connectedDevice.device.rssi)}
               identifyUnit={() =>
-                sendNewPacket(
-                  connectedDevice.device.id,
+                queuePacket(
                   packet.sendIdentifyUnit(),
+                  connectedDevice.device.id,
                 )
               }
               stopIdentifyUnit={() =>
-                sendNewPacket(
-                  connectedDevice.device.id,
+                queuePacket(
                   packet.sendStopIdentifyUnit(),
+                  connectedDevice.device.id,
                 )
               }
               disconnectDevice={() => disconnectDevice(connectedDevice.device)}

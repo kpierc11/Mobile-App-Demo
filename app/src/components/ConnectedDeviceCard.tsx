@@ -23,8 +23,8 @@ interface ConnectedCardProps {
     | "wifi-strength-3"
     | "wifi-strength-4"
     | "wifi-strength-outline";
-  identifyUnit: () => Promise<void>;
-  stopIdentifyUnit: () => Promise<void>;
+  identifyUnit: () => void;
+  stopIdentifyUnit: () => void;
   disconnectDevice: () => Promise<void>;
 }
 

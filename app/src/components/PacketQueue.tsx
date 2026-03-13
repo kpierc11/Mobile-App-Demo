@@ -1,54 +1,62 @@
-import { createContext, ReactNode, useRef } from "react";
-import BleManager, { Peripheral } from "react-native-ble-manager";
+import { createContext, ReactNode, useContext, useRef } from "react";
+import BleManager from "react-native-ble-manager";
 import { Packet, PacketTypes } from "@/src/utils/Packet";
-import { HbsDevice } from "../types/hbsDevice";
+import { UnitDataContext } from "./UnitDataProvider";
+import { ParsedRegisterData } from "../types/parsedRegisterData";
 
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
 
 interface PacketQueueProps {
-  deviceID: number;
-  currentPacket: Uint8Array;
-  queuePacket: (packet: Uint8Array) => void;
+  queuePacket: (packet: Uint8Array, deviceID: string) => void;
 }
 
-const packet = new Packet();
+const packetParser = new Packet();
+
 export const PacketQueueContext = createContext<PacketQueueProps>({
-  deviceID: 0,
-  currentPacket: new Uint8Array(),
   queuePacket: () => {},
 });
 
 const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
   try {
     await BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet]);
-  } catch (error) {}
+  } catch (error) {
+    console.error("BLE write error:", error);
+  }
 };
 
-const handleResponsePacket = async (
-  returnData: Uint8Array<any>,
-  id: string,
+const processQueue = async (
+  packet: Uint8Array,
+  deviceID: string,
+  setUnitData: (data: ParsedRegisterData[]) => void,
 ) => {
   try {
-    const parsedReturnData = await packet.parsePacket(returnData);
-    let sendPacket = null;
-    const { type, currentPacket, regData } = parsedReturnData;
+    const parsedReturnData = await packetParser.parsePacket(packet);
 
-    if (type == PacketTypes.GET_SENSOR_DATA) {
-      sendPacket = currentPacket;
-    }
+    let sendPacket: Uint8Array | null = null;
 
-    if (type == PacketTypes.PARSE_SENSOR_DATA) {
+    const { type, currentPacket: parsedPacket, regData } = parsedReturnData;
+
+    if (type === PacketTypes.IDENTIFY) {
+      sendPacket = packet;
+    } else if (type === PacketTypes.GET_SENSOR_DATA) {
+      sendPacket = parsedPacket;
+    } else if (type === PacketTypes.PARSE_SENSOR_DATA) {
       setUnitData(regData);
-      sendPacket = packet.sendGetSensorData();
+      sendPacket = packetParser.sendGetSensorData();
+    }
+    else {
+      packetParser.get
     }
 
     if (sendPacket) {
       setTimeout(() => {
-        sendNewPacket(id, sendPacket);
+        sendNewPacket(deviceID, sendPacket as Uint8Array);
       }, 3000);
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error("Packet parsing error:", error);
+  }
 };
 
 export default function PacketQueueProvider({
@@ -56,16 +64,16 @@ export default function PacketQueueProvider({
 }: {
   children: ReactNode;
 }) {
-  const currentPacket = new Uint8Array();
-  const queuePacket = (packet: Uint8Array) => {
-    console.log(packet);
+  const { setUnitData } = useContext(UnitDataContext);
+
+  const queuePacket = async (packet: Uint8Array, deviceID: string) => {
+    console.log("Incoming packet:", packet);
+    processQueue(packet, deviceID, setUnitData);
   };
 
-  let deviceID = 0;
-
   return (
-    <PacketQueueContext value={{ deviceID, currentPacket, queuePacket }}>
+    <PacketQueueContext.Provider value={{ queuePacket }}>
       {children}
-    </PacketQueueContext>
+    </PacketQueueContext.Provider>
   );
 }

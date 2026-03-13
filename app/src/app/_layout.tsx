@@ -32,8 +32,8 @@ export default function RootLayout() {
   return (
     <ThemeContext value={{ mode, setMode }}>
       <ThemeProvider value={theme}>
-        <PacketQueueProvider>
-          <UnitDataProvider>
+        <UnitDataProvider>
+          <PacketQueueProvider>
             <Stack
               screenOptions={{
                 headerShown: false,
@@ -43,8 +43,8 @@ export default function RootLayout() {
               <Stack.Screen name="(drawer)" />
             </Stack>
             <StatusBar style={mode === "dark" ? "light" : "dark"} />
-          </UnitDataProvider>
-        </PacketQueueProvider>
+          </PacketQueueProvider>
+        </UnitDataProvider>
       </ThemeProvider>
     </ThemeContext>
   );
