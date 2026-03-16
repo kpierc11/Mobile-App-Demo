@@ -84,7 +84,7 @@ export class Packet {
 
     const now = new Date();
     const hours = now.getHours();
-    const minutes = now.getMinutes(); 
+    const minutes = now.getMinutes();
 
     // Convert to total minutes
     const totalMinutes = hours * 60 + minutes;
@@ -310,13 +310,9 @@ export class Packet {
       packetType = PacketTypes.IDENTIFY;
     }
 
-    // if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
-    //   const { newPacket, registerData } =
-    //     this.parseRegisterData(packetDataView);
-    //   packet = newPacket;
-    //   parsedRegData = registerData;
-    //   packetType = PacketTypes.PARSE_SENSOR_DATA;
-    // }
+    if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
+      packetType = PacketTypes.PARSE_SENSOR_DATA;
+    }
 
     return { type: packetType, currentPacket: packet, regData: parsedRegData };
   }

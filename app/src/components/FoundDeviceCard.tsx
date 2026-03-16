@@ -6,16 +6,24 @@ import { Peripheral } from "react-native-ble-manager";
 
 interface FoundDeviceProps {
   peripheral: HbsDevice;
-  connectToDevice:()=> Promise<void>;
+  connectToDevice: () => Promise<void>;
   getSignalIcon:
     | "wifi-strength-1"
     | "wifi-strength-2"
     | "wifi-strength-3"
     | "wifi-strength-4"
     | "wifi-strength-outline";
+  identifyUnit: () => void;
+  stopIdentifyUnit: () => void;
 }
 
-export default function FoundDeviceCard({peripheral,connectToDevice,getSignalIcon}: FoundDeviceProps) {
+export default function FoundDeviceCard({
+  peripheral,
+  connectToDevice,
+  identifyUnit,
+  stopIdentifyUnit,
+  getSignalIcon,
+}: FoundDeviceProps) {
   const theme = useTheme();
   const foundDeviceImage = theme.dark
     ? require("../../assets/images/hbs-logo-white.png")
@@ -28,12 +36,41 @@ export default function FoundDeviceCard({peripheral,connectToDevice,getSignalIco
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
       {/* RSSI */}
-      <View style={{ width: "100%", alignItems: "flex-end" }}>
-        <MaterialCommunityIcons
-          name={getSignalIcon}
-          size={20}
-          color={theme.colors.primary}
-        />
+      <View
+        style={{
+          display: "flex",
+          alignItems: "center",
+          flexDirection: "row",
+          width: "100%",
+          marginBottom: 20,
+        }}
+      >
+        <TouchableOpacity
+          style={{ marginRight: "auto" }}
+          onPress={stopIdentifyUnit}
+        >
+          <MaterialCommunityIcons
+            name={"lightbulb-off-outline"}
+            size={28}
+            color={theme.colors.primary}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={identifyUnit}>
+          <MaterialCommunityIcons
+            style={{ marginRight: 20 }}
+            name={"lightbulb-on-10"}
+            size={28}
+            color={theme.colors.primary}
+          />
+        </TouchableOpacity>
+
+        <View>
+          <MaterialCommunityIcons
+            name={getSignalIcon}
+            size={20}
+            color={theme.colors.primary}
+          />
+        </View>
       </View>
 
       {/* Device info */}
@@ -60,10 +97,7 @@ export default function FoundDeviceCard({peripheral,connectToDevice,getSignalIco
             marginRight: "auto",
           }}
         >
-          <TouchableOpacity
-            style={styles.button}
-            onPress={connectToDevice}
-          >
+          <TouchableOpacity style={styles.button} onPress={connectToDevice}>
             <Text style={{ color: "white", fontSize: 12 }}>Connect</Text>
             <MaterialCommunityIcons
               name="connection"

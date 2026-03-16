@@ -14,12 +14,6 @@ interface PacketQueueProps {
 
 const packetParser = new Packet();
 
-const packetsEqual = (a: Uint8Array | null, b: Uint8Array) => {
-  if (!a) return false;
-  if (a.length !== b.length) return false;
-  return a.every((v, i) => v === b[i]);
-};
-
 export const PacketQueueContext = createContext<PacketQueueProps>({
   processImmediatePacket: () => {},
   processIncomingPacket: () => {},
@@ -27,9 +21,12 @@ export const PacketQueueContext = createContext<PacketQueueProps>({
 
 const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
   try {
+    await BleManager.connect(deviceID);
+    await BleManager.retrieveServices(deviceID);
     await BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet]);
+    await BleManager.disconnect(deviceID);
   } catch (error) {
-    console.error("BLE write error:", error);
+    console.log("BLE write error:", error);
   }
 };
 
@@ -49,27 +46,40 @@ const processPacket = async (
 };
 
 const processResponsePacket = async (
-  previousPacket: Uint8Array | null,
-  currentPacket: Uint8Array,
+  packet: Uint8Array,
   deviceID: string,
   setUnitData: (data: ParsedRegisterData[]) => void,
 ) => {
   try {
+    console.log("Processing response packet:" + packet);
+    let sendPacket = null;
+    const parsedPacket = await packetParser.parsePacket(packet);
 
+    const { type, currentPacket, regData } = parsedPacket;
 
-    
+    console.log("Packet type:" + type);
 
+    if (type === PacketTypes.ACK_KNOWLEDGE) {
+      sendPacket = packetParser.sendGetSensorData();
+    }
 
+    if (type === PacketTypes.PARSE_SENSOR_DATA) {
+      let packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
+      let parsedRegData: any = [];
+      const { newPacket, registerData } =
+        packetParser.parseRegisterData(packetDataView);
+      parsedRegData = registerData;
+      setUnitData(parsedRegData);
+      sendPacket = packetParser.sendGetSensorData();
+    }
 
-
-    if (currentPacket) {
-      sendNewPacket(deviceID, currentPacket as Uint8Array);
+    if (sendPacket) {
+      sendNewPacket(deviceID, sendPacket as Uint8Array);
     }
   } catch (error) {
     console.error("Packet parsing error:", error);
   }
 };
-
 
 export default function PacketQueueProvider({
   children,
@@ -88,12 +98,22 @@ export default function PacketQueueProvider({
 
     const previousPacket = previousPacketRef.current;
 
-    processPacket(previousPacket, packet, deviceID, setUnitData);
+    await processPacket(previousPacket, packet, deviceID, setUnitData);
     previousPacketRef.current = packet;
   };
 
+  const processIncomingPacket = async (
+    packet: Uint8Array,
+    deviceID: string,
+  ) => {
+    await new Promise((r) => setTimeout(r, 3000));
+    await processResponsePacket(packet, deviceID, setUnitData);
+  };
+
   return (
-    <PacketQueueContext.Provider value={{ processImmediatePacket }}>
+    <PacketQueueContext.Provider
+      value={{ processImmediatePacket, processIncomingPacket }}
+    >
       {children}
     </PacketQueueContext.Provider>
   );

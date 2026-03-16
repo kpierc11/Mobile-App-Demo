@@ -4,7 +4,7 @@
     "slug": "myquattro",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/myquattro-app-icon-sky-blue.png",
+    "icon": "./assets/images/myquattro-app-icon-sky-blue-3.png",
     "scheme": "app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -43,7 +43,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/hbs-splash.png",
-          "imageWidth": 200,
+          "imageWidth": 300,
           "resizeMode": "cover",
           "backgroundColor": "#FFFFFF",
           "dark": {

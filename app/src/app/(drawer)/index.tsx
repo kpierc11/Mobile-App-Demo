@@ -39,7 +39,8 @@ export default function HomeScreen() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevice, setConnectedDevice] = useState<HbsDevice>();
   const { setUnitData } = useContext(UnitDataContext);
-  const { processIncomingPacket } = useContext(PacketQueueContext);
+  const { processIncomingPacket, processImmediatePacket } =
+    useContext(PacketQueueContext);
   const [imageLink, setImageLink] = useState("");
   const sortedDevices = [...foundDeviceList].sort(
     (a, b) => b.device.rssi - a.device.rssi,
@@ -98,7 +99,7 @@ export default function HomeScreen() {
       BleManager.onDidUpdateValueForCharacteristic(
         ({ value, peripheral }: any) => {
           const returnData = new Uint8Array(value);
-          //processIncomingPacket(returnData, peripheral);
+          processIncomingPacket(returnData, peripheral);
         },
       );
 
@@ -250,7 +251,7 @@ export default function HomeScreen() {
         await new Promise((res) => setTimeout(res, 200));
 
         //enqueue packet for writing.
-        processIncomingPacket(packet, device.id);
+        processImmediatePacket(packet, device.id);
       }
     } catch (error) {}
   };
@@ -340,13 +341,13 @@ export default function HomeScreen() {
               imageLink={imageLink}
               getSignalIcon={getSignalIcon(connectedDevice.device.rssi)}
               identifyUnit={() =>
-                processIncomingPacket(
+                processImmediatePacket(
                   packet.sendIdentifyUnit(),
                   connectedDevice.device.id,
                 )
               }
               stopIdentifyUnit={() =>
-                processIncomingPacket(
+                processImmediatePacket(
                   packet.sendStopIdentifyUnit(),
                   connectedDevice.device.id,
                 )
@@ -397,6 +398,18 @@ export default function HomeScreen() {
                 key={index}
                 peripheral={item}
                 connectToDevice={() => connectToDevice(item.device)}
+                identifyUnit={() =>
+                  processImmediatePacket(
+                    packet.sendIdentifyUnit(),
+                    item.device.id,
+                  )
+                }
+                stopIdentifyUnit={() =>
+                  processImmediatePacket(
+                    packet.sendStopIdentifyUnit(),
+                    item.device.id,
+                  )
+                }
                 getSignalIcon={getSignalIcon(item.device.rssi)}
               ></FoundDeviceCard>
             ))}
