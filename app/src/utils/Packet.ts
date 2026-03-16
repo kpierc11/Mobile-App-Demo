@@ -8,6 +8,7 @@ interface CUID {
 
 export enum PacketTypes {
   SET_TIME,
+  ACK_KNOWLEDGE,
   IDENTIFY,
   GET_SENSOR_DATA,
   PARSE_SENSOR_DATA,
@@ -302,17 +303,20 @@ export class Packet {
     let parsedRegData: any = [];
 
     if (pckCMD == PacketCmds.CBIN_PACKET_SET_ACK) {
-      packet = this.sendGetSensorData();
-      packetType = PacketTypes.GET_SENSOR_DATA;
+      packetType = PacketTypes.ACK_KNOWLEDGE;
     }
 
-    if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
-      const { newPacket, registerData } =
-        this.parseRegisterData(packetDataView);
-      packet = newPacket;
-      parsedRegData = registerData;
-      packetType = PacketTypes.PARSE_SENSOR_DATA;
+    if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
+      packetType = PacketTypes.IDENTIFY;
     }
+
+    // if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
+    //   const { newPacket, registerData } =
+    //     this.parseRegisterData(packetDataView);
+    //   packet = newPacket;
+    //   parsedRegData = registerData;
+    //   packetType = PacketTypes.PARSE_SENSOR_DATA;
+    // }
 
     return { type: packetType, currentPacket: packet, regData: parsedRegData };
   }

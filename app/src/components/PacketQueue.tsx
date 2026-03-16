@@ -8,13 +8,21 @@ const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
 
 interface PacketQueueProps {
-  queuePacket: (packet: Uint8Array, deviceID: string) => void;
+  processImmediatePacket: (packet: Uint8Array, deviceID: string) => void;
+  processIncomingPacket: (packet: Uint8Array, deviceID: string) => void;
 }
 
 const packetParser = new Packet();
 
+const packetsEqual = (a: Uint8Array | null, b: Uint8Array) => {
+  if (!a) return false;
+  if (a.length !== b.length) return false;
+  return a.every((v, i) => v === b[i]);
+};
+
 export const PacketQueueContext = createContext<PacketQueueProps>({
-  queuePacket: () => {},
+  processImmediatePacket: () => {},
+  processIncomingPacket: () => {},
 });
 
 const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
@@ -25,39 +33,43 @@ const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
   }
 };
 
-const processQueue = async (
-  packet: Uint8Array,
+const processPacket = async (
+  previousPacket: Uint8Array | null,
+  currentPacket: Uint8Array,
   deviceID: string,
   setUnitData: (data: ParsedRegisterData[]) => void,
 ) => {
   try {
-    const parsedReturnData = await packetParser.parsePacket(packet);
-
-    let sendPacket: Uint8Array | null = null;
-
-    const { type, currentPacket: parsedPacket, regData } = parsedReturnData;
-
-    if (type === PacketTypes.IDENTIFY) {
-      sendPacket = packet;
-    } else if (type === PacketTypes.GET_SENSOR_DATA) {
-      sendPacket = parsedPacket;
-    } else if (type === PacketTypes.PARSE_SENSOR_DATA) {
-      setUnitData(regData);
-      sendPacket = packetParser.sendGetSensorData();
-    }
-    else {
-      packetParser.get
-    }
-
-    if (sendPacket) {
-      setTimeout(() => {
-        sendNewPacket(deviceID, sendPacket as Uint8Array);
-      }, 3000);
+    if (currentPacket) {
+      sendNewPacket(deviceID, currentPacket as Uint8Array);
     }
   } catch (error) {
     console.error("Packet parsing error:", error);
   }
 };
+
+const processResponsePacket = async (
+  previousPacket: Uint8Array | null,
+  currentPacket: Uint8Array,
+  deviceID: string,
+  setUnitData: (data: ParsedRegisterData[]) => void,
+) => {
+  try {
+
+
+    
+
+
+
+
+    if (currentPacket) {
+      sendNewPacket(deviceID, currentPacket as Uint8Array);
+    }
+  } catch (error) {
+    console.error("Packet parsing error:", error);
+  }
+};
+
 
 export default function PacketQueueProvider({
   children,
@@ -65,14 +77,23 @@ export default function PacketQueueProvider({
   children: ReactNode;
 }) {
   const { setUnitData } = useContext(UnitDataContext);
+  const previousPacketRef = useRef<Uint8Array>(null);
 
-  const queuePacket = async (packet: Uint8Array, deviceID: string) => {
-    console.log("Incoming packet:", packet);
-    processQueue(packet, deviceID, setUnitData);
+  const processImmediatePacket = async (
+    packet: Uint8Array,
+    deviceID: string,
+  ) => {
+    console.log("Previous Packet:", previousPacketRef.current);
+    console.log("Current Packet:", packet);
+
+    const previousPacket = previousPacketRef.current;
+
+    processPacket(previousPacket, packet, deviceID, setUnitData);
+    previousPacketRef.current = packet;
   };
 
   return (
-    <PacketQueueContext.Provider value={{ queuePacket }}>
+    <PacketQueueContext.Provider value={{ processImmediatePacket }}>
       {children}
     </PacketQueueContext.Provider>
   );

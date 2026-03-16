@@ -11,7 +11,7 @@ import {
 import { HbsDevice } from "../types/hbsDevice";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { router } from "expo-router";
-import { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { UnitDataContext } from "./UnitDataProvider";
 
 interface ConnectedCardProps {
@@ -88,7 +88,7 @@ export default function ConnectedDeviceCard({
         {imageLink ? (
           <Image
             style={styles.connectedDeviceImage}
-            source={{uri:unitImageURL}}
+            source={{ uri: unitImageURL }}
           />
         ) : (
           <View
