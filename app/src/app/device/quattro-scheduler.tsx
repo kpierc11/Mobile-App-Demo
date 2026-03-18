@@ -8,13 +8,18 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { TimerPickerModal } from "react-native-timer-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import AntDesign from '@expo/vector-icons/AntDesign';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+
+
 
 export const CustomButton: React.FC<{
   label: string;
   onPress?: () => void;
 }> = ({ label, onPress }) => {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity style={[styles.button, {marginRight:20}]} onPress={onPress}>
       <Text style={{ color: "white", fontSize: 16 }}>{label}</Text>
       <MaterialCommunityIcons name="arrow-right" size={12} color={"white"} />
     </TouchableOpacity>
@@ -51,12 +56,20 @@ export default function QuattroScheduler() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={{ width: "100%", alignItems: "flex-end" }}>
+      <View style={{ width: "100%", flexDirection:"row", justifyContent:"center", alignItems: "center" }}>
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, {marginRight:"auto"}]}
           onPress={() => setShowPicker(true)}
         >
-          <Text style={{ color: "white" }}>Add new Time</Text>
+          <Text style={{ color: "white" }}>Add New Time</Text>
+          <AntDesign name="plus" size={16} color={"white"} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => setOffTimes([])}
+        >
+          <Text style={{ color: "white" }}>Clear Schedule</Text>
+          <MaterialIcons name="clear" size={16} color={"white"} />
         </TouchableOpacity>
       </View>
       <View style={{ marginTop: 20 }}></View>
@@ -144,6 +157,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
+    alignItems:"center"
   },
   title: {
     fontSize: 20,
@@ -159,7 +173,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginTop: 20,
-    marginRight: 20,
   },
 
   image: {
@@ -171,7 +184,7 @@ const styles = StyleSheet.create({
   },
 
   settingsCard: {
-    width: "95%",
+    width: "100%",
     padding: 10,
     borderRadius: 10,
     margin: 20,

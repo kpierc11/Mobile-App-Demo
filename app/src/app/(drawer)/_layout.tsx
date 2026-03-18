@@ -11,7 +11,7 @@ export default function DrawerLayout() {
     <Drawer
       screenOptions={{
         headerShown: true,
-        headerTintColor: theme.colors.text,
+        headerTintColor: theme.colors.primary,
         drawerActiveTintColor: theme.colors.primary,
         drawerInactiveTintColor: theme.colors.text,
         drawerStyle: { backgroundColor: theme.colors.card },
@@ -22,6 +22,7 @@ export default function DrawerLayout() {
         name="index"
         options={{
           title: "MyQuattro™",
+          headerTitleStyle:{color:theme.colors.text},
           drawerLabel: "Scan Devices",
           drawerIcon: ({ size, color }) => (
             <MaterialCommunityIcons

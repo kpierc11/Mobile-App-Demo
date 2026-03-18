@@ -7,6 +7,12 @@ import { ParsedRegisterData } from "../types/parsedRegisterData";
 const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
 const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
 
+const imageMap: Record<number, any> = {
+  24: require("../../assets/images/devices/solar-controller.png"),
+  25: require("../../assets/images/devices/ac-power-supply.png"),
+  40: require("../../assets/images/devices/24-volt-ac-dc-power.png"),
+};
+
 interface PacketQueueProps {
   processImmediatePacket: (packet: Uint8Array, deviceID: string) => void;
   processIncomingPacket: (packet: Uint8Array, deviceID: string) => void;
@@ -21,10 +27,7 @@ export const PacketQueueContext = createContext<PacketQueueProps>({
 
 const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
   try {
-    await BleManager.connect(deviceID);
-    await BleManager.retrieveServices(deviceID);
     await BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet]);
-    await BleManager.disconnect(deviceID);
   } catch (error) {
     console.log("BLE write error:", error);
   }
@@ -49,6 +52,7 @@ const processResponsePacket = async (
   packet: Uint8Array,
   deviceID: string,
   setUnitData: (data: ParsedRegisterData[]) => void,
+  setUnitImageUrl: (imageURL: string) => void,
 ) => {
   try {
     console.log("Processing response packet:" + packet);
@@ -70,6 +74,10 @@ const processResponsePacket = async (
         packetParser.parseRegisterData(packetDataView);
       parsedRegData = registerData;
       setUnitData(parsedRegData);
+      console.log(packetParser.header.source.hID);
+      if (packetParser.header.source.hID) {
+        setUnitImageUrl(imageMap[packetParser.header.source.hID]); 
+      }
       sendPacket = packetParser.sendGetSensorData();
     }
 
@@ -86,7 +94,7 @@ export default function PacketQueueProvider({
 }: {
   children: ReactNode;
 }) {
-  const { setUnitData } = useContext(UnitDataContext);
+  const { setUnitData, setUnitImageURL } = useContext(UnitDataContext);
   const previousPacketRef = useRef<Uint8Array>(null);
 
   const processImmediatePacket = async (
@@ -107,7 +115,7 @@ export default function PacketQueueProvider({
     deviceID: string,
   ) => {
     await new Promise((r) => setTimeout(r, 3000));
-    await processResponsePacket(packet, deviceID, setUnitData);
+    await processResponsePacket(packet, deviceID, setUnitData, setUnitImageURL);
   };
 
   return (

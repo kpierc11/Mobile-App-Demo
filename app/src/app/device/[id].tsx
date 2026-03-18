@@ -15,6 +15,7 @@ import Feather from "@expo/vector-icons/Feather";
 import { SettingsStore } from "@/src/hooks/useStorage";
 import { useTheme } from "@react-navigation/native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 export default function DeviceDetails() {
   const theme = useTheme();
@@ -57,34 +58,6 @@ export default function DeviceDetails() {
         { backgroundColor: theme.colors.background },
       ]}
     >
-      <TouchableOpacity
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "flex-end",
-          marginTop: 25,
-          flexDirection: "row",
-          gap: 10,
-          width: "100%",
-        }}
-        onPress={() =>
-          router.push({
-            pathname: "/device/quattro-scheduler",
-            params: { currentDeviceID: id, currentDeviceName: name },
-          })
-        }
-      >
-        <View style={styles.row}>
-          <Text style={[styles.label, { color: theme.colors.text }]}>
-            Quattro Scheduler
-          </Text>
-        </View>
-        <MaterialIcons
-          name="settings"
-          size={20}
-          color={theme.colors.text}
-        />
-      </TouchableOpacity>
       <Image
         source={require("../../../assets/images/devices/24-volt-ac-dc-power.png")}
         style={styles.image}
@@ -115,28 +88,22 @@ export default function DeviceDetails() {
             </View>
             <Feather name="edit" size={18} color={theme.colors.text} />
           </TouchableOpacity>
-
-          {/* Device ID */}
-          <View style={{ display: "flex", flexDirection: "row", gap: 2 }}>
-            <Text
-              style={[
-                styles.label,
-                { color: theme.colors.text, marginRight: 5 },
-              ]}
-            >
-              ID:
-            </Text>
-            <View style={{ display: "flex", flexWrap: "wrap" }}>
-              <Text
-                style={[
-                  styles.value,
-                  { color: theme.colors.text, flexWrap: "wrap", width: 250 },
-                ]}
-              >
-                {id}
+          <TouchableOpacity
+            style={styles.iconContainer}
+            onPress={() =>
+             router.push({
+              pathname: "/device/quattro-scheduler",
+              params: { currentDeviceID: id, currentDeviceName: name },
+            })
+            }
+          >
+            <View style={styles.row}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                Quattro Scheduler
               </Text>
             </View>
-          </View>
+            <Feather name="settings" size={18} color={theme.colors.text} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -205,12 +172,24 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
+  button: {
+    backgroundColor: "#215387",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+    gap: 5,
+    borderRadius: 5,
+    padding: 10,
+    marginTop: 20,
+  },
+
   image: {
     width: "80%",
     height: 200,
-    borderRadius:15,
-    marginTop:20,
-    marginBottom:20,
+    borderRadius: 15,
+    marginTop: 20,
+    marginBottom: 20,
   },
 
   settingsCard: {

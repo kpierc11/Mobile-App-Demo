@@ -39,10 +39,11 @@ export default function ConnectedDeviceCard({
   const theme = useTheme();
   const { unitData, setUnitData, setUnitImageURL, unitImageURL } =
     useContext(UnitDataContext);
+  const [imageURL, setImageURL] = useState(unitImageURL);
+
   const formatDeviceID = (deviceName: string) => {
     return deviceName.slice(0, 7);
   };
-  console.log(imageLink);
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
       {/* RSSI */}
@@ -85,10 +86,10 @@ export default function ConnectedDeviceCard({
 
       {/* Device Info */}
       <View style={{ flexDirection: "row", gap: 30 }}>
-        {imageLink ? (
+        {imageURL ? (
           <Image
             style={styles.connectedDeviceImage}
-            source={{ uri: unitImageURL }}
+            source={{ uri: imageURL }}
           />
         ) : (
           <View

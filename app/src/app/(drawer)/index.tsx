@@ -26,12 +26,6 @@ const READ_CHAR = "00001002-0000-1000-8000-00805f9b34fb";
 const READ_DESC = "00002902-0000-1000-8000-00805f9b34fb";
 const SCAN_DURATION = 5;
 
-const imageMap: Record<number, any> = {
-  24: require("../../../assets/images/devices/solar-controller.png"),
-  25: require("../../../assets/images/devices/ac-power-supply.png"),
-  40: require("../../../assets/images/devices/24-volt-ac-dc-power.png"),
-};
-
 export default function HomeScreen() {
   const [foundDeviceList, setFoundDeviceList] = useState<HbsDevice[]>([]);
   const [restartScan, setRestartScan] = useState<boolean>(false);
@@ -248,7 +242,6 @@ export default function HomeScreen() {
       const services = await BleManager.retrieveServices(device.id);
       if (services) {
         await BleManager.startNotification(device.id, SERVICE_UUID, READ_CHAR);
-        await new Promise((res) => setTimeout(res, 200));
 
         //enqueue packet for writing.
         processImmediatePacket(packet, device.id);

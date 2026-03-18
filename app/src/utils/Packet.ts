@@ -306,6 +306,10 @@ export class Packet {
       packetType = PacketTypes.ACK_KNOWLEDGE;
     }
 
+    if (pckCMD == PacketCmds.CBIN_PACKET_SET) {
+      packetType = PacketTypes.ACK_KNOWLEDGE;
+    }
+
     if (pckCMD == PacketCmds.CBIN_PACKET_IDENTIFY_MODE) {
       packetType = PacketTypes.IDENTIFY;
     }
