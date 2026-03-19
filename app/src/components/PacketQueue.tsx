@@ -3,9 +3,7 @@ import BleManager from "react-native-ble-manager";
 import { Packet, PacketTypes } from "@/src/utils/Packet";
 import { UnitDataContext } from "./UnitDataProvider";
 import { ParsedRegisterData } from "../types/parsedRegisterData";
-
-const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
-const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
+import { BLE_CONFIG } from "../constants/bleConfig";
 
 const imageMap: Record<number, any> = {
   24: require("../../assets/images/devices/solar-controller.png"),
@@ -27,7 +25,14 @@ export const PacketQueueContext = createContext<PacketQueueProps>({
 
 const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
   try {
-    await BleManager.write(deviceID, SERVICE_UUID, WRITE_CHAR, [...packet]);
+    // await BleManager.connect(deviceID);
+    // await BleManager.retrieveServices(deviceID);
+    await BleManager.write(
+      deviceID,
+      BLE_CONFIG.SERVICE_UUID,
+      BLE_CONFIG.WRITE_CHAR,
+      [...packet],
+    );
   } catch (error) {
     console.log("BLE write error:", error);
   }
@@ -37,7 +42,6 @@ const processPacket = async (
   previousPacket: Uint8Array | null,
   currentPacket: Uint8Array,
   deviceID: string,
-  setUnitData: (data: ParsedRegisterData[]) => void,
 ) => {
   try {
     if (currentPacket) {
@@ -76,7 +80,7 @@ const processResponsePacket = async (
       setUnitData(parsedRegData);
       console.log(packetParser.header.source.hID);
       if (packetParser.header.source.hID) {
-        setUnitImageUrl(imageMap[packetParser.header.source.hID]); 
+        setUnitImageUrl(imageMap[packetParser.header.source.hID]);
       }
       sendPacket = packetParser.sendGetSensorData();
     }
@@ -106,7 +110,7 @@ export default function PacketQueueProvider({
 
     const previousPacket = previousPacketRef.current;
 
-    await processPacket(previousPacket, packet, deviceID, setUnitData);
+    await processPacket(previousPacket, packet, deviceID);
     previousPacketRef.current = packet;
   };
 

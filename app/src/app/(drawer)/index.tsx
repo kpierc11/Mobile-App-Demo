@@ -19,12 +19,7 @@ import { HbsDevice } from "@/src/types/hbsDevice";
 import FoundDeviceCard from "@/src/components/FoundDeviceCard";
 import ConnectedDeviceCard from "@/src/components/ConnectedDeviceCard";
 import { PacketQueueContext } from "@/src/components/PacketQueue";
-
-const SERVICE_UUID = "00001000-0000-1000-8000-00805f9b34fb";
-const WRITE_CHAR = "00001001-0000-1000-8000-00805f9b34fb";
-const READ_CHAR = "00001002-0000-1000-8000-00805f9b34fb";
-const READ_DESC = "00002902-0000-1000-8000-00805f9b34fb";
-const SCAN_DURATION = 5;
+import { BLE_CONFIG } from "@/src/constants/bleConfig";
 
 export default function HomeScreen() {
   const [foundDeviceList, setFoundDeviceList] = useState<HbsDevice[]>([]);
@@ -148,11 +143,13 @@ export default function HomeScreen() {
       setFoundDeviceList([]);
       const scanOptions = {
         serviceUUIDs: [],
-        seconds: SCAN_DURATION,
+        seconds: BLE_CONFIG.SCAN_DURATION,
         allowDuplicates: false,
       };
       await BleManager.scan(scanOptions);
-    } catch (error) {}
+    } catch (error) {} 
+     
+    
   };
 
   const getSignalIcon = (rssi: number) => {
@@ -216,7 +213,11 @@ export default function HomeScreen() {
   const disconnectDevice = async (device: Peripheral) => {
     try {
       try {
-        await BleManager.stopNotification(device.id, SERVICE_UUID, WRITE_CHAR);
+        await BleManager.stopNotification(
+          device.id,
+          BLE_CONFIG.SERVICE_UUID,
+          BLE_CONFIG.WRITE_CHAR,
+        );
       } catch (e) {
         console.log("Notification was not active");
       }
@@ -241,7 +242,11 @@ export default function HomeScreen() {
     try {
       const services = await BleManager.retrieveServices(device.id);
       if (services) {
-        await BleManager.startNotification(device.id, SERVICE_UUID, READ_CHAR);
+        await BleManager.startNotification(
+          device.id,
+          BLE_CONFIG.SERVICE_UUID,
+          BLE_CONFIG.READ_CHAR,
+        );
 
         //enqueue packet for writing.
         processImmediatePacket(packet, device.id);
