@@ -14,6 +14,12 @@ import { router } from "expo-router";
 import React, { useContext, useState } from "react";
 import { UnitDataContext } from "./UnitDataProvider";
 
+const imageMap: Record<number, any> = {
+  24: require("../../assets/images/devices/solar-controller.png"),
+  25: require("../../assets/images/devices/ac-power-supply.png"),
+  40: require("../../assets/images/devices/24-volt-ac-dc-power.png"),
+};
+
 interface ConnectedCardProps {
   connectedDevice: HbsDevice;
   imageLink: string;
@@ -37,9 +43,8 @@ export default function ConnectedDeviceCard({
   disconnectDevice,
 }: ConnectedCardProps) {
   const theme = useTheme();
-  const { unitData, setUnitData, setUnitImageURL, unitImageURL } =
+  const { unitData, setUnitData, unitHID} =
     useContext(UnitDataContext);
-  const [imageURL, setImageURL] = useState(unitImageURL);
 
   const formatDeviceID = (deviceName: string) => {
     return deviceName.slice(0, 7);
@@ -86,10 +91,10 @@ export default function ConnectedDeviceCard({
 
       {/* Device Info */}
       <View style={{ flexDirection: "row", gap: 30 }}>
-        {imageURL ? (
+        {unitHID ? (
           <Image
             style={styles.connectedDeviceImage}
-            source={{ uri: imageURL }}
+            source={imageMap[unitHID]}
           />
         ) : (
           <View
@@ -224,7 +229,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   foundDeviceImage: {
-    width: 120,
+    width: 150,
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "flex-start",

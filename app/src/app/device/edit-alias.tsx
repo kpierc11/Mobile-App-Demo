@@ -1,38 +1,40 @@
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { View, StyleSheet, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SettingsStore } from "@/src/hooks/useStorage";
 import { useTheme } from "@react-navigation/native";
+import { Packet } from "@/src/utils/Packet";
+import { PacketQueueContext } from "@/src/components/PacketQueue";
 
 export default function EditAlias() {
   const theme = useTheme();
   const { currentDeviceID, currentDeviceName } = useLocalSearchParams();
   const [deviceName, setDeviceName] = useState(currentDeviceName);
+  const { processImmediatePacket } = useContext(PacketQueueContext);
+  const packetParser = new Packet();
 
   const formattedDeviceID = currentDeviceID.toString().replaceAll(":", "-");
 
   const getSavedName = async () => {
     try {
-      const savedName = await SettingsStore.getValueFor(
-        formattedDeviceID,
-      );
+      const savedName = await SettingsStore.getValueFor(formattedDeviceID);
 
       if (savedName) {
         setDeviceName(savedName);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const saveNewName = async () => {
     try {
-      await SettingsStore.save(
-        formattedDeviceID,
-        deviceName.toString(),
+      await SettingsStore.save(formattedDeviceID, deviceName.toString());
+      processImmediatePacket(
+        packetParser.sendSetAlias(currentDeviceName.toString()),
+        currentDeviceID.toString(),
       );
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
 

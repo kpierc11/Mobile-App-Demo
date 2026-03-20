@@ -248,7 +248,6 @@ export default function HomeScreen() {
           BLE_CONFIG.READ_CHAR,
         );
 
-        //enqueue packet for writing.
         processImmediatePacket(packet, device.id);
       }
     } catch (error) {}

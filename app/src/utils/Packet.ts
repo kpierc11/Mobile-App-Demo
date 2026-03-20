@@ -194,10 +194,11 @@ export class Packet {
    * Sends a packet to set an alias name for the device.
    * @returns Uint8Array
    */
-  sendSetAlias() {
+  sendSetAlias(alias: string) {
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
     this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
+    const maxStringSize = 19
 
     //8 random bytes
     for (let i = 0; i < 8; i++) {
@@ -209,12 +210,23 @@ export class Packet {
     this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_SET);
     adjustedHeaderSize += 1;
 
-    //
-    this.dataView.setUint8(byteOffset++, -120);
-    this.dataView.setUint8(byteOffset++, 20);
-    this.dataView.setUint8(byteOffset++, 0);
-    this.dataView.setUint8(byteOffset++, 0);
-    adjustedHeaderSize += 4;
+    //Set alias
+    const asciiCodes = Array.from(alias).map((char) => char.charCodeAt(0));
+
+    // asciiCodes.forEach((num) => {
+    //   this.dataView.setUint8(byteOffset++, num);
+    //   adjustedHeaderSize += 1;
+    // });
+
+    for (let i = 0; i <= maxStringSize; i++) {
+      let value = asciiCodes[i];
+      if (value) {
+        this.dataView.setUint8(byteOffset++, value);
+      } else {
+        this.dataView.setUint8(byteOffset++, 0);
+      }
+      adjustedHeaderSize += 1;
+    }
 
     //Update Header Length
     this.dataView.setUint8(2, adjustedHeaderSize);

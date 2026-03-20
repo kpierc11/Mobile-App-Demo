@@ -5,12 +5,6 @@ import { UnitDataContext } from "./UnitDataProvider";
 import { ParsedRegisterData } from "../types/parsedRegisterData";
 import { BLE_CONFIG } from "../constants/bleConfig";
 
-const imageMap: Record<number, any> = {
-  24: require("../../assets/images/devices/solar-controller.png"),
-  25: require("../../assets/images/devices/ac-power-supply.png"),
-  40: require("../../assets/images/devices/24-volt-ac-dc-power.png"),
-};
-
 interface PacketQueueProps {
   processImmediatePacket: (packet: Uint8Array, deviceID: string) => void;
   processIncomingPacket: (packet: Uint8Array, deviceID: string) => void;
@@ -23,10 +17,28 @@ export const PacketQueueContext = createContext<PacketQueueProps>({
   processIncomingPacket: () => {},
 });
 
-const sendNewPacket = async (deviceID: string, packet: Uint8Array) => {
+const sendProcessedPacket = async (deviceID: string, packet: Uint8Array) => {
   try {
-    // await BleManager.connect(deviceID);
-    // await BleManager.retrieveServices(deviceID);
+    await BleManager.connect(deviceID);
+    await BleManager.retrieveServices(deviceID);
+    await BleManager.write(
+      deviceID,
+      BLE_CONFIG.SERVICE_UUID,
+      BLE_CONFIG.WRITE_CHAR,
+      [...packet],
+    );
+  } catch (error) {
+    console.log("BLE write error:", error);
+  }
+};
+
+const sendImmediatePacket = async (deviceID: string, packet: Uint8Array) => {
+  try {
+    const connected = await BleManager.isPeripheralConnected(deviceID, []);
+    if (!connected) {
+      await BleManager.connect(deviceID);
+      await BleManager.retrieveServices(deviceID);
+    }
     await BleManager.write(
       deviceID,
       BLE_CONFIG.SERVICE_UUID,
@@ -45,7 +57,7 @@ const processPacket = async (
 ) => {
   try {
     if (currentPacket) {
-      sendNewPacket(deviceID, currentPacket as Uint8Array);
+      sendImmediatePacket(deviceID, currentPacket as Uint8Array);
     }
   } catch (error) {
     console.error("Packet parsing error:", error);
@@ -56,7 +68,7 @@ const processResponsePacket = async (
   packet: Uint8Array,
   deviceID: string,
   setUnitData: (data: ParsedRegisterData[]) => void,
-  setUnitImageUrl: (imageURL: string) => void,
+  setUnitHID: (hardwareID: number) => void,
 ) => {
   try {
     console.log("Processing response packet:" + packet);
@@ -78,15 +90,15 @@ const processResponsePacket = async (
         packetParser.parseRegisterData(packetDataView);
       parsedRegData = registerData;
       setUnitData(parsedRegData);
-      console.log(packetParser.header.source.hID);
       if (packetParser.header.source.hID) {
-        setUnitImageUrl(imageMap[packetParser.header.source.hID]);
+        setUnitHID(packetParser.header.source.hID);
       }
+      await new Promise((r) => setTimeout(r, 3000));
       sendPacket = packetParser.sendGetSensorData();
     }
 
     if (sendPacket) {
-      sendNewPacket(deviceID, sendPacket as Uint8Array);
+      sendProcessedPacket(deviceID, sendPacket as Uint8Array);
     }
   } catch (error) {
     console.error("Packet parsing error:", error);
@@ -98,7 +110,7 @@ export default function PacketQueueProvider({
 }: {
   children: ReactNode;
 }) {
-  const { setUnitData, setUnitImageURL } = useContext(UnitDataContext);
+  const { setUnitData, setUnitHID } = useContext(UnitDataContext);
   const previousPacketRef = useRef<Uint8Array>(null);
 
   const processImmediatePacket = async (
@@ -118,8 +130,7 @@ export default function PacketQueueProvider({
     packet: Uint8Array,
     deviceID: string,
   ) => {
-    await new Promise((r) => setTimeout(r, 3000));
-    await processResponsePacket(packet, deviceID, setUnitData, setUnitImageURL);
+    await processResponsePacket(packet, deviceID, setUnitData, setUnitHID);
   };
 
   return (

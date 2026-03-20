@@ -14,14 +14,20 @@ import * as Progress from "react-native-progress";
 import Feather from "@expo/vector-icons/Feather";
 import { SettingsStore } from "@/src/hooks/useStorage";
 import { useTheme } from "@react-navigation/native";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { Packet } from "@/src/utils/Packet";
+
+const imageMap: Record<number, any> = {
+  24: require("../../../assets/images/devices/solar-controller.png"),
+  25: require("../../../assets/images/devices/ac-power-supply.png"),
+  40: require("../../../assets/images/devices/24-volt-ac-dc-power.png"),
+};
 
 export default function DeviceDetails() {
   const theme = useTheme();
   const { deviceDetails } = useLocalSearchParams();
-  const { unitData } = useContext(UnitDataContext);
+  const { unitData, unitHID } = useContext(UnitDataContext);
   const [storedDeviceName, setStoredDeviceName] = useState("");
+  const packetParser = new Packet();
   const parsedDetails = deviceDetails
     ? JSON.parse(deviceDetails as string)
     : {};
@@ -59,11 +65,18 @@ export default function DeviceDetails() {
       ]}
     >
       <Image
-        source={require("../../../assets/images/devices/24-volt-ac-dc-power.png")}
+        source={imageMap[unitHID]}
         style={styles.image}
         resizeMode="cover"
       />
 
+      <View
+        style={{ display: "flex", justifyContent: "flex-start", width: "95%" }}
+      >
+        <Text style={[styles.mainHeading, { color: theme.colors.text }]}>
+          Device Properties
+        </Text>
+      </View>
       <View
         style={[styles.settingsCard, { backgroundColor: theme.colors.card }]}
       >
@@ -80,7 +93,7 @@ export default function DeviceDetails() {
           >
             <View style={styles.row}>
               <Text style={[styles.label, { color: theme.colors.text }]}>
-                Name:
+                Alias:
               </Text>
               <Text style={[styles.value, { color: theme.colors.text }]}>
                 {storedDeviceName ? storedDeviceName : name}
@@ -88,13 +101,28 @@ export default function DeviceDetails() {
             </View>
             <Feather name="edit" size={18} color={theme.colors.text} />
           </TouchableOpacity>
+          <View style={styles.iconContainer}>
+            <View style={styles.row}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                ID:
+              </Text>
+              <Text
+                style={[
+                  styles.value,
+                  { color: theme.colors.text, maxWidth: 200 },
+                ]}
+              >
+                {id}
+              </Text>
+            </View>
+          </View>
           <TouchableOpacity
             style={styles.iconContainer}
             onPress={() =>
-             router.push({
-              pathname: "/device/quattro-scheduler",
-              params: { currentDeviceID: id, currentDeviceName: name },
-            })
+              router.push({
+                pathname: "/device/quattro-scheduler",
+                params: { currentDeviceID: id, currentDeviceName: name },
+              })
             }
           >
             <View style={styles.row}>
@@ -107,6 +135,13 @@ export default function DeviceDetails() {
         </View>
       </View>
 
+      <View
+        style={{ display: "flex", justifyContent: "flex-start", width: "95%" }}
+      >
+        <Text style={[styles.mainHeading, { color: theme.colors.text }]}>
+          Sensor Readings
+        </Text>
+      </View>
       {/* Device Registers */}
       <View style={styles.cardWrapper}>
         {unitData.length > 0 ? (
@@ -165,6 +200,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 10,
+  },
+  mainHeading: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    marginTop: 10,
   },
   title: {
     fontSize: 24,
