@@ -1,27 +1,33 @@
 import { PacketQueueContext } from "@/src/components/PacketQueue";
 import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "@react-navigation/native";
-import { router } from "expo-router";
-import React, { useContext, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Switch,
+} from "react-native";
 import { TimerPickerModal } from "react-native-timer-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import AntDesign from '@expo/vector-icons/AntDesign';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-
-
-
+import AntDesign from "@expo/vector-icons/AntDesign";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Packet } from "@/src/utils/Packet";
 
 export const CustomButton: React.FC<{
   label: string;
   onPress?: () => void;
 }> = ({ label, onPress }) => {
   return (
-    <TouchableOpacity style={[styles.button, {marginRight:20}]} onPress={onPress}>
+    <TouchableOpacity
+      style={[styles.button, { marginRight: 20 }]}
+      onPress={onPress}
+    >
       <Text style={{ color: "white", fontSize: 16 }}>{label}</Text>
-      <MaterialCommunityIcons name="arrow-right" size={12} color={"white"} />
     </TouchableOpacity>
   );
 };
@@ -29,17 +35,47 @@ export const CustomButton: React.FC<{
 export default function QuattroScheduler() {
   const { processImmediatePacket } = useContext(PacketQueueContext);
   const theme = useTheme();
-
+  const packet = new Packet();
+  const { currentDeviceID, currentDeviceName } = useLocalSearchParams();
   const [showPicker, setShowPicker] = useState(false);
   const [alarmString, setAlarmString] = useState<string | null>(null);
   const [offTimes, setOffTimes] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isEnabled, setIsEnabled] = useState<boolean>(false);
+
+  const toggleSwitch = async () => {
+    setIsEnabled((previousState) => !previousState);
+    setIsLoading(true);
+    try {
+      if (isEnabled) {
+        await processImmediatePacket(
+          packet.sendTurnOffQuattros(),
+          currentDeviceID.toString(),
+        );
+      }
+
+      if (!isEnabled) {
+        await processImmediatePacket(
+          packet.sendTurnOnQuattros(),
+          currentDeviceID.toString(),
+        );
+      }
+
+      await new Promise((r) => setTimeout(r, 3000));
+    } catch (error) {
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const formatTime = ({
     hours,
     minutes,
+    ampm,
   }: {
     hours?: number;
     minutes?: number;
+    ampm?: "AM" | "PM";
   }) => {
     const timeParts = [];
 
@@ -49,32 +85,96 @@ export default function QuattroScheduler() {
     if (minutes !== undefined) {
       timeParts.push(minutes.toString().padStart(2, "0"));
     }
-    return timeParts.join(":");
+    const time = timeParts.join(":");
+
+    return ampm ? `${time} ${ampm}` : time;
   };
 
+  const handleClearSchedule = async () => {
+    setOffTimes([]);
+    try {
+      await processImmediatePacket(
+        packet.sendTurnOnQuattros(),
+        currentDeviceID.toString(),
+      );
+    } catch (error) {}
+  };
+
+  const getCurrentSchedule = async () => {
+    await processImmediatePacket(
+      packet.sendGetQuattroSchedule(),
+      currentDeviceID.toString(),
+    );
+  };
+
+  useEffect(() => {
+    getCurrentSchedule();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <View
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: 120,
+            width: "100%",
+          }}
+        >
+          <Text style={{ color: theme.colors.text, fontSize: 20 }}>
+            Updating Settings...
+          </Text>
+          <ActivityIndicator style={{ marginTop: 20 }} size="large" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView
+    <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={{ width: "100%", flexDirection:"row", justifyContent:"center", alignItems: "center" }}>
+      <View
+        style={{
+          display: "flex",
+          justifyContent: "flex-start",
+          width: "95%",
+          marginTop: 40,
+        }}
+      >
+        <Text style={[styles.mainHeading, { color: theme.colors.text }]}>
+          Schedule Selector
+        </Text>
+      </View>
+      <View
+        style={{
+          width: "100%",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <TouchableOpacity
-          style={[styles.button, {marginRight:"auto"}]}
+          style={[styles.button, { marginRight: "auto" }]}
           onPress={() => setShowPicker(true)}
         >
           <Text style={{ color: "white" }}>Add New Time</Text>
           <AntDesign name="plus" size={16} color={"white"} />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setOffTimes([])}
-        >
+        <TouchableOpacity style={styles.button} onPress={handleClearSchedule}>
           <Text style={{ color: "white" }}>Clear Schedule</Text>
           <MaterialIcons name="clear" size={16} color={"white"} />
         </TouchableOpacity>
       </View>
-      <View style={{ marginTop: 20 }}></View>
       <View
-        style={[styles.settingsCard, { backgroundColor: theme.colors.card }]}
+        style={[
+          styles.settingsCard,
+          { backgroundColor: theme.colors.card, marginTop: 20 },
+        ]}
       >
         <View style={styles.iconMainContainer}>
           {offTimes.length > 0 ? (
@@ -127,6 +227,7 @@ export default function QuattroScheduler() {
         }}
         setIsVisible={setShowPicker}
         use12HourPicker
+        minuteInterval={10}
         minuteLabel="min"
         styles={{
           theme: theme.dark ? "dark" : "light",
@@ -136,7 +237,7 @@ export default function QuattroScheduler() {
           },
           pickerLabel: {
             fontSize: 20,
-            fontWeight:500,
+            fontWeight: 500,
           },
           modalTitle: {
             fontSize: 18,
@@ -149,7 +250,7 @@ export default function QuattroScheduler() {
         }}
         visible={showPicker}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -157,7 +258,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    alignItems:"center"
+    alignItems: "center",
+  },
+  mainHeading: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    marginTop: 10,
   },
   title: {
     fontSize: 20,

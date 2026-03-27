@@ -12,6 +12,7 @@ export enum PacketTypes {
   IDENTIFY,
   GET_SENSOR_DATA,
   PARSE_SENSOR_DATA,
+  QUATTRO_SCHEDULE,
 }
 
 enum PacketCmds {
@@ -59,6 +60,7 @@ export class Packet {
    * @returns Uint8Array
    */
   sendSetTime(): Uint8Array {
+    this.resetBuffer();
     let byteOffset = this.header.length;
     let adjustedHeaderSize = 0;
 
@@ -115,6 +117,7 @@ export class Packet {
    * @returns Uint8Array
    */
   sendIdentifyUnit() {
+    this.resetBuffer();
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
     this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
@@ -155,6 +158,7 @@ export class Packet {
    * @returns Uint8Array
    */
   sendStopIdentifyUnit() {
+    this.resetBuffer();
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
     this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
@@ -195,10 +199,11 @@ export class Packet {
    * @returns Uint8Array
    */
   sendSetAlias(alias: string) {
+    this.resetBuffer();
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
     this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
-    const maxStringSize = 19
+    const maxStringSize = 19;
 
     //8 random bytes
     for (let i = 0; i < 8; i++) {
@@ -212,11 +217,6 @@ export class Packet {
 
     //Set alias
     const asciiCodes = Array.from(alias).map((char) => char.charCodeAt(0));
-
-    // asciiCodes.forEach((num) => {
-    //   this.dataView.setUint8(byteOffset++, num);
-    //   adjustedHeaderSize += 1;
-    // });
 
     for (let i = 0; i <= maxStringSize; i++) {
       let value = asciiCodes[i];
@@ -243,12 +243,151 @@ export class Packet {
   }
 
   /**
+   * Sends a packet to turns on the quattro heads
+   * @returns Uint8Array
+   */
+  sendTurnOnQuattros() {
+    this.resetBuffer();
+    let byteOffset = 16;
+    let adjustedHeaderSize = 0;
+    this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
+    const maxStringSize = 19;
+
+    //8 random bytes
+    for (let i = 0; i < 8; i++) {
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
+      adjustedHeaderSize += 1;
+    }
+
+    //Set Command
+    this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_SET);
+    adjustedHeaderSize += 1;
+
+    //Set Register ID and byte size
+    this.dataView.setUint8(byteOffset++, 2);
+    this.dataView.setUint8(byteOffset++, 0);
+    this.dataView.setUint8(byteOffset++, 36);
+    adjustedHeaderSize += 3;
+
+    for (let i = 0; i <= 36; i++) {
+      this.dataView.setUint8(byteOffset++, 255);
+      adjustedHeaderSize += 1;
+    }
+
+    //Update Header Length
+    this.dataView.setUint8(2, adjustedHeaderSize);
+
+    let ck = 0;
+    for (let i = 0; i < byteOffset; i++) {
+      ck -= this.dataView.getInt8(i);
+    }
+
+    //Add Checksum
+    this.dataView.setUint8(byteOffset++, ck & 0xff);
+
+    return new Uint8Array(this.dataView.buffer, 0, byteOffset);
+  }
+
+  /**
+   * Sends a packet to turn off the quattro heads
+   * @returns Uint8Array
+   */
+  sendTurnOffQuattros() {
+    this.resetBuffer();
+    let byteOffset = 16;
+    let adjustedHeaderSize = 0;
+    this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
+    const maxStringSize = 19;
+
+    //8 random bytes
+    for (let i = 0; i < 8; i++) {
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
+      adjustedHeaderSize += 1;
+    }
+
+    //Set Command
+    this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_SET);
+    adjustedHeaderSize += 1;
+
+    //Set Register ID and byte size
+    this.dataView.setUint8(byteOffset++, 2);
+    this.dataView.setUint8(byteOffset++, 0);
+    this.dataView.setUint8(byteOffset++, 36);
+    adjustedHeaderSize += 3;
+
+    for (let i = 0; i <= 36; i++) {
+      this.dataView.setUint8(byteOffset++, 0);
+      adjustedHeaderSize += 1;
+    }
+
+    //Update Header Length
+    this.dataView.setUint8(2, adjustedHeaderSize);
+
+    let ck = 0;
+    for (let i = 0; i < byteOffset; i++) {
+      ck -= this.dataView.getInt8(i);
+    }
+
+    //Add Checksum
+    this.dataView.setUint8(byteOffset++, ck & 0xff);
+
+    return new Uint8Array(this.dataView.buffer, 0, byteOffset);
+  }
+
+  /**
+   * Sends a packet to return the current Quattro Schedule
+   * @returns Uint8Array
+   */
+  sendGetQuattroSchedule() {
+    this.resetBuffer();
+    let byteOffset = 16;
+    let adjustedHeaderSize = 0;
+    this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
+    const maxStringSize = 19;
+
+    //8 random bytes
+    for (let i = 0; i < 8; i++) {
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
+      adjustedHeaderSize += 1;
+    }
+
+    //Set Command
+    this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_GET);
+    adjustedHeaderSize += 1;
+
+    //Set Register ID and byte size
+    this.dataView.setUint8(byteOffset++, 2);
+    this.dataView.setUint8(byteOffset++, 0);
+    this.dataView.setUint8(byteOffset++, 36);
+    adjustedHeaderSize += 3;
+
+    // for (let i = 0; i <= 36; i++) {
+    //   this.dataView.setUint8(byteOffset++, 0);
+    //   adjustedHeaderSize += 1;
+    // }
+
+    //Update Header Length
+    this.dataView.setUint8(2, adjustedHeaderSize);
+
+    let ck = 0;
+    for (let i = 0; i < byteOffset; i++) {
+      ck -= this.dataView.getInt8(i);
+    }
+
+    //Add Checksum
+    this.dataView.setUint8(byteOffset++, ck & 0xff);
+
+    return new Uint8Array(this.dataView.buffer, 0, byteOffset);
+  }
+
+  /**
    * The registers that are available for the device are determined by the hid.
    * This checks the current hid and finds the available registers located in the register class.
    * Once found, a packet is built to request the registers from the firmware.
    * @returns Uint8Array
    */
   sendGetSensorData() {
+    this.resetBuffer();
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
     this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
@@ -306,11 +445,17 @@ export class Packet {
    * @returns
    */
   async parsePacket(packet: Uint8Array) {
-    let packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
+    let packetDataView: DataView | null = new DataView(
+      packet.buffer,
+      0,
+      packet.byteLength,
+    );
 
     this.parseHeaderChunk(packetDataView);
 
     let pckCMD = packet[24];
+    let registerID = packet[25];
+    console.log("Register ID", registerID);
     let packetType: PacketTypes = PacketTypes.SET_TIME;
     let parsedRegData: any = [];
 
@@ -326,8 +471,10 @@ export class Packet {
       packetType = PacketTypes.IDENTIFY;
     }
 
-    if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA) {
+    if (pckCMD == PacketCmds.CBIN_PACKET_GET_DATA && registerID != 2) {
       packetType = PacketTypes.PARSE_SENSOR_DATA;
+    } else {
+      packetType = PacketTypes.QUATTRO_SCHEDULE;
     }
 
     return { type: packetType, currentPacket: packet, regData: parsedRegData };
@@ -338,6 +485,14 @@ export class Packet {
    */
   createHeaderChunk(destinationPacket: CUID, sourcePacket: CUID): void {
     let byteOffset = 0;
+
+    // //Reset Header before setting new values.
+    // this.header = {
+    //   signature: 0xb2c2,
+    //   length: 16,
+    //   destination: { fID: 0, hID: 0, serNum: 0 },
+    //   source: { fID: 0, hID: 0, serNum: 0 },
+    // };
 
     //Signature (2 bytes)
     this.dataView.setUint16(byteOffset, this.header.signature);
@@ -366,6 +521,8 @@ export class Packet {
    */
   parseHeaderChunk(dataView: DataView) {
     let byteOffset = 0;
+
+    this.dataView;
 
     //Signature (2 bytes)
     this.header.signature = dataView.getUint16(byteOffset);
@@ -421,7 +578,7 @@ export class Packet {
           break;
 
         default:
-          throw new Error(`Unsupported register size: ${registerByteLength}`);
+        // throw new Error(`Unsupported register size: ${registerByteLength}`);
       }
 
       const parsedReg = this.register.parseRegister(
@@ -434,5 +591,15 @@ export class Packet {
     }
 
     return { newPacket: new Uint8Array(), registerData: regData };
+  }
+
+  parseQuattroSchedule(packet: Uint8Array) {
+
+    
+  }
+
+  resetBuffer() {
+    this.buffer = new ArrayBuffer(250);
+    this.dataView = new DataView(this.buffer);
   }
 }

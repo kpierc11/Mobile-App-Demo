@@ -28,7 +28,7 @@ export default function HomeScreen() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevice, setConnectedDevice] = useState<HbsDevice>();
   const { setUnitData } = useContext(UnitDataContext);
-  const { processIncomingPacket, processImmediatePacket } =
+  const { processResponsePacket, processImmediatePacket } =
     useContext(PacketQueueContext);
   const [imageLink, setImageLink] = useState("");
   const sortedDevices = [...foundDeviceList].sort(
@@ -84,11 +84,16 @@ export default function HomeScreen() {
       },
     );
 
+    const onConnectPeripheralListener = BleManager.onConnectPeripheral(
+      ({ peripheral }) => {},
+    );
+
     const onDidUpdateValueForCharacteristicListener =
       BleManager.onDidUpdateValueForCharacteristic(
         ({ value, peripheral }: any) => {
           const returnData = new Uint8Array(value);
-          processIncomingPacket(returnData, peripheral);
+          console.log("Return Data: ", returnData);
+          processResponsePacket(returnData);
         },
       );
 
@@ -96,6 +101,7 @@ export default function HomeScreen() {
       onStopListener.remove();
       onDiscoveredPeripheralListener.remove();
       onDidUpdateValueForCharacteristicListener.remove();
+      onConnectPeripheralListener.remove();
     };
   }, []);
 
@@ -147,9 +153,7 @@ export default function HomeScreen() {
         allowDuplicates: false,
       };
       await BleManager.scan(scanOptions);
-    } catch (error) {} 
-     
-    
+    } catch (error) {}
   };
 
   const getSignalIcon = (rssi: number) => {
@@ -183,7 +187,7 @@ export default function HomeScreen() {
         BleManager.requestMTU(device.id, 512)
           .then((mtu) => {})
           .catch((error) => {
-            console.log(error);
+            console.error(error);
           });
       }
 
@@ -203,23 +207,23 @@ export default function HomeScreen() {
 
       startDeviceNotify(device, packet.sendSetTime());
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setIsConnecting(false);
-      console.log("connected");
     }
   };
 
   const disconnectDevice = async (device: Peripheral) => {
+    const CONNECTION_TIMEOUT = 6000;
     try {
       try {
         await BleManager.stopNotification(
-          device.id,
+          device.id, 
           BLE_CONFIG.SERVICE_UUID,
           BLE_CONFIG.WRITE_CHAR,
         );
       } catch (e) {
-        console.log("Notification was not active");
+        console.error("Notification was not active");
       }
 
       await BleManager.disconnect(device.id);
@@ -228,7 +232,7 @@ export default function HomeScreen() {
 
       setConnectedDevice(undefined);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

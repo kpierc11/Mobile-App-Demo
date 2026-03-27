@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useRef } from "react";
+import { createContext, ReactNode, useContext, useEffect, useRef } from "react";
 import BleManager from "react-native-ble-manager";
 import { Packet, PacketTypes } from "@/src/utils/Packet";
 import { UnitDataContext } from "./UnitDataProvider";
@@ -6,102 +6,78 @@ import { ParsedRegisterData } from "../types/parsedRegisterData";
 import { BLE_CONFIG } from "../constants/bleConfig";
 
 interface PacketQueueProps {
-  processImmediatePacket: (packet: Uint8Array, deviceID: string) => void;
-  processIncomingPacket: (packet: Uint8Array, deviceID: string) => void;
+  processImmediatePacket: (
+    packet: Uint8Array | null,
+    deviceID: string,
+  ) => Promise<void>;
+  processResponsePacket: (packet: Uint8Array) => Promise<void>;
 }
 
 const packetParser = new Packet();
 
 export const PacketQueueContext = createContext<PacketQueueProps>({
-  processImmediatePacket: () => {},
-  processIncomingPacket: () => {},
+  processImmediatePacket: async () => {},
+  processResponsePacket: async () => {},
 });
 
-const sendProcessedPacket = async (deviceID: string, packet: Uint8Array) => {
-  try {
-    await BleManager.connect(deviceID);
-    await BleManager.retrieveServices(deviceID);
-    await BleManager.write(
-      deviceID,
-      BLE_CONFIG.SERVICE_UUID,
-      BLE_CONFIG.WRITE_CHAR,
-      [...packet],
-    );
-  } catch (error) {
-    console.log("BLE write error:", error);
+const packetsEqual = (a: Uint8Array | null, b: Uint8Array) => {
+  if (!a) {
+    return;
   }
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 };
 
-const sendImmediatePacket = async (deviceID: string, packet: Uint8Array) => {
-  try {
-    const connected = await BleManager.isPeripheralConnected(deviceID, []);
-    if (!connected) {
-      await BleManager.connect(deviceID);
-      await BleManager.retrieveServices(deviceID);
-    }
-    await BleManager.write(
-      deviceID,
-      BLE_CONFIG.SERVICE_UUID,
-      BLE_CONFIG.WRITE_CHAR,
-      [...packet],
-    );
-  } catch (error) {
-    console.log("BLE write error:", error);
-  }
-};
-
-const processPacket = async (
-  previousPacket: Uint8Array | null,
-  currentPacket: Uint8Array,
-  deviceID: string,
-) => {
-  try {
-    if (currentPacket) {
-      sendImmediatePacket(deviceID, currentPacket as Uint8Array);
-    }
-  } catch (error) {
-    console.error("Packet parsing error:", error);
-  }
-};
-
-const processResponsePacket = async (
+const processSensorData = (
   packet: Uint8Array,
-  deviceID: string,
   setUnitData: (data: ParsedRegisterData[]) => void,
   setUnitHID: (hardwareID: number) => void,
 ) => {
+  const packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
+
+  const { registerData } = packetParser.parseRegisterData(packetDataView);
+  let parsedRegData: any = [];
+  parsedRegData = registerData;
+
+  setUnitData(parsedRegData);
+
+  if (packetParser.header.source.hID) {
+    setUnitHID(packetParser.header.source.hID);
+  }
+};
+
+const processQuattroSchedule = (packet:Uint8Array) =>{
+
+  let byteOffset = 16 + 8 + 3;
+  for(let i = byteOffset; i < packet.length; i++)
+  {
+    console.log(packet[i]);
+  }
+}
+
+const ensureConnected = async (deviceID: string) => {
+  const connected = await BleManager.isPeripheralConnected(deviceID, []);
+  if (!connected) {
+    await BleManager.connect(deviceID);
+    await BleManager.retrieveServices(deviceID);
+  }
+};
+
+const writePacket = async (deviceID: string, packet: Uint8Array) => {
   try {
-    console.log("Processing response packet:" + packet);
-    let sendPacket = null;
-    const parsedPacket = await packetParser.parsePacket(packet);
+    await ensureConnected(deviceID);
 
-    const { type, currentPacket, regData } = parsedPacket;
-
-    console.log("Packet type:" + type);
-
-    if (type === PacketTypes.ACK_KNOWLEDGE) {
-      sendPacket = packetParser.sendGetSensorData();
-    }
-
-    if (type === PacketTypes.PARSE_SENSOR_DATA) {
-      let packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
-      let parsedRegData: any = [];
-      const { newPacket, registerData } =
-        packetParser.parseRegisterData(packetDataView);
-      parsedRegData = registerData;
-      setUnitData(parsedRegData);
-      if (packetParser.header.source.hID) {
-        setUnitHID(packetParser.header.source.hID);
-      }
-      await new Promise((r) => setTimeout(r, 3000));
-      sendPacket = packetParser.sendGetSensorData();
-    }
-
-    if (sendPacket) {
-      sendProcessedPacket(deviceID, sendPacket as Uint8Array);
-    }
+    await BleManager.write(
+      deviceID,
+      BLE_CONFIG.SERVICE_UUID,
+      BLE_CONFIG.WRITE_CHAR,
+      [...packet],
+    );
   } catch (error) {
-    console.error("Packet parsing error:", error);
+    console.error("BLE write error:", error);
   }
 };
 
@@ -111,31 +87,55 @@ export default function PacketQueueProvider({
   children: ReactNode;
 }) {
   const { setUnitData, setUnitHID } = useContext(UnitDataContext);
-  const previousPacketRef = useRef<Uint8Array>(null);
+  const latestPacket = useRef<Uint8Array>(null);
+  const deviceIDRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (!deviceIDRef.current) return;
+
+      const packet = latestPacket.current ?? packetParser.sendGetSensorData();
+
+      await writePacket(deviceIDRef.current, packet);
+
+      latestPacket.current = null;
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [deviceIDRef.current]);
 
   const processImmediatePacket = async (
-    packet: Uint8Array,
+    packet: Uint8Array | null,
     deviceID: string,
   ) => {
-    console.log("Previous Packet:", previousPacketRef.current);
-    console.log("Current Packet:", packet);
-
-    const previousPacket = previousPacketRef.current;
-
-    await processPacket(previousPacket, packet, deviceID);
-    previousPacketRef.current = packet;
+    deviceIDRef.current = deviceID;
+    if (!packet) {
+      latestPacket.current = packetParser.sendGetSensorData();
+    } else {
+      latestPacket.current = packet;
+    }
   };
 
-  const processIncomingPacket = async (
-    packet: Uint8Array,
-    deviceID: string,
-  ) => {
-    await processResponsePacket(packet, deviceID, setUnitData, setUnitHID);
+  const processResponsePacket = async (packet: Uint8Array) => {
+    try {
+      const parsedPacket = await packetParser.parsePacket(packet);
+      const { type } = parsedPacket;
+
+      if (type === PacketTypes.PARSE_SENSOR_DATA) {
+        processSensorData(packet, setUnitData, setUnitHID);
+      }
+
+      if(type === PacketTypes.QUATTRO_SCHEDULE) {
+          processQuattroSchedule(packet)
+      }
+    } catch (error) {
+      console.error("Packet parsing error:", error);
+    }
   };
 
   return (
     <PacketQueueContext.Provider
-      value={{ processImmediatePacket, processIncomingPacket }}
+      value={{ processImmediatePacket, processResponsePacket }}
     >
       {children}
     </PacketQueueContext.Provider>
