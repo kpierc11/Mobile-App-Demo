@@ -17,6 +17,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Packet } from "@/src/utils/Packet";
+import { Button } from "@react-navigation/elements";
+
+interface TimeData {
+  time: number;
+  id: number;
+}
 
 export const CustomButton: React.FC<{
   label: string;
@@ -107,6 +113,25 @@ export default function QuattroScheduler() {
     );
   };
 
+  const handleRemoveTime = (timeIndex: number) => {
+    setOffTimes(offTimes.filter((a, index) => index !== timeIndex));
+  };
+
+  const handleScheduleUpdate = () => {
+    //const now = new Date();
+
+    //const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
+
+    offTimes.forEach((time) => {
+      const scheduleTime = time.split(":");
+      const hoursToMinutes = Number(scheduleTime[0]) * 60;
+      const minutes = Number(scheduleTime[1]);
+      const totalMinutes = hoursToMinutes + minutes;
+
+      console.log("Minutes:", totalMinutes);
+    });
+  };
+
   useEffect(() => {
     getCurrentSchedule();
   }, []);
@@ -183,7 +208,7 @@ export default function QuattroScheduler() {
                 <TouchableOpacity
                   key={index}
                   style={styles.iconContainer}
-                  onPress={() => setShowPicker(true)}
+                  onPress={() => handleRemoveTime(index)}
                 >
                   <View style={styles.row}>
                     <Text style={[styles.label, { color: theme.colors.text }]}>
@@ -193,7 +218,7 @@ export default function QuattroScheduler() {
                       style={[styles.value, { color: theme.colors.text }]}
                     ></Text>
                   </View>
-                  <Feather name="edit" size={18} color={theme.colors.text} />
+                  <Feather name="trash" size={22} color={theme.colors.text} />
                 </TouchableOpacity>
               );
             })
@@ -210,6 +235,11 @@ export default function QuattroScheduler() {
         </View>
       </View>
 
+      <View>
+        <TouchableOpacity onPress={handleScheduleUpdate}>
+          <Text style={{ color: theme.colors.text }}>Update Schedule</Text>
+        </TouchableOpacity>
+      </View>
       <TimerPickerModal
         closeOnOverlayPress
         modalProps={{

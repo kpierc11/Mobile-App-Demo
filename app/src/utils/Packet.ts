@@ -380,6 +380,52 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
+   /**
+   * Sends a packet to return the current Quattro Schedule
+   * @returns Uint8Array
+   */
+  sendSetQuattroSchedule() {
+    this.resetBuffer();
+    let byteOffset = 16;
+    let adjustedHeaderSize = 0;
+    this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
+    const maxStringSize = 19;
+
+    //8 random bytes
+    for (let i = 0; i < 8; i++) {
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
+      adjustedHeaderSize += 1;
+    }
+
+    //Set Command
+    this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_SET);
+    adjustedHeaderSize += 1;
+
+    //Set Register ID and byte size
+    this.dataView.setUint8(byteOffset++, 2);
+    this.dataView.setUint8(byteOffset++, 0);
+    this.dataView.setUint8(byteOffset++, 36);
+    adjustedHeaderSize += 3;
+
+    for (let i = 0; i <= 36; i++) {
+      this.dataView.setUint8(byteOffset++, 0);
+      adjustedHeaderSize += 1;
+    }
+
+    //Update Header Length
+    this.dataView.setUint8(2, adjustedHeaderSize);
+
+    let ck = 0;
+    for (let i = 0; i < byteOffset; i++) {
+      ck -= this.dataView.getInt8(i);
+    }
+
+    //Add Checksum
+    this.dataView.setUint8(byteOffset++, ck & 0xff);
+
+    return new Uint8Array(this.dataView.buffer, 0, byteOffset);
+  }
+
   /**
    * The registers that are available for the device are determined by the hid.
    * This checks the current hid and finds the available registers located in the register class.
