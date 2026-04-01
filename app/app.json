@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hydrobioscience.myquattro",
+      "bundleIdentifier": "com.dpipower.myquattro",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSBluetoothAlwaysUsageDescription": "This app uses Bluetooth to connect to Hydro BioScience devices.",
@@ -19,7 +19,7 @@
       }
     },
     "android": {
-      "package": "com.hydrobioscience.myquattro",
+      "package": "com.dpipower.myquattro",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/myquattro-app-icon-sky-blue.png"

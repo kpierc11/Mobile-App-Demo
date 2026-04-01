@@ -54,7 +54,7 @@ const processQuattroSchedule = (packet:Uint8Array) =>{
   let byteOffset = 16 + 8 + 3;
   for(let i = byteOffset; i < packet.length; i++)
   {
-    console.log(packet[i]);
+    //console.log(packet[i]);
   }
 }
 

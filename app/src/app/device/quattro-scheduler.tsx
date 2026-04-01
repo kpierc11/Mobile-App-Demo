@@ -98,38 +98,54 @@ export default function QuattroScheduler() {
 
   const handleClearSchedule = async () => {
     setOffTimes([]);
-    try {
-      await processImmediatePacket(
-        packet.sendTurnOnQuattros(),
-        currentDeviceID.toString(),
-      );
-    } catch (error) {}
   };
 
   const getCurrentSchedule = async () => {
-    await processImmediatePacket(
-      packet.sendGetQuattroSchedule(),
-      currentDeviceID.toString(),
-    );
+    try {
+      await processImmediatePacket(
+        packet.sendGetQuattroSchedule(),
+        currentDeviceID.toString(),
+      );
+    } catch (error) {}
   };
 
   const handleRemoveTime = (timeIndex: number) => {
     setOffTimes(offTimes.filter((a, index) => index !== timeIndex));
   };
 
-  const handleScheduleUpdate = () => {
-    //const now = new Date();
+  const handleScheduleUpdate = async () => {
+    setIsLoading(true);
 
-    //const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
+    let currentMinutes = 0;
 
-    offTimes.forEach((time) => {
-      const scheduleTime = time.split(":");
-      const hoursToMinutes = Number(scheduleTime[0]) * 60;
-      const minutes = Number(scheduleTime[1]);
-      const totalMinutes = hoursToMinutes + minutes;
+    try {
+      if (!offTimes) {
+        await processImmediatePacket(
+          packet.sendTurnOnQuattros(),
+          currentDeviceID.toString(),
+        );
+        return;
+      }
 
-      console.log("Minutes:", totalMinutes);
-    });
+      offTimes.forEach((time) => {
+        const scheduleTime = time.split(":");
+        const hoursToMinutes = Number(scheduleTime[0]) * 60;
+        const minutes = Number(scheduleTime[1]);
+        const totalMinutes = hoursToMinutes + minutes;
+
+        //console.log("Minutes:", totalMinutes);
+        currentMinutes = totalMinutes;
+      });
+
+      // await processImmediatePacket(
+      //   packet.sendSetQuattroSchedule(currentMinutes),
+      //   currentDeviceID.toString(),
+      // );
+      await new Promise((r) => setTimeout(r, 3000));
+    } catch (error) {
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -236,8 +252,8 @@ export default function QuattroScheduler() {
       </View>
 
       <View>
-        <TouchableOpacity onPress={handleScheduleUpdate}>
-          <Text style={{ color: theme.colors.text }}>Update Schedule</Text>
+        <TouchableOpacity style={styles.button} onPress={handleScheduleUpdate}>
+          <Text style={{ color: "white" }}>Update Schedule</Text>
         </TouchableOpacity>
       </View>
       <TimerPickerModal

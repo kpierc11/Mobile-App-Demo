@@ -92,7 +92,7 @@ export default function HomeScreen() {
       BleManager.onDidUpdateValueForCharacteristic(
         ({ value, peripheral }: any) => {
           const returnData = new Uint8Array(value);
-          console.log("Return Data: ", returnData);
+          //console.log("Return Data: ", returnData);
           processResponsePacket(returnData);
         },
       );
@@ -218,7 +218,7 @@ export default function HomeScreen() {
     try {
       try {
         await BleManager.stopNotification(
-          device.id, 
+          device.id,
           BLE_CONFIG.SERVICE_UUID,
           BLE_CONFIG.WRITE_CHAR,
         );
@@ -226,7 +226,16 @@ export default function HomeScreen() {
         console.error("Notification was not active");
       }
 
-      await BleManager.disconnect(device.id);
+      await Promise.race([
+        BleManager.disconnect(device.id),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Connection timed out")),
+            CONNECTION_TIMEOUT,
+          ),
+        ),
+      ]);
+
       setImageLink("");
       setUnitData([]);
 

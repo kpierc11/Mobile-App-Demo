@@ -361,11 +361,6 @@ export class Packet {
     this.dataView.setUint8(byteOffset++, 36);
     adjustedHeaderSize += 3;
 
-    // for (let i = 0; i <= 36; i++) {
-    //   this.dataView.setUint8(byteOffset++, 0);
-    //   adjustedHeaderSize += 1;
-    // }
-
     //Update Header Length
     this.dataView.setUint8(2, adjustedHeaderSize);
 
@@ -384,7 +379,7 @@ export class Packet {
    * Sends a packet to return the current Quattro Schedule
    * @returns Uint8Array
    */
-  sendSetQuattroSchedule() {
+  sendSetQuattroSchedule(minutes:number) {
     this.resetBuffer();
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
