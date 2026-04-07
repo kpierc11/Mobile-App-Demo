@@ -22,7 +22,7 @@
       "package": "com.dpipower.myquattro",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/myquattro-app-icon-sky-blue.png"
+        "foregroundImage": "./assets/images/myquattro-app-icon-sky-blue-3.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,

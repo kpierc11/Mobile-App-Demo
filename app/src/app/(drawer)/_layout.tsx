@@ -58,8 +58,10 @@ export default function DrawerLayout() {
       />
       <Drawer.Screen
         name="privacy-policy"
+        
         options={{
           title: "Privacy Policy",
+          headerTitleStyle:{color:theme.colors.text},
           drawerLabel: "Privacy Policy",
           drawerIcon: ({ size, color }) => (
             <MaterialCommunityIcons name="file-document" size={size} color={color} />

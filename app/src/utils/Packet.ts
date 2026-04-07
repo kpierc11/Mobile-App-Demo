@@ -635,7 +635,7 @@ export class Packet {
   }
 
   parseQuattroSchedule(packet: Uint8Array) {
-
+        
     
   }
 
