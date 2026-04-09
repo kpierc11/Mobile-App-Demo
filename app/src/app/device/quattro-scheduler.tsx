@@ -79,7 +79,7 @@ export default function QuattroScheduler() {
     minutes,
     ampm,
   }: {
-    hours?: number;
+    hours: number;
     minutes?: number;
     ampm?: "AM" | "PM";
   }) => {
@@ -93,7 +93,7 @@ export default function QuattroScheduler() {
     }
     const time = timeParts.join(":");
 
-    return ampm ? `${time} ${ampm}` : time;
+    return time;
   };
 
   const handleClearSchedule = async () => {

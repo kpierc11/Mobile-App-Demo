@@ -164,9 +164,33 @@ export default function DeviceDetails() {
                 />
               )}
 
-              {registerName.includes("Voltage") && (
+               {registerName.includes("Input") && (
                 <Progress.Bar
-                  progress={0.8}
+                  progress={Number(value / 24.0)}
+                  width={100}
+                  color={theme.colors.primary}
+                />
+              )}
+
+              {registerName.includes("Battery") && (
+                <Progress.Bar
+                  progress={Number(value / 16.48)}
+                  width={100}
+                  color={theme.colors.primary}
+                />
+              )}
+
+              {registerName.includes("Sonic 1 Voltage") && (
+                <Progress.Bar
+                  progress={Number(value / 44.0)}
+                  width={100}
+                  color={theme.colors.primary}
+                />
+              )}
+
+              {registerName.includes("Sonic 2 Voltage") && (
+                <Progress.Bar
+                  progress={Number(value / 44.0)}
                   width={100}
                   color={theme.colors.primary}
                 />
@@ -178,6 +202,7 @@ export default function DeviceDetails() {
               <Text
                 style={[styles.deviceInfoText, { color: theme.colors.text }]}
               >
+                {console.log(value)}
                 {value}
               </Text>
             </View>

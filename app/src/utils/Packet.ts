@@ -242,6 +242,48 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
+
+
+   /**
+   * Sends a packet to retrieve the alias name for the device.
+   * @returns Uint8Array
+   */
+  sendGetAlias(alias: string) {
+    this.resetBuffer();
+    let byteOffset = 16;
+    let adjustedHeaderSize = 0;
+    this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
+    const maxStringSize = 19;
+
+    //8 random bytes
+    for (let i = 0; i < 8; i++) {
+      this.dataView.setUint8(byteOffset++, Math.floor(Math.random() * 0));
+      adjustedHeaderSize += 1;
+    }
+
+    //Set Command
+    this.dataView.setUint8(byteOffset++, PacketCmds.CBIN_PACKET_SET);
+    adjustedHeaderSize += 1;
+
+    //Get alias
+    const asciiCodes = Array.from(alias).map((char) => char.charCodeAt(0));
+    this.dataView.setUint8(byteOffset++, 0)
+    this.dataView.setUint8(byteOffset++, 2)
+
+    //Update Header Length
+    this.dataView.setUint8(2, adjustedHeaderSize);
+
+    let ck = 0;
+    for (let i = 0; i < byteOffset; i++) {
+      ck -= this.dataView.getInt8(i);
+    }
+
+    //Add Checksum
+    this.dataView.setUint8(byteOffset++, ck & 0xff);
+
+    return new Uint8Array(this.dataView.buffer, 0, byteOffset);
+  }
+
   /**
    * Sends a packet to turns on the quattro heads
    * @returns Uint8Array
@@ -496,7 +538,6 @@ export class Packet {
 
     let pckCMD = packet[24];
     let registerID = packet[25];
-    console.log("Register ID", registerID);
     let packetType: PacketTypes = PacketTypes.SET_TIME;
     let parsedRegData: any = [];
 

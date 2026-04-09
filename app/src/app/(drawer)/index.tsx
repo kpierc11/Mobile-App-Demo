@@ -60,6 +60,7 @@ export default function HomeScreen() {
       (peripheral: Peripheral) => {
         const { name, advertising, rssi, id } = peripheral;
         const { isConnectable } = advertising;
+;
 
         if (
           rssi > -85 &&
@@ -84,6 +85,10 @@ export default function HomeScreen() {
       },
     );
 
+     const onDisconnectPeripheralListener = BleManager.onDisconnectPeripheral(({peripheral, status, domain,code})=>{
+        console.log(status);
+     })
+
     const onConnectPeripheralListener = BleManager.onConnectPeripheral(
       ({ peripheral }) => {},
     );
@@ -100,6 +105,7 @@ export default function HomeScreen() {
     return () => {
       onStopListener.remove();
       onDiscoveredPeripheralListener.remove();
+      onDisconnectPeripheralListener.remove();
       onDidUpdateValueForCharacteristicListener.remove();
       onConnectPeripheralListener.remove();
     };
@@ -340,8 +346,8 @@ export default function HomeScreen() {
         {connectedDevice && (
           <>
             {/* Header */}
-            <View style={{ alignSelf: "flex-start" }}>
-              <Text style={[styles.subHeading, { color: theme.colors.text }]}>
+            <View style={[styles.labelHeading, { backgroundColor: "#215387" }]}>
+              <Text style={[styles.labelHeadingText, { color: "white" }]}>
                 Connected Device
               </Text>
             </View>
@@ -369,14 +375,8 @@ export default function HomeScreen() {
         {sortedDevices.length > 0 ? (
           <>
             {/* Title */}
-            <View
-              style={{
-                alignSelf: "flex-start",
-                marginBottom: 2,
-                marginTop: 10,
-              }}
-            >
-              <Text style={[styles.subHeading, { color: theme.colors.text }]}>
+            <View style={[styles.labelHeading, { backgroundColor: "#215387" }]}>
+              <Text style={[styles.labelHeadingText, { color: "white" }]}>
                 Found Devices
               </Text>
             </View>
@@ -454,10 +454,26 @@ const styles = StyleSheet.create({
     color: "black",
   },
 
+  labelHeading: {
+    justifyContent: "center",
+    alignSelf: "flex-start",
+    borderRadius: 99,
+    padding: 8,
+    marginBottom: 10,
+    marginTop: 20,
+  },
+
+  labelHeadingText: {
+    fontWeight: "400",
+    fontSize: 12,
+  },
+
   subHeading: {
     fontSize: 18,
     fontWeight: "400",
     textAlign: "left",
+    display: "flex",
+    alignItems: "center",
     color: "black",
     marginBottom: 20,
   },

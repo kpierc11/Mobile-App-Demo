@@ -122,9 +122,9 @@ export class Register {
     } else if (data === 1) {
       formattedValue = "Detected";
     } else if (reg.name.toLowerCase().includes("temperature")) {
-      formattedValue = (data / 100).toFixed(2) + " (c)";
+      formattedValue = (data / 100).toFixed(2);
     } else if (reg.name.toLowerCase().includes("voltage")) {
-      formattedValue = (data / 1000).toFixed(3) + " (v)";
+      formattedValue = (data / 1000).toFixed(3);
     }
 
     return { registerName: reg?.name, value: formattedValue, hardwareID: hID };
