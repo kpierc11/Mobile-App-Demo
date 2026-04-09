@@ -202,7 +202,6 @@ export default function DeviceDetails() {
               <Text
                 style={[styles.deviceInfoText, { color: theme.colors.text }]}
               >
-                {console.log(value)}
                 {value}
               </Text>
             </View>

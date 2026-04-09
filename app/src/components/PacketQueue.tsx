@@ -52,7 +52,7 @@ const processSensorData = (
 const processQuattroSchedule = (packet:Uint8Array) =>{
 
   let byteOffset = 16 + 8 + 3;
-  console.log("Current Schedule" +packet);
+  //console.log("Current Schedule" +packet);
   for(let i = byteOffset; i < packet.length; i++)
   {
     //console.log(packet[i]);
