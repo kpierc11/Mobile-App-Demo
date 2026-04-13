@@ -3,6 +3,8 @@ import CustomDrawerContent from "@/src/components/CustomDrawerContent";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useTheme } from "@react-navigation/native";
+import { View } from "react-native";
+import { DrawerToggleButton } from "@react-navigation/drawer";
 
 export default function DrawerLayout() {
   const theme = useTheme();
@@ -10,7 +12,7 @@ export default function DrawerLayout() {
   return (
     <Drawer
       screenOptions={{
-        headerShown: true,
+        headerShown: false,
         headerTintColor: theme.colors.primary,
         drawerActiveTintColor: theme.colors.primary,
         drawerInactiveTintColor: theme.colors.text,
@@ -21,8 +23,9 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="index"
         options={{
+          headerShown: true,
           title: "MyQuattro™",
-          headerTitleStyle:{color:theme.colors.text},
+          headerTitleStyle: { color: theme.colors.text },
           drawerLabel: "Scan Devices",
           drawerIcon: ({ size, color }) => (
             <MaterialCommunityIcons
@@ -30,6 +33,11 @@ export default function DrawerLayout() {
               size={size}
               color={color}
             />
+          ),
+          headerLeft: (props) => (
+            <View>
+              <DrawerToggleButton {...props} tintColor={theme.colors.primary} />
+            </View>
           ),
         }}
       />
@@ -40,7 +48,11 @@ export default function DrawerLayout() {
           drawerLabel: "About",
           headerShown: false,
           drawerIcon: ({ size, color }) => (
-            <MaterialCommunityIcons name="file-document" size={size} color={color} />
+            <MaterialCommunityIcons
+              name="file-document"
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -48,7 +60,6 @@ export default function DrawerLayout() {
         name="settings"
         options={{
           title: "Settings",
-          headerShown:false,
           drawerLabel: "Settings",
           headerBackButtonDisplayMode: "default",
           drawerIcon: ({ size, color }) => (
@@ -57,18 +68,21 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
-        name="privacy-policy"
-        
+        name="privacy"
         options={{
           title: "Privacy Policy",
-          headerTitleStyle:{color:theme.colors.text},
+          headerTitleStyle: { color: theme.colors.text },
+          headerBackButtonDisplayMode: "default",
           drawerLabel: "Privacy Policy",
           drawerIcon: ({ size, color }) => (
-            <MaterialCommunityIcons name="file-document" size={size} color={color} />
+            <MaterialCommunityIcons
+              name="file-document"
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
-      
     </Drawer>
   );
 }

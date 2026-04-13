@@ -71,7 +71,7 @@ export default function DeviceDetails() {
       />
 
       <View
-        style={{ display: "flex", justifyContent: "flex-start", width: "95%" }}
+        style={{ display: "flex",justifyContent: "flex-start", width:"100%" }}
       >
         <Text style={[styles.mainHeading, { color: theme.colors.text }]}>
           Device Properties
@@ -136,7 +136,7 @@ export default function DeviceDetails() {
       </View>
 
       <View
-        style={{ display: "flex", justifyContent: "flex-start", width: "95%" }}
+        style={{ display: "flex", justifyContent: "flex-start", width: "100%" }}
       >
         <Text style={[styles.mainHeading, { color: theme.colors.text }]}>
           Sensor Readings
@@ -223,7 +223,8 @@ const styles = StyleSheet.create({
   scrollView: {
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 10,
+    marginHorizontal: 20,
+    paddingBottom:20
   },
   mainHeading: {
     fontSize: 18,
@@ -250,15 +251,18 @@ const styles = StyleSheet.create({
   },
 
   image: {
-    width: "80%",
+    width: "100%",
     height: 200,
+    maxWidth:400,
     borderRadius: 15,
     marginTop: 20,
     marginBottom: 20,
+    marginLeft:20, 
+    marginRight:20
   },
 
   settingsCard: {
-    width: "95%",
+    width: "100%",
     padding: 10,
     borderRadius: 10,
     margin: 20,
@@ -297,16 +301,21 @@ const styles = StyleSheet.create({
   cardWrapper: {
     flexDirection: "row",
     flexWrap: "wrap",
+    width:"100%",
+    justifyContent:"space-between"
   },
 
   card: {
     flexBasis: "48%",
-    margin: "1%",
+    gap:10,
+    // marginRight: 10,
     marginBottom: 20,
     padding: 20,
+    width:50,
     borderRadius: 10,
     elevation: 2,
     maxHeight: 250,
+  
   },
 
   subHeading: {

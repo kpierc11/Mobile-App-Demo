@@ -12,7 +12,7 @@ export default function AboutLayout() {
         options={{
           title: "About",
           headerLeft: (props) => (
-            <View style={{ marginLeft: -16 }}>
+            <View>
               <DrawerToggleButton {...props} tintColor={theme.colors.primary} />
             </View>
           ),

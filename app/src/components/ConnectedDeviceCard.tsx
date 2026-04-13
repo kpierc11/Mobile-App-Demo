@@ -67,7 +67,7 @@ export default function ConnectedDeviceCard({
         >
           <MaterialCommunityIcons
             name={"lightbulb-off-outline"}
-            size={28}
+            size={30}
             color={theme.colors.primary}
           />
         </TouchableOpacity>
@@ -75,7 +75,7 @@ export default function ConnectedDeviceCard({
           <MaterialCommunityIcons
             style={{ marginRight: 20 }}
             name={"lightbulb-on-10"}
-            size={28}
+            size={30}
             color={theme.colors.primary}
           />
         </TouchableOpacity>
@@ -83,7 +83,7 @@ export default function ConnectedDeviceCard({
         <View>
           <MaterialCommunityIcons
             name={getSignalIcon}
-            size={20}
+            size={24}
             color={theme.colors.primary}
           />
         </View>
@@ -113,7 +113,7 @@ export default function ConnectedDeviceCard({
           <Text style={{ fontWeight: "bold", color: theme.colors.text }}>
             {formatDeviceID(connectedDevice.device.id)}
           </Text>
-          <Text style={{ maxWidth: 150, color: theme.colors.text }}>
+          <Text style={{ maxWidth: 300, color: theme.colors.text }}>
             {connectedDevice.storedDeviceName
               ? connectedDevice.storedDeviceName
               : connectedDevice.device.name}
@@ -225,7 +225,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     objectFit: "cover",
     height: 120,
-    width: 150,
+    width: "100%",
+    maxWidth:400,
     borderRadius: 15,
   },
   foundDeviceImage: {

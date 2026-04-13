@@ -2,7 +2,6 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { View, TouchableOpacity, Image, Text, StyleSheet } from "react-native";
 import { HbsDevice } from "../types/hbsDevice";
-import { Peripheral } from "react-native-ble-manager";
 
 interface FoundDeviceProps {
   peripheral: HbsDevice;
@@ -51,7 +50,7 @@ export default function FoundDeviceCard({
         >
           <MaterialCommunityIcons
             name={"lightbulb-off-outline"}
-            size={28}
+            size={30}
             color={theme.colors.primary}
           />
         </TouchableOpacity>
@@ -59,7 +58,7 @@ export default function FoundDeviceCard({
           <MaterialCommunityIcons
             style={{ marginRight: 20 }}
             name={"lightbulb-on-10"}
-            size={28}
+            size={30}
             color={theme.colors.primary}
           />
         </TouchableOpacity>
@@ -67,7 +66,7 @@ export default function FoundDeviceCard({
         <View>
           <MaterialCommunityIcons
             name={getSignalIcon}
-            size={20}
+            size={24}
             color={theme.colors.primary}
           />
         </View>
@@ -80,7 +79,7 @@ export default function FoundDeviceCard({
           <Text style={{ color: theme.colors.text }}>
             {formatDeviceID(peripheral.device.id)}
           </Text>
-          <Text style={{ maxWidth: 150, color: theme.colors.text }}>
+          <Text style={{ maxWidth: 300, color: theme.colors.text }}>
             {peripheral.storedDeviceName
               ? peripheral.storedDeviceName
               : peripheral.device.name}

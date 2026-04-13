@@ -44,12 +44,20 @@ export default function HomeScreen() {
       return;
     }
     await BleManager.start({ showAlert: true });
-    getConnectedDevices();
-    startScanningDevices();
+    //await getConnectedDevices();
+    await startScanningDevices();
   };
 
   useEffect(() => {
     initBLE();
+
+    const stateListener = BleManager.onDidUpdateState((args: any) => {
+      if (args.state === "on") {
+        setTimeout(() => {
+          startScanningDevices();
+        }, 300);
+      }
+    });
 
     const onStopListener = BleManager.onStopScan(() => {
       setRestartScan(false);
@@ -60,7 +68,6 @@ export default function HomeScreen() {
       (peripheral: Peripheral) => {
         const { name, advertising, rssi, id } = peripheral;
         const { isConnectable } = advertising;
-;
 
         if (
           rssi > -85 &&
@@ -71,6 +78,7 @@ export default function HomeScreen() {
             setFoundDeviceList((prev) => {
               const exists = prev.some((item) => item.device.id === id);
               if (exists) return prev;
+
               return [
                 ...prev,
                 {
@@ -85,24 +93,24 @@ export default function HomeScreen() {
       },
     );
 
-     const onDisconnectPeripheralListener = BleManager.onDisconnectPeripheral(({peripheral, status, domain,code})=>{
-        console.log(status);
-     })
+    const onDisconnectPeripheralListener = BleManager.onDisconnectPeripheral(
+      ({ peripheral }) => {
+       
+      },
+    );
 
     const onConnectPeripheralListener = BleManager.onConnectPeripheral(
       ({ peripheral }) => {},
     );
 
     const onDidUpdateValueForCharacteristicListener =
-      BleManager.onDidUpdateValueForCharacteristic(
-        ({ value, peripheral }: any) => {
-          const returnData = new Uint8Array(value);
-          //console.log("Return Data: ", returnData);
-          processResponsePacket(returnData);
-        },
-      );
+      BleManager.onDidUpdateValueForCharacteristic(({ value }: any) => {
+        const returnData = new Uint8Array(value);
+        processResponsePacket(returnData);
+      });
 
     return () => {
+      stateListener.remove();
       onStopListener.remove();
       onDiscoveredPeripheralListener.remove();
       onDisconnectPeripheralListener.remove();
@@ -147,19 +155,20 @@ export default function HomeScreen() {
   };
 
   const startScanningDevices = async () => {
-    if (isScanning) {
-      return;
-    }
+    setIsScanning(true);
     try {
-      setIsScanning(true);
-      setFoundDeviceList([]);
       const scanOptions = {
         serviceUUIDs: [],
         seconds: BLE_CONFIG.SCAN_DURATION,
-        allowDuplicates: false,
       };
       await BleManager.scan(scanOptions);
-    } catch (error) {}
+      await new Promise((r) => {
+        setTimeout(r, 3000);
+      });
+    } catch (error) {
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const getSignalIcon = (rssi: number) => {
@@ -334,100 +343,108 @@ export default function HomeScreen() {
       <Text style={[styles.deviceTitle, { color: theme.colors.text }]}>
         HBS Devices
       </Text>
-      <ScrollView
-        contentContainerStyle={styles.scrollView}
-        refreshControl={
-          <RefreshControl
-            refreshing={isScanning}
-            onRefresh={handleDeviceListRefresh}
-          />
-        }
-      >
-        {connectedDevice && (
-          <>
-            {/* Header */}
-            <View style={[styles.labelHeading, { backgroundColor: "#215387" }]}>
-              <Text style={[styles.labelHeadingText, { color: "white" }]}>
-                Connected Device
-              </Text>
-            </View>
-
-            <ConnectedDeviceCard
-              connectedDevice={connectedDevice}
-              imageLink={imageLink}
-              getSignalIcon={getSignalIcon(connectedDevice.device.rssi)}
-              identifyUnit={() =>
-                processImmediatePacket(
-                  packet.sendIdentifyUnit(),
-                  connectedDevice.device.id,
-                )
-              }
-              stopIdentifyUnit={() =>
-                processImmediatePacket(
-                  packet.sendStopIdentifyUnit(),
-                  connectedDevice.device.id,
-                )
-              }
-              disconnectDevice={() => disconnectDevice(connectedDevice.device)}
-            ></ConnectedDeviceCard>
-          </>
-        )}
-        {sortedDevices.length > 0 ? (
-          <>
-            {/* Title */}
-            <View style={[styles.labelHeading, { backgroundColor: "#215387" }]}>
-              <Text style={[styles.labelHeadingText, { color: "white" }]}>
-                Found Devices
-              </Text>
-            </View>
-
-            {isConnecting ? (
-              <View style={{ flex: 1, paddingHorizontal: 20 }}>
-                <Text
-                  style={{
-                    textAlign: "center",
-                    marginTop: 20,
-                    fontSize: 18,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Connecting to Device...
+      <View style={{ maxWidth: 800 }}>
+        <ScrollView
+          contentContainerStyle={styles.scrollView}
+          refreshControl={
+            <RefreshControl
+              refreshing={isScanning}
+              onRefresh={handleDeviceListRefresh}
+            />
+          }
+        >
+          {connectedDevice && (
+            <>
+              {/* Header */}
+              <View
+                style={[styles.labelHeading, { backgroundColor: "#215387" }]}
+              >
+                <Text style={[styles.labelHeadingText, { color: "white" }]}>
+                  Connected Device
                 </Text>
-                <ActivityIndicator
-                  style={{ marginTop: 20, marginBottom: 40 }}
-                  size="large"
-                />
               </View>
-            ) : (
-              <></>
-            )}
 
-            {/* Device list */}
-            {sortedDevices.map((item: HbsDevice, index) => (
-              <FoundDeviceCard
-                key={index}
-                peripheral={item}
-                connectToDevice={() => connectToDevice(item.device)}
+              <ConnectedDeviceCard
+                connectedDevice={connectedDevice}
+                imageLink={imageLink}
+                getSignalIcon={getSignalIcon(connectedDevice.device.rssi)}
                 identifyUnit={() =>
                   processImmediatePacket(
                     packet.sendIdentifyUnit(),
-                    item.device.id,
+                    connectedDevice.device.id,
                   )
                 }
                 stopIdentifyUnit={() =>
                   processImmediatePacket(
                     packet.sendStopIdentifyUnit(),
-                    item.device.id,
+                    connectedDevice.device.id,
                   )
                 }
-                getSignalIcon={getSignalIcon(item.device.rssi)}
-              ></FoundDeviceCard>
-            ))}
-          </>
-        ) : (
-          <></>
-        )}
-      </ScrollView>
+                disconnectDevice={() =>
+                  disconnectDevice(connectedDevice.device)
+                }
+              ></ConnectedDeviceCard>
+            </>
+          )}
+          {sortedDevices.length > 0 ? (
+            <>
+              {/* Title */}
+              <View
+                style={[styles.labelHeading, { backgroundColor: "#215387" }]}
+              >
+                <Text style={[styles.labelHeadingText, { color: "white" }]}>
+                  Found Devices
+                </Text>
+              </View>
+
+              {isConnecting ? (
+                <View style={{ flex: 1, paddingHorizontal: 20 }}>
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      marginTop: 20,
+                      fontSize: 18,
+                      color: theme.colors.text,
+                    }}
+                  >
+                    Connecting to Device...
+                  </Text>
+                  <ActivityIndicator
+                    style={{ marginTop: 20, marginBottom: 40 }}
+                    size="large"
+                  />
+                </View>
+              ) : (
+                <></>
+              )}
+
+              {/* Device list */}
+              {sortedDevices.map((item: HbsDevice, index) => (
+                <FoundDeviceCard
+                  key={index}
+                  peripheral={item}
+                  connectToDevice={() => connectToDevice(item.device)}
+                  identifyUnit={() =>
+                    processImmediatePacket(
+                      packet.sendIdentifyUnit(),
+                      item.device.id,
+                    )
+                  }
+                  stopIdentifyUnit={() =>
+                    processImmediatePacket(
+                      packet.sendStopIdentifyUnit(),
+                      item.device.id,
+                    )
+                  }
+                  getSignalIcon={getSignalIcon(item.device.rssi)}
+                ></FoundDeviceCard>
+              ))}
+            </>
+          ) : (
+            <></>
+          )}
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -435,8 +452,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     paddingHorizontal: 20,
+    alignItems: "center",
   },
 
   scrollView: {
@@ -449,6 +467,7 @@ const styles = StyleSheet.create({
 
   deviceTitle: {
     fontSize: 25,
+    width:"100%",
     fontWeight: "bold",
     textAlign: "left",
     color: "black",

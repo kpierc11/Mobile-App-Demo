@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { SettingsStore } from "../hooks/useStorage";
 import { ThemeContext, ThemeMode } from "../components/ThemeContext";
 import PacketQueueProvider from "../components/PacketQueue";
+import { View } from "react-native";
+import { DrawerToggleButton } from "@react-navigation/drawer";
 
 export default function RootLayout() {
   const [mode, setMode] = useState<ThemeMode>("dark");
@@ -34,13 +36,8 @@ export default function RootLayout() {
       <ThemeProvider value={theme}>
         <UnitDataProvider>
           <PacketQueueProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                headerTintColor: theme.colors.primary,
-              }}
-            >
-              <Stack.Screen name="(drawer)" />
+            <Stack screenOptions={{headerShown:false}}>
+              <Stack.Screen name="(drawer)" options={{headerShown:false}} />
             </Stack>
             <StatusBar style={mode === "dark" ? "light" : "dark"} />
           </PacketQueueProvider>

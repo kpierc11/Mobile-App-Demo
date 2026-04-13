@@ -29,3 +29,6 @@
 //     height: Dimensions.get("window").height,
 //   },
 // });
+export default function UserManual() {
+    return <></>
+}

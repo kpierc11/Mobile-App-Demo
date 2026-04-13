@@ -20,17 +20,6 @@ export const PacketQueueContext = createContext<PacketQueueProps>({
   processResponsePacket: async () => {},
 });
 
-const packetsEqual = (a: Uint8Array | null, b: Uint8Array) => {
-  if (!a) {
-    return;
-  }
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-};
-
 const processSensorData = (
   packet: Uint8Array,
   setUnitData: (data: ParsedRegisterData[]) => void,

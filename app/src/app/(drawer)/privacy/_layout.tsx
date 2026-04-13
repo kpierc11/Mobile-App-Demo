@@ -3,18 +3,14 @@ import { useTheme } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { View } from "react-native";
 
-export default function SettingsLayout() {
+export default function AboutLayout() {
   const theme = useTheme();
   return (
-    <Stack
-      screenOptions={{
-        contentStyle: { width: "100%", margin: 0, padding: 0 },
-      }}
-    >
+    <Stack>
       <Stack.Screen
         name="index"
         options={{
-          title: "Settings",
+          title: "Privacy Policy",
           headerLeft: (props) => (
             <View>
               <DrawerToggleButton {...props} tintColor={theme.colors.primary} />
@@ -22,8 +18,6 @@ export default function SettingsLayout() {
           ),
         }}
       />
-      <Stack.Screen name="appearance" options={{ title: "Appearance" }} />
-      <Stack.Screen name="language" options={{ title: "Language" }} />
     </Stack>
   );
 }

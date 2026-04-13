@@ -75,6 +75,7 @@ export default function SupportedDevices() {
 
         <Image
           style={styles.image}
+          
           source={require("../../../../assets/images/devices/24-volt-ac-dc-power.png")}
           contentFit="cover"
         />
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
     display: "flex",
     marginBottom: 60,
     justifyContent: "center",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
   subTitle: {
     fontSize: 18,
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     marginTop: 20,
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
     marginLeft: 10,
@@ -137,6 +138,7 @@ const styles = StyleSheet.create({
   image: {
     height: 200,
     width: "100%",
+    maxWidth:600,
     marginBottom: 20,
     borderRadius: 15,
   },
