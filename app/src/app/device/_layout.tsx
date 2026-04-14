@@ -29,8 +29,18 @@ export default function DeviceLayout() {
       />
       <Stack.Screen
         name="edit-alias"
+        
         options={{
           title: "Edit Alias",
+          headerLeft: (props) => (
+            <HeaderBackButton
+              {...props}
+              label="Devices"
+              labelStyle={{ fontSize: 16, color: theme.colors.primary }}
+              onPress={() => router.back()}
+              tintColor={theme.colors.primary}
+            />
+          ),
         }}
       />
       <Stack.Screen

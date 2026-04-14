@@ -7,6 +7,7 @@ import {
   RefreshControl,
   PermissionsAndroid,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +21,8 @@ import FoundDeviceCard from "@/src/components/FoundDeviceCard";
 import ConnectedDeviceCard from "@/src/components/ConnectedDeviceCard";
 import { PacketQueueContext } from "@/src/components/PacketQueue";
 import { BLE_CONFIG } from "@/src/constants/bleConfig";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import FilterOptions from "@/src/components/FilterOptions";
 
 export default function HomeScreen() {
   const [foundDeviceList, setFoundDeviceList] = useState<HbsDevice[]>([]);
@@ -27,13 +30,43 @@ export default function HomeScreen() {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedDevice, setConnectedDevice] = useState<HbsDevice>();
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filterAlphabetically, setFilterAlphabetically] =
+    useState<boolean>(false);
   const { setUnitData } = useContext(UnitDataContext);
   const { processResponsePacket, processImmediatePacket } =
     useContext(PacketQueueContext);
   const [imageLink, setImageLink] = useState("");
-  const sortedDevices = [...foundDeviceList].sort(
-    (a, b) => b.device.rssi - a.device.rssi,
-  );
+
+  const sortedDevices = foundDeviceList
+    .filter((a) => {
+      if (searchTerm != "") {
+        const nameA = a.storedDeviceName.toUpperCase()
+          ? a.storedDeviceName.toUpperCase()
+          : a.device.name.toUpperCase();
+
+        return nameA.includes(searchTerm.toUpperCase());
+      }
+      return a
+    })
+    .sort((a, b) => {
+      if (filterAlphabetically) {
+        const nameA = a.storedDeviceName.toUpperCase()
+          ? a.storedDeviceName.toUpperCase()
+          : a.device.name;
+        const nameB = b.storedDeviceName.toUpperCase()
+          ? b.storedDeviceName.toUpperCase()
+          : b.device.name;
+        if (nameA < nameB) {
+          return -1;
+        }
+        if (nameA > nameB) {
+          return 1;
+        }
+        return 0;
+      }
+      return b.device.rssi - a.device.rssi;
+    });
 
   const theme = useTheme();
   const packet = new Packet();
@@ -44,7 +77,7 @@ export default function HomeScreen() {
       return;
     }
     await BleManager.start({ showAlert: true });
-    //await getConnectedDevices();
+
     await startScanningDevices();
   };
 
@@ -74,6 +107,9 @@ export default function HomeScreen() {
           isConnectable &&
           name?.toLowerCase().includes("ble#")
         ) {
+          console.log(advertising.localName);
+          console.log(id);
+          console.log(name);
           getStoredDeviceName(id).then((storedName) => {
             setFoundDeviceList((prev) => {
               const exists = prev.some((item) => item.device.id === id);
@@ -94,9 +130,7 @@ export default function HomeScreen() {
     );
 
     const onDisconnectPeripheralListener = BleManager.onDisconnectPeripheral(
-      ({ peripheral }) => {
-       
-      },
+      ({ peripheral }) => {},
     );
 
     const onConnectPeripheralListener = BleManager.onConnectPeripheral(
@@ -106,6 +140,7 @@ export default function HomeScreen() {
     const onDidUpdateValueForCharacteristicListener =
       BleManager.onDidUpdateValueForCharacteristic(({ value }: any) => {
         const returnData = new Uint8Array(value);
+        console.log(returnData);
         processResponsePacket(returnData);
       });
 
@@ -343,7 +378,20 @@ export default function HomeScreen() {
       <Text style={[styles.deviceTitle, { color: theme.colors.text }]}>
         HBS Devices
       </Text>
+
       <View style={{ maxWidth: 800 }}>
+        <FilterOptions
+          filterAlphabetically={filterAlphabetically}
+          setFilterAphabetically={() => {
+            !filterAlphabetically
+              ? setFilterAlphabetically(true)
+              : setFilterAlphabetically(false);
+          }}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        >
+          {" "}
+        </FilterOptions>
         <ScrollView
           contentContainerStyle={styles.scrollView}
           refreshControl={
@@ -386,15 +434,26 @@ export default function HomeScreen() {
               ></ConnectedDeviceCard>
             </>
           )}
-          {sortedDevices.length > 0 ? (
+          {foundDeviceList.length > 0 ? (
             <>
-              {/* Title */}
               <View
-                style={[styles.labelHeading, { backgroundColor: "#215387" }]}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
               >
-                <Text style={[styles.labelHeadingText, { color: "white" }]}>
-                  Found Devices
-                </Text>
+                <View
+                  style={[
+                    styles.labelHeading,
+                    { backgroundColor: "#215387", marginRight: "auto" },
+                  ]}
+                >
+                  <Text style={[styles.labelHeadingText, { color: "white" }]}>
+                    Found Devices
+                  </Text>
+                </View>
               </View>
 
               {isConnecting ? (
@@ -458,7 +517,7 @@ const styles = StyleSheet.create({
   },
 
   scrollView: {
-    marginTop: 20,
+    marginTop: 2,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
@@ -467,7 +526,7 @@ const styles = StyleSheet.create({
 
   deviceTitle: {
     fontSize: 25,
-    width:"100%",
+    width: "100%",
     fontWeight: "bold",
     textAlign: "left",
     color: "black",

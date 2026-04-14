@@ -2,6 +2,8 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTheme } from "@react-navigation/native";
 import { View, TouchableOpacity, Image, Text, StyleSheet } from "react-native";
 import { HbsDevice } from "../types/hbsDevice";
+import Feather from "@expo/vector-icons/Feather";
+import { router } from "expo-router";
 
 interface FoundDeviceProps {
   peripheral: HbsDevice;
@@ -79,11 +81,28 @@ export default function FoundDeviceCard({
           <Text style={{ color: theme.colors.text }}>
             {formatDeviceID(peripheral.device.id)}
           </Text>
-          <Text style={{ maxWidth: 300, color: theme.colors.text }}>
-            {peripheral.storedDeviceName
-              ? peripheral.storedDeviceName
-              : peripheral.device.name}
-          </Text>
+          <View style={{display:"flex", flexDirection:"row", gap:5, marginTop:20}}>
+            
+            <TouchableOpacity
+              style={{}}
+              onPress={() =>
+                router.push({
+                  pathname: "/device/edit-alias",
+                  params: {
+                    currentDeviceID: peripheral.device.id,
+                    currentDeviceName: peripheral.device.name,
+                  },
+                })
+              }
+            >
+              <Feather name="edit" size={18} color={theme.colors.text} />
+            </TouchableOpacity>
+            <Text style={{ maxWidth: 300, color: theme.colors.text }}>
+              {peripheral.storedDeviceName
+                ? peripheral.storedDeviceName
+                : peripheral.device.name}
+            </Text>
+          </View>
         </View>
       </View>
 

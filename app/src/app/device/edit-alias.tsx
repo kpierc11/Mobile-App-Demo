@@ -29,8 +29,8 @@ export default function EditAlias() {
   const saveNewName = async () => {
     try {
       await SettingsStore.save(formattedDeviceID, deviceName.toString());
-      processImmediatePacket(
-        packetParser.sendSetAlias(currentDeviceName.toString()),
+      await processImmediatePacket(
+        packetParser.sendSetAlias(deviceName.toString()),
         currentDeviceID.toString(),
       );
     } catch (error) {

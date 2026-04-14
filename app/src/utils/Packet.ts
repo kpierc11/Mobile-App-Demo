@@ -203,7 +203,7 @@ export class Packet {
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
     this.createHeaderChunk(this.uIDBroadcastPacket, this.uIDServer);
-    const maxStringSize = 19;
+    const maxStringSize = 18;
 
     //8 random bytes
     for (let i = 0; i < 8; i++) {
@@ -222,6 +222,7 @@ export class Packet {
       let value = asciiCodes[i];
       if (value) {
         this.dataView.setUint8(byteOffset++, value);
+        console.log(value);
       } else {
         this.dataView.setUint8(byteOffset++, 0);
       }
@@ -242,9 +243,7 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
-
-
-   /**
+  /**
    * Sends a packet to retrieve the alias name for the device.
    * @returns Uint8Array
    */
@@ -267,8 +266,12 @@ export class Packet {
 
     //Get alias
     const asciiCodes = Array.from(alias).map((char) => char.charCodeAt(0));
-    this.dataView.setUint8(byteOffset++, 0)
-    this.dataView.setUint8(byteOffset++, 2)
+    for (let i = 0; i <= maxStringSize; i++) {
+      let value = asciiCodes[i];
+      this.dataView.setUint8(byteOffset++, 0);
+
+      adjustedHeaderSize += 1;
+    }
 
     //Update Header Length
     this.dataView.setUint8(2, adjustedHeaderSize);
@@ -417,11 +420,11 @@ export class Packet {
     return new Uint8Array(this.dataView.buffer, 0, byteOffset);
   }
 
-   /**
+  /**
    * Sends a packet to return the current Quattro Schedule
    * @returns Uint8Array
    */
-  sendSetQuattroSchedule(minutes:number) {
+  sendSetQuattroSchedule(minutes: number) {
     this.resetBuffer();
     let byteOffset = 16;
     let adjustedHeaderSize = 0;
@@ -675,10 +678,7 @@ export class Packet {
     return { newPacket: new Uint8Array(), registerData: regData };
   }
 
-  parseQuattroSchedule(packet: Uint8Array) {
-        
-    
-  }
+  parseQuattroSchedule(packet: Uint8Array) {}
 
   resetBuffer() {
     this.buffer = new ArrayBuffer(250);

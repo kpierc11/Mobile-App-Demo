@@ -47,7 +47,7 @@ export default function DeviceDetails() {
 
   useEffect(() => {
     getStoredDeviceName();
-  });
+  }, [storedDeviceName]);
 
   if (!deviceDetails) {
     return (
@@ -71,7 +71,7 @@ export default function DeviceDetails() {
       />
 
       <View
-        style={{ display: "flex",justifyContent: "flex-start", width:"100%" }}
+        style={{ display: "flex", justifyContent: "flex-start", width: "100%" }}
       >
         <Text style={[styles.mainHeading, { color: theme.colors.text }]}>
           Device Properties
@@ -164,7 +164,7 @@ export default function DeviceDetails() {
                 />
               )}
 
-               {registerName.includes("Input") && (
+              {registerName.includes("Input") && (
                 <Progress.Bar
                   progress={Number(value / 24.0)}
                   width={100}
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 20,
-    paddingBottom:20
+    paddingBottom: 20,
   },
   mainHeading: {
     fontSize: 18,
@@ -253,12 +253,12 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: 200,
-    maxWidth:400,
+    maxWidth: 400,
     borderRadius: 15,
     marginTop: 20,
     marginBottom: 20,
-    marginLeft:20, 
-    marginRight:20
+    marginLeft: 20,
+    marginRight: 20,
   },
 
   settingsCard: {
@@ -301,21 +301,20 @@ const styles = StyleSheet.create({
   cardWrapper: {
     flexDirection: "row",
     flexWrap: "wrap",
-    width:"100%",
-    justifyContent:"space-between"
+    width: "100%",
+    justifyContent: "space-between",
   },
 
   card: {
     flexBasis: "48%",
-    gap:10,
+    gap: 10,
     // marginRight: 10,
     marginBottom: 20,
     padding: 20,
-    width:50,
+    width: 50,
     borderRadius: 10,
     elevation: 2,
     maxHeight: 250,
-  
   },
 
   subHeading: {

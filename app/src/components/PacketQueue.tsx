@@ -103,6 +103,7 @@ export default function PacketQueueProvider({
       latestPacket.current = packetParser.sendGetSensorData();
     } else {
       latestPacket.current = packet;
+      console.log(latestPacket);
     }
   };
 
