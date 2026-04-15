@@ -3,7 +3,7 @@ import { createContext, useState, ReactNode } from "react";
  
 type UnitDataContextType = {
   unitData: ParsedRegisterData[];
-  unitHID: number
+  unitHID: number;
   setUnitHID: (hardwareID: number) => void;
   setUnitData: (data: ParsedRegisterData[]) => void;
 };
@@ -25,7 +25,7 @@ export default function UnitDataProvider({
 
   return (
     <UnitDataContext
-      value={{ unitData, setUnitData, unitHID, setUnitHID }}
+      value={{ unitData, setUnitData, unitHID, setUnitHID}}
     >
       {children}
     </UnitDataContext>

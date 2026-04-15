@@ -75,7 +75,6 @@ export default function HomeScreen() {
       return;
     }
     await BleManager.start({ showAlert: true });
-
     await startScanningDevices();
   };
 

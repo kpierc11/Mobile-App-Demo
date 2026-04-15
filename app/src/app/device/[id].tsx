@@ -32,7 +32,7 @@ export default function DeviceDetails() {
     ? JSON.parse(deviceDetails as string)
     : {};
 
-  const { name, id, imageURL } = parsedDetails;
+  const { name, id} = parsedDetails;
 
   const getStoredDeviceName = async () => {
     try {
@@ -47,7 +47,7 @@ export default function DeviceDetails() {
 
   useEffect(() => {
     getStoredDeviceName();
-  }, [storedDeviceName]);
+  });
 
   if (!deviceDetails) {
     return (

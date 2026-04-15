@@ -4,6 +4,8 @@ import { View, TouchableOpacity, Image, Text, StyleSheet } from "react-native";
 import { HbsDevice } from "../types/hbsDevice";
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
+import { SettingsStore } from "../hooks/useStorage";
+import { useEffect, useState } from "react";
 
 interface FoundDeviceProps {
   peripheral: HbsDevice;
@@ -33,6 +35,23 @@ export default function FoundDeviceCard({
   const formatDeviceID = (deviceName: string) => {
     return deviceName.slice(0, 7);
   };
+
+  const [currentStoredName, setCurrentStoredName] = useState<string>("");
+
+  const getStoredDeviceName = async () => {
+    try {
+      const storedName = await SettingsStore.getValueFor(
+        peripheral.device.id.replaceAll(":", "-"),
+      );
+      if (storedName) {
+        setCurrentStoredName(storedName);
+      }
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    getStoredDeviceName();
+  },[]);
 
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
@@ -75,41 +94,37 @@ export default function FoundDeviceCard({
       </View>
 
       {/* Device info */}
-      <View style={{ flexDirection: "row", gap: 30 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 30 }}>
         <Image style={styles.foundDeviceImage} source={foundDeviceImage} />
-        <View style={{display:"flex", flexWrap:"wrap"}}>
-          <Text style={{ color: theme.colors.text }}>
+        <View style={{}}>
+          <Text style={{ color: theme.colors.text, marginBottom: 20 }}>
             {formatDeviceID(peripheral.device.id)}
           </Text>
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              flexWrap:"wrap",
-              gap: 5,
-              marginTop: 20,
-            }}
+
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: "/device/edit-alias",
+                params: {
+                  currentDeviceID: peripheral.device.id,
+                  currentDeviceName: peripheral.device.name,
+                },
+              })
+            }
           >
-            <TouchableOpacity
-              style={{display:"flex", flexDirection:"row", alignItems:"center", gap:10, maxWidth:200}}
-              onPress={() =>
-                router.push({
-                  pathname: "/device/edit-alias",
-                  params: {
-                    currentDeviceID: peripheral.device.id,
-                    currentDeviceName: peripheral.device.name,
-                  },
-                })
-              }
-            >
+            <View style={{ display: "flex", flexDirection: "row", gap: 10 }}>
               <Feather name="edit" size={18} color={theme.colors.text} />
-              <Text style={{ display:"flex", flexGrow:1, color: theme.colors.text }}>
-                {peripheral.storedDeviceName
-                  ? peripheral.storedDeviceName
-                  : peripheral.device.name}
+              <Text
+                style={{
+                  display: "flex",
+                  color: theme.colors.text,
+                  maxWidth: 100,
+                }}
+              >
+                {currentStoredName ? currentStoredName : peripheral.device.name}
               </Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -158,7 +173,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginLeft: 20,
     marginRight: 20,
-    
   },
   button: {
     backgroundColor: "#215387",

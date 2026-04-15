@@ -12,8 +12,7 @@ export default function EditAlias() {
   const { currentDeviceID, currentDeviceName } = useLocalSearchParams();
   const [deviceName, setDeviceName] = useState(currentDeviceName);
   const { processImmediatePacket } = useContext(PacketQueueContext);
-  const packetParser = new Packet();
-
+  const packet = new Packet();
   const formattedDeviceID = currentDeviceID.toString().replaceAll(":", "-");
 
   const getSavedName = async () => {
@@ -27,14 +26,12 @@ export default function EditAlias() {
   };
 
   const saveNewName = async () => {
-    const testArray = new Uint8Array([-78, -62, 28, 0, 0, 0, -1, 31, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 115, 23, 16, 104, 101, 108, 108, 111, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -95]);
-    
     try {
       await SettingsStore.save(formattedDeviceID, deviceName.toString());
-      await processImmediatePacket(
-        testArray,
-        currentDeviceID.toString(),
-      );
+      // await processImmediatePacket(
+      //   packet.sendSetAlias(deviceName.toString()),
+      //   currentDeviceID.toString(),
+      // );
     } catch (error) {
       console.log(error);
     }

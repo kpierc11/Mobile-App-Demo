@@ -11,8 +11,9 @@ import {
 import { HbsDevice } from "../types/hbsDevice";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { router } from "expo-router";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { UnitDataContext } from "./UnitDataProvider";
+import { SettingsStore } from "../hooks/useStorage";
 
 const imageMap: Record<number, any> = {
   24: require("../../assets/images/devices/solar-controller.png"),
@@ -43,12 +44,29 @@ export default function ConnectedDeviceCard({
   disconnectDevice,
 }: ConnectedCardProps) {
   const theme = useTheme();
-  const { unitData, setUnitData, unitHID} =
-    useContext(UnitDataContext);
+  const { unitData, setUnitData, unitHID } = useContext(UnitDataContext);
 
   const formatDeviceID = (deviceName: string) => {
     return deviceName.slice(0, 7);
   };
+
+  const [currentStoredName, setCurrentStoredName] = useState<string>("");
+
+  const getStoredDeviceName = async () => {
+    try {
+      const storedName = await SettingsStore.getValueFor(
+        connectedDevice.device.id.replaceAll(":", "-"),
+      );
+      if (storedName) {
+        setCurrentStoredName(storedName);
+      }
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    getStoredDeviceName();
+  });
+
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
       {/* RSSI */}
@@ -113,9 +131,9 @@ export default function ConnectedDeviceCard({
           <Text style={{ fontWeight: "bold", color: theme.colors.text }}>
             {formatDeviceID(connectedDevice.device.id)}
           </Text>
-          <Text style={{ maxWidth: 300, color: theme.colors.text }}>
-            {connectedDevice.storedDeviceName
-              ? connectedDevice.storedDeviceName
+          <Text style={{ maxWidth: 100, color: theme.colors.text }}>
+            {currentStoredName
+              ? currentStoredName
               : connectedDevice.device.name}
           </Text>
         </View>
@@ -226,7 +244,7 @@ const styles = StyleSheet.create({
     objectFit: "cover",
     height: 120,
     width: "100%",
-    maxWidth:400,
+    maxWidth: 400,
     borderRadius: 15,
   },
   foundDeviceImage: {
