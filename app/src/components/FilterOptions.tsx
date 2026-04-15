@@ -46,7 +46,7 @@ export default function FilterOptions({
             { backgroundColor: theme.colors.card },
           ]}
         >
-          <Feather name="search" size={20} color="black" style={{marginLeft:50}} />
+          <Feather name="search" size={20} color={theme.colors.text} style={{marginLeft:50}} />
           <TextInput
             style={[
               styles.input,
@@ -72,13 +72,13 @@ export default function FilterOptions({
               },
               filterAlphabetically
                 ? { backgroundColor: "#215387", width: "auto" }
-                : { backgroundColor: "white" },
+                : { backgroundColor: theme.colors.card },
             ]}
           >
             <FontAwesome6
               name="arrow-down-a-z"
               size={18}
-              color={filterAlphabetically ? "white" : "black"}
+              color={filterAlphabetically ? "white" : theme.colors.text}
             />
           </View>
         </TouchableOpacity>

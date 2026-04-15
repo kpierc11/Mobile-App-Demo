@@ -20,7 +20,6 @@ import FoundDeviceCard from "@/src/components/FoundDeviceCard";
 import ConnectedDeviceCard from "@/src/components/ConnectedDeviceCard";
 import { PacketQueueContext } from "@/src/components/PacketQueue";
 import { BLE_CONFIG } from "@/src/constants/bleConfig";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import FilterOptions from "@/src/components/FilterOptions";
 
 export default function HomeScreen() {
