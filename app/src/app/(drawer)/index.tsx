@@ -105,9 +105,6 @@ export default function HomeScreen() {
           isConnectable &&
           name?.toLowerCase().includes("ble#")
         ) {
-          console.log(advertising.localName);
-          console.log(id);
-          console.log(name);
           getStoredDeviceName(id).then((storedName) => {
             setFoundDeviceList((prev) => {
               const exists = prev.some((item) => item.device.id === id);
