@@ -7,7 +7,6 @@ import {
   RefreshControl,
   PermissionsAndroid,
   Platform,
-  TouchableOpacity,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -40,17 +39,17 @@ export default function HomeScreen() {
 
   const sortedDevices = foundDeviceList
     .filter((a) => {
-      if (searchTerm != "") {
+      if (searchTerm != "" && a.device.name) {
         const nameA = a.storedDeviceName.toUpperCase()
           ? a.storedDeviceName.toUpperCase()
           : a.device.name.toUpperCase();
 
         return nameA.includes(searchTerm.toUpperCase());
       }
-      return a
+      return a;
     })
     .sort((a, b) => {
-      if (filterAlphabetically) {
+      if (filterAlphabetically && a.device.name && b.device.name) {
         const nameA = a.storedDeviceName.toUpperCase()
           ? a.storedDeviceName.toUpperCase()
           : a.device.name;
@@ -389,9 +388,7 @@ export default function HomeScreen() {
           }}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
-        >
-          {" "}
-        </FilterOptions>
+        ></FilterOptions>
         <ScrollView
           contentContainerStyle={styles.scrollView}
           refreshControl={

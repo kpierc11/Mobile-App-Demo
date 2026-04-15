@@ -1,3 +1,4 @@
+import Feather from "@expo/vector-icons/Feather";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useTheme } from "@react-navigation/native";
 import { Dispatch, SetStateAction, useState } from "react";
@@ -37,43 +38,51 @@ export default function FilterOptions({
         marginTop: 30,
       }}
     >
-      <View
-        style={[styles.settingsCard, { backgroundColor: theme.colors.card }]}
-      >
-        <TextInput
-          style={[
-            styles.input,
-            { color: theme.colors.text, borderColor: theme.colors.border },
-          ]}
-          onChangeText={setSearchTerm}
-          value={searchTerm}
-          placeholder={"Search Name..."}
-          placeholderTextColor={theme.colors.border}
-        />
-      </View>
-      <Text style={{ fontSize: 16 }}>Filters:</Text>
-      <TouchableOpacity onPress={setFilterAphabetically}>
+      <View style={{ display: "flex", flexDirection: "column", gap: 10, marginRight:"auto"
+       }}>
         <View
           style={[
-            {
-              display: "flex",
-              justifyContent: "center",
-              backgroundColor: "#215387",
-              borderRadius: 15,
-              padding: 10,
-            },
-            filterAlphabetically
-              ? { backgroundColor: "#215387", width: "auto" }
-              : { backgroundColor: "white" },
+            styles.settingsCard,
+            { backgroundColor: theme.colors.card },
           ]}
         >
-          <FontAwesome6
-            name="arrow-down-a-z"
-            size={18}
-            color={filterAlphabetically ? "white" : "black"}
+          <Feather name="search" size={20} color="black" style={{marginLeft:50}} />
+          <TextInput
+            style={[
+              styles.input,
+              { color: theme.colors.text, borderColor: theme.colors.border },
+            ]}
+            onChangeText={setSearchTerm}
+            value={searchTerm}
+            placeholder={"Search Device..."}
+            placeholderTextColor={theme.colors.border}
           />
         </View>
-      </TouchableOpacity>
+      </View>
+      <View style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <TouchableOpacity onPress={setFilterAphabetically}>
+          <View
+            style={[
+              {
+                display: "flex",
+                justifyContent: "center",
+                backgroundColor: "#215387",
+                borderRadius: 15,
+                padding: 10,
+              },
+              filterAlphabetically
+                ? { backgroundColor: "#215387", width: "auto" }
+                : { backgroundColor: "white" },
+            ]}
+          >
+            <FontAwesome6
+              name="arrow-down-a-z"
+              size={18}
+              color={filterAlphabetically ? "white" : "black"}
+            />
+          </View>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -85,10 +94,11 @@ const styles = StyleSheet.create({
   },
   settingsCard: {
     display: "flex",
+    flexDirection:"row",
+    alignItems:"center",
     justifyContent: "center",
     borderColor: "black",
-    width: "100%",
-    maxWidth: 200,
+    width: 300,
     borderWidth: 0,
     padding: 1,
     borderRadius: 15,

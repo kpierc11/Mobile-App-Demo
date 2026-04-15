@@ -77,14 +77,21 @@ export default function FoundDeviceCard({
       {/* Device info */}
       <View style={{ flexDirection: "row", gap: 30 }}>
         <Image style={styles.foundDeviceImage} source={foundDeviceImage} />
-        <View>
+        <View style={{display:"flex", flexWrap:"wrap"}}>
           <Text style={{ color: theme.colors.text }}>
             {formatDeviceID(peripheral.device.id)}
           </Text>
-          <View style={{display:"flex", flexDirection:"row", gap:5, marginTop:20}}>
-            
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              flexWrap:"wrap",
+              gap: 5,
+              marginTop: 20,
+            }}
+          >
             <TouchableOpacity
-              style={{}}
+              style={{display:"flex", flexDirection:"row", alignItems:"center", gap:10, maxWidth:200}}
               onPress={() =>
                 router.push({
                   pathname: "/device/edit-alias",
@@ -96,12 +103,12 @@ export default function FoundDeviceCard({
               }
             >
               <Feather name="edit" size={18} color={theme.colors.text} />
+              <Text style={{ display:"flex", flexGrow:1, color: theme.colors.text }}>
+                {peripheral.storedDeviceName
+                  ? peripheral.storedDeviceName
+                  : peripheral.device.name}
+              </Text>
             </TouchableOpacity>
-            <Text style={{ maxWidth: 300, color: theme.colors.text }}>
-              {peripheral.storedDeviceName
-                ? peripheral.storedDeviceName
-                : peripheral.device.name}
-            </Text>
           </View>
         </View>
       </View>
@@ -151,6 +158,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginLeft: 20,
     marginRight: 20,
+    
   },
   button: {
     backgroundColor: "#215387",
