@@ -47,7 +47,7 @@ export default function DeviceDetails() {
 
   useEffect(() => {
     getStoredDeviceName();
-  });
+  },[]);
 
   if (!deviceDetails) {
     return (

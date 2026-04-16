@@ -8,13 +8,13 @@ import {
   PermissionsAndroid,
   Platform,
 } from "react-native";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BleManager, { Peripheral } from "react-native-ble-manager";
 import { Packet } from "@/src/utils/Packet";
 import { UnitDataContext } from "@/src/components/UnitDataProvider";
 import { SettingsStore } from "@/src/hooks/useStorage";
-import { useTheme } from "@react-navigation/native";
+import { useFocusEffect, useTheme } from "@react-navigation/native";
 import { HbsDevice } from "@/src/types/hbsDevice";
 import FoundDeviceCard from "@/src/components/FoundDeviceCard";
 import ConnectedDeviceCard from "@/src/components/ConnectedDeviceCard";
@@ -49,15 +49,21 @@ export default function HomeScreen() {
   const sortedDevices = foundDeviceList
     .filter((a) => {
       if (searchTerm != "" && a.device.name) {
-        const nameA = a.storedDeviceName.toUpperCase();
+        const nameA = a.storedDeviceName.toUpperCase()
+          ? a.storedDeviceName.toUpperCase()
+          : a.device.name.toUpperCase();
         return nameA.includes(searchTerm.toUpperCase());
       }
       return a;
     })
     .sort((a, b) => {
       if (filterAlphabetically && a.device.name && b.device.name) {
-        const nameA = a.storedDeviceName.toUpperCase();
-        const nameB = b.storedDeviceName.toUpperCase();
+        const nameA = a.storedDeviceName.toUpperCase()
+          ? a.storedDeviceName.toUpperCase()
+          : a.device.name;
+        const nameB = b.storedDeviceName.toUpperCase()
+          ? b.storedDeviceName.toUpperCase()
+          : b.device.name;
 
         if (nameA < nameB) {
           return -1;
@@ -81,6 +87,10 @@ export default function HomeScreen() {
     await BleManager.start({ showAlert: true });
     await startScanningDevices();
   };
+
+  useEffect(() => {
+    getDiscoveredDevices();
+  } );
 
   useEffect(() => {
     initBLE();
@@ -283,9 +293,31 @@ export default function HomeScreen() {
     }
   };
 
-  const getConnectedDevices = async () => {
+  const getDiscoveredDevices = async () => {
     try {
-      await BleManager.getConnectedPeripherals([]);
+      const peripherals = await BleManager.getDiscoveredPeripherals();
+
+      peripherals.forEach((peripheral) => {
+        if (peripheral.name?.toLowerCase().includes("ble#")) {
+          getStoredDeviceName(peripheral.id).then((storedName) => {
+            setFoundDeviceList((prev) => {
+              const exists = prev.some(
+                (item) => item.device.id === peripheral.id,
+              );
+              if (exists) return prev;
+
+              return [
+                ...prev,
+                {
+                  device: peripheral,
+                  storedDeviceName: storedName || "",
+                  imageLink: "",
+                },
+              ];
+            });
+          });
+        }
+      });
     } catch (error) {}
   };
 

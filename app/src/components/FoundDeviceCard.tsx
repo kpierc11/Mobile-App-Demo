@@ -55,8 +55,6 @@ export default function FoundDeviceCard({
   useFocusEffect(
     useCallback(() => {
       getStoredDeviceName();
-      setAliasUpdated();
-      //peripheral.storedDeviceName = currentStoredName;
       return () => {};
     }, []),
   );
