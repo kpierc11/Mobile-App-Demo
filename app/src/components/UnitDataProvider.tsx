@@ -1,6 +1,6 @@
 import { ParsedRegisterData } from "../types/parsedRegisterData";
 import { createContext, useState, ReactNode } from "react";
- 
+
 type UnitDataContextType = {
   unitData: ParsedRegisterData[];
   unitHID: number;
@@ -25,7 +25,12 @@ export default function UnitDataProvider({
 
   return (
     <UnitDataContext
-      value={{ unitData, setUnitData, unitHID, setUnitHID}}
+      value={{
+        unitData,
+        setUnitData,
+        unitHID,
+        setUnitHID
+      }}
     >
       {children}
     </UnitDataContext>

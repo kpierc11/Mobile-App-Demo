@@ -1,11 +1,12 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useTheme } from "@react-navigation/native";
+import { useTheme, useFocusEffect } from "@react-navigation/native";
 import { View, TouchableOpacity, Image, Text, StyleSheet } from "react-native";
 import { HbsDevice } from "../types/hbsDevice";
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import { SettingsStore } from "../hooks/useStorage";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext, useCallback } from "react";
+import { UnitDataContext } from "@/src/components/UnitDataProvider";
 
 interface FoundDeviceProps {
   peripheral: HbsDevice;
@@ -18,6 +19,7 @@ interface FoundDeviceProps {
     | "wifi-strength-outline";
   identifyUnit: () => void;
   stopIdentifyUnit: () => void;
+  setAliasUpdated: () => void;
 }
 
 export default function FoundDeviceCard({
@@ -25,6 +27,7 @@ export default function FoundDeviceCard({
   connectToDevice,
   identifyUnit,
   stopIdentifyUnit,
+  setAliasUpdated,
   getSignalIcon,
 }: FoundDeviceProps) {
   const theme = useTheme();
@@ -49,9 +52,14 @@ export default function FoundDeviceCard({
     } catch (error) {}
   };
 
-  useEffect(() => {
-    getStoredDeviceName();
-  },[]);
+  useFocusEffect(
+    useCallback(() => {
+      getStoredDeviceName();
+      setAliasUpdated();
+      //peripheral.storedDeviceName = currentStoredName;
+      return () => {};
+    }, []),
+  );
 
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
@@ -108,6 +116,7 @@ export default function FoundDeviceCard({
                 params: {
                   currentDeviceID: peripheral.device.id,
                   currentDeviceName: peripheral.device.name,
+                  currentDeviceStoredName: peripheral.storedDeviceName,
                 },
               })
             }

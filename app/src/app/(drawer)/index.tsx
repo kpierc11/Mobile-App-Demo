@@ -34,27 +34,31 @@ export default function HomeScreen() {
   const { setUnitData } = useContext(UnitDataContext);
   const { processResponsePacket, processImmediatePacket } =
     useContext(PacketQueueContext);
+  const [aliasUpdated, setAliasUpdated] = useState<boolean>(false);
   const [imageLink, setImageLink] = useState("");
+
+  const getStoredDeviceName = async (deviceID: string) => {
+    try {
+      const storedName = await SettingsStore.getValueFor(
+        deviceID.replaceAll(":", "-"),
+      );
+      return storedName ? storedName : "";
+    } catch (error) {}
+  };
 
   const sortedDevices = foundDeviceList
     .filter((a) => {
       if (searchTerm != "" && a.device.name) {
-        const nameA = a.storedDeviceName.toUpperCase()
-          ? a.storedDeviceName.toUpperCase()
-          : a.device.name.toUpperCase();
-
+        const nameA = a.storedDeviceName.toUpperCase();
         return nameA.includes(searchTerm.toUpperCase());
       }
       return a;
     })
     .sort((a, b) => {
       if (filterAlphabetically && a.device.name && b.device.name) {
-        const nameA = a.storedDeviceName.toUpperCase()
-          ? a.storedDeviceName.toUpperCase()
-          : a.device.name;
-        const nameB = b.storedDeviceName.toUpperCase()
-          ? b.storedDeviceName.toUpperCase()
-          : b.device.name;
+        const nameA = a.storedDeviceName.toUpperCase();
+        const nameB = b.storedDeviceName.toUpperCase();
+
         if (nameA < nameB) {
           return -1;
         }
@@ -134,7 +138,6 @@ export default function HomeScreen() {
     const onDidUpdateValueForCharacteristicListener =
       BleManager.onDidUpdateValueForCharacteristic(({ value }: any) => {
         const returnData = new Uint8Array(value);
-        console.log(returnData);
         processResponsePacket(returnData);
       });
 
@@ -173,15 +176,6 @@ export default function HomeScreen() {
     }
     return true;
   }
-
-  const getStoredDeviceName = async (deviceID: string) => {
-    try {
-      const storedName = await SettingsStore.getValueFor(
-        deviceID.replaceAll(":", "-"),
-      );
-      return storedName ? storedName : "";
-    } catch (error) {}
-  };
 
   const startScanningDevices = async () => {
     setIsScanning(true);
@@ -377,9 +371,7 @@ export default function HomeScreen() {
         <FilterOptions
           filterAlphabetically={filterAlphabetically}
           setFilterAphabetically={() => {
-            !filterAlphabetically
-              ? setFilterAlphabetically(true)
-              : setFilterAlphabetically(false);
+            setFilterAlphabetically((prev) => !prev);
           }}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -488,6 +480,7 @@ export default function HomeScreen() {
                     )
                   }
                   getSignalIcon={getSignalIcon(item.device.rssi)}
+                  setAliasUpdated={() => setAliasUpdated(true)}
                 ></FoundDeviceCard>
               ))}
             </>

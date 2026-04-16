@@ -9,7 +9,8 @@ import { PacketQueueContext } from "@/src/components/PacketQueue";
 
 export default function EditAlias() {
   const theme = useTheme();
-  const { currentDeviceID, currentDeviceName } = useLocalSearchParams();
+  const { currentDeviceID, currentDeviceName, currentDeviceStoredName } =
+    useLocalSearchParams();
   const [deviceName, setDeviceName] = useState(currentDeviceName);
   const { processImmediatePacket } = useContext(PacketQueueContext);
   const packet = new Packet();
@@ -18,7 +19,6 @@ export default function EditAlias() {
   const getSavedName = async () => {
     try {
       const savedName = await SettingsStore.getValueFor(formattedDeviceID);
-
       if (savedName) {
         setDeviceName(savedName);
       }
