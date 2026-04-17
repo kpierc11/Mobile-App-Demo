@@ -6,6 +6,7 @@ import { SettingsStore } from "@/src/hooks/useStorage";
 import { useTheme } from "@react-navigation/native";
 import { Packet } from "@/src/utils/Packet";
 import { PacketQueueContext } from "@/src/components/PacketQueue";
+import useAliasNaming from "@/src/hooks/useAliasNaming";
 
 export default function EditAlias() {
   const theme = useTheme();
@@ -15,6 +16,7 @@ export default function EditAlias() {
   const { processImmediatePacket } = useContext(PacketQueueContext);
   const packet = new Packet();
   const formattedDeviceID = currentDeviceID.toString().replaceAll(":", "-");
+  const { updateAlias } = useAliasNaming();
 
   const getSavedName = async () => {
     try {
@@ -32,6 +34,7 @@ export default function EditAlias() {
       //   packet.sendSetAlias(deviceName.toString()),
       //   currentDeviceID.toString(),
       // );
+      updateAlias(currentDeviceID.toString(), deviceName.toString());
     } catch (error) {
       console.log(error);
     }

@@ -21,6 +21,7 @@ import ConnectedDeviceCard from "@/src/components/ConnectedDeviceCard";
 import { PacketQueueContext } from "@/src/components/PacketQueue";
 import { BLE_CONFIG } from "@/src/constants/bleConfig";
 import FilterOptions from "@/src/components/FilterOptions";
+import UseAliasNaming from "@/src/hooks/useAliasNaming";
 
 export default function HomeScreen() {
   const [foundDeviceList, setFoundDeviceList] = useState<HbsDevice[]>([]);
@@ -34,8 +35,8 @@ export default function HomeScreen() {
   const { setUnitData } = useContext(UnitDataContext);
   const { processResponsePacket, processImmediatePacket } =
     useContext(PacketQueueContext);
-  const [aliasUpdated, setAliasUpdated] = useState<boolean>(false);
   const [imageLink, setImageLink] = useState("");
+  const { updateAlias } = UseAliasNaming();
 
   const getStoredDeviceName = async (deviceID: string) => {
     try {
@@ -90,7 +91,14 @@ export default function HomeScreen() {
 
   useEffect(() => {
     getDiscoveredDevices();
-  } );
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      getDiscoveredDevices();
+      return () => {};
+    }, []),
+  );
 
   useEffect(() => {
     initBLE();
@@ -119,6 +127,7 @@ export default function HomeScreen() {
           name?.toLowerCase().includes("ble#")
         ) {
           getStoredDeviceName(id).then((storedName) => {
+            updateAlias(peripheral.id, storedName);
             setFoundDeviceList((prev) => {
               const exists = prev.some((item) => item.device.id === id);
               if (exists) return prev;
@@ -512,7 +521,6 @@ export default function HomeScreen() {
                     )
                   }
                   getSignalIcon={getSignalIcon(item.device.rssi)}
-                  setAliasUpdated={() => setAliasUpdated(true)}
                 ></FoundDeviceCard>
               ))}
             </>

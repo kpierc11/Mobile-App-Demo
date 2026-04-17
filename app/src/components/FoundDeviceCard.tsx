@@ -1,12 +1,12 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useTheme, useFocusEffect } from "@react-navigation/native";
+import { useTheme } from "@react-navigation/native";
 import { View, TouchableOpacity, Image, Text, StyleSheet } from "react-native";
 import { HbsDevice } from "../types/hbsDevice";
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import { SettingsStore } from "../hooks/useStorage";
-import { useEffect, useState, useContext, useCallback } from "react";
-import { UnitDataContext } from "@/src/components/UnitDataProvider";
+import { useState} from "react";
+import useAliasNaming from "../hooks/useAliasNaming";
 
 interface FoundDeviceProps {
   peripheral: HbsDevice;
@@ -19,7 +19,6 @@ interface FoundDeviceProps {
     | "wifi-strength-outline";
   identifyUnit: () => void;
   stopIdentifyUnit: () => void;
-  setAliasUpdated: () => void;
 }
 
 export default function FoundDeviceCard({
@@ -27,7 +26,6 @@ export default function FoundDeviceCard({
   connectToDevice,
   identifyUnit,
   stopIdentifyUnit,
-  setAliasUpdated,
   getSignalIcon,
 }: FoundDeviceProps) {
   const theme = useTheme();
@@ -38,6 +36,9 @@ export default function FoundDeviceCard({
   const formatDeviceID = (deviceName: string) => {
     return deviceName.slice(0, 7);
   };
+
+  const {getLatestAlias} = useAliasNaming();
+  const alias = getLatestAlias(peripheral.device.id);
 
   const [currentStoredName, setCurrentStoredName] = useState<string>("");
 
@@ -52,12 +53,12 @@ export default function FoundDeviceCard({
     } catch (error) {}
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      getStoredDeviceName();
-      return () => {};
-    }, []),
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     getStoredDeviceName();
+  //     return () => {};
+  //   }, []),
+  // );
 
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
@@ -128,7 +129,7 @@ export default function FoundDeviceCard({
                   maxWidth: 100,
                 }}
               >
-                {currentStoredName ? currentStoredName : peripheral.device.name}
+                {alias ?? peripheral.device.name}
               </Text>
             </View>
           </TouchableOpacity>
