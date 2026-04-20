@@ -8,7 +8,7 @@ export default function UseAliasNaming() {
       console.log(key);
       console.log(value);
     });
-  }, []);
+  },[]);
 
   async function setInitialAliasNames() {}
 
@@ -16,6 +16,9 @@ export default function UseAliasNaming() {
     if (!alias) {
       return;
     }
+
+    console.log(alias);
+
     setDevicesAlias((prev) => ({
       ...prev,
       [deviceID]: alias,
@@ -26,10 +29,10 @@ export default function UseAliasNaming() {
     const latestAlias = devicesAlias[deviceID] ?? undefined;
 
     console.log(deviceID);
-    console.log(latestAlias);
+    console.log("latest alias" + latestAlias);
 
     return latestAlias;
   }
-
+  
   return { devicesAlias, updateAlias, getLatestAlias };
 }

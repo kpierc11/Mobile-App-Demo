@@ -53,13 +53,6 @@ export default function FoundDeviceCard({
     } catch (error) {}
   };
 
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     getStoredDeviceName();
-  //     return () => {};
-  //   }, []),
-  // );
-
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
       {/* RSSI */}
@@ -115,7 +108,6 @@ export default function FoundDeviceCard({
                 params: {
                   currentDeviceID: peripheral.device.id,
                   currentDeviceName: peripheral.device.name,
-                  currentDeviceStoredName: peripheral.storedDeviceName,
                 },
               })
             }

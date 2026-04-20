@@ -13,7 +13,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import BleManager, { Peripheral } from "react-native-ble-manager";
 import { Packet } from "@/src/utils/Packet";
 import { UnitDataContext } from "@/src/components/UnitDataProvider";
-import { SettingsStore } from "@/src/hooks/useStorage";
 import { useFocusEffect, useTheme } from "@react-navigation/native";
 import { HbsDevice } from "@/src/types/hbsDevice";
 import FoundDeviceCard from "@/src/components/FoundDeviceCard";
@@ -36,35 +35,20 @@ export default function HomeScreen() {
   const { processResponsePacket, processImmediatePacket } =
     useContext(PacketQueueContext);
   const [imageLink, setImageLink] = useState("");
-  const { updateAlias } = UseAliasNaming();
-
-  const getStoredDeviceName = async (deviceID: string) => {
-    try {
-      const storedName = await SettingsStore.getValueFor(
-        deviceID.replaceAll(":", "-"),
-      );
-      return storedName ? storedName : "";
-    } catch (error) {}
-  };
+  const { updateAlias, getLatestAlias } = UseAliasNaming();
 
   const sortedDevices = foundDeviceList
     .filter((a) => {
       if (searchTerm != "" && a.device.name) {
-        const nameA = a.storedDeviceName.toUpperCase()
-          ? a.storedDeviceName.toUpperCase()
-          : a.device.name.toUpperCase();
+        const nameA = getLatestAlias(a.device.id).toUpperCase();
         return nameA.includes(searchTerm.toUpperCase());
       }
       return a;
     })
     .sort((a, b) => {
       if (filterAlphabetically && a.device.name && b.device.name) {
-        const nameA = a.storedDeviceName.toUpperCase()
-          ? a.storedDeviceName.toUpperCase()
-          : a.device.name;
-        const nameB = b.storedDeviceName.toUpperCase()
-          ? b.storedDeviceName.toUpperCase()
-          : b.device.name;
+        const nameA = getLatestAlias(a.device.id).toUpperCase();
+        const nameB = getLatestAlias(b.device.id).toUpperCase();
 
         if (nameA < nameB) {
           return -1;
@@ -88,17 +72,6 @@ export default function HomeScreen() {
     await BleManager.start({ showAlert: true });
     await startScanningDevices();
   };
-
-  useEffect(() => {
-    getDiscoveredDevices();
-  });
-
-  useFocusEffect(
-    useCallback(() => {
-      getDiscoveredDevices();
-      return () => {};
-    }, []),
-  );
 
   useEffect(() => {
     initBLE();
@@ -126,21 +99,18 @@ export default function HomeScreen() {
           isConnectable &&
           name?.toLowerCase().includes("ble#")
         ) {
-          getStoredDeviceName(id).then((storedName) => {
-            updateAlias(peripheral.id, storedName);
-            setFoundDeviceList((prev) => {
-              const exists = prev.some((item) => item.device.id === id);
-              if (exists) return prev;
+          updateAlias(id, name);
+          setFoundDeviceList((prev) => {
+            const exists = prev.some((item) => item.device.id === id);
+            if (exists) return prev;
 
-              return [
-                ...prev,
-                {
-                  device: peripheral,
-                  storedDeviceName: storedName || "",
-                  imageLink: "",
-                },
-              ];
-            });
+            return [
+              ...prev,
+              {
+                device: peripheral,
+                imageLink: "",
+              },
+            ];
           });
         }
       },
@@ -248,7 +218,7 @@ export default function HomeScreen() {
           });
       }
 
-      const storedDeviceName = await getStoredDeviceName(device.id);
+      const storedDeviceName = getLatestAlias(device.id);
 
       let storedName = "";
 
@@ -258,7 +228,6 @@ export default function HomeScreen() {
 
       setConnectedDevice({
         device: device,
-        storedDeviceName: storedName,
         imageLink: imageLink,
       });
 
@@ -302,33 +271,7 @@ export default function HomeScreen() {
     }
   };
 
-  const getDiscoveredDevices = async () => {
-    try {
-      const peripherals = await BleManager.getDiscoveredPeripherals();
-
-      peripherals.forEach((peripheral) => {
-        if (peripheral.name?.toLowerCase().includes("ble#")) {
-          getStoredDeviceName(peripheral.id).then((storedName) => {
-            setFoundDeviceList((prev) => {
-              const exists = prev.some(
-                (item) => item.device.id === peripheral.id,
-              );
-              if (exists) return prev;
-
-              return [
-                ...prev,
-                {
-                  device: peripheral,
-                  storedDeviceName: storedName || "",
-                  imageLink: "",
-                },
-              ];
-            });
-          });
-        }
-      });
-    } catch (error) {}
-  };
+  const getDiscoveredDevices = async () => {};
 
   const startDeviceNotify = async (device: Peripheral, packet: Uint8Array) => {
     try {
