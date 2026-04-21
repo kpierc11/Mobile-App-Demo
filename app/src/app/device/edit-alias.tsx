@@ -16,7 +16,7 @@ export default function EditAlias() {
   const { processImmediatePacket } = useContext(PacketQueueContext);
   const packet = new Packet();
   const formattedDeviceID = currentDeviceID.toString().replaceAll(":", "-");
-  const { updateAlias } = useAliasNaming();
+  const { addAlias } = useAliasNaming();
 
   const getSavedName = async () => {
     try {
@@ -34,7 +34,7 @@ export default function EditAlias() {
       //   packet.sendSetAlias(deviceName.toString()),
       //   currentDeviceID.toString(),
       // );
-      updateAlias(currentDeviceID.toString(), deviceName.toString());
+      addAlias(currentDeviceID.toString(), deviceName.toString());
     } catch (error) {
       console.log(error);
     }

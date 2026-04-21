@@ -222,7 +222,6 @@ export class Packet {
       let value = asciiCodes[i];
       if (value) {
         this.dataView.setUint8(byteOffset++, value);
-        console.log(value);
       } else {
         this.dataView.setUint8(byteOffset++, 0);
       }

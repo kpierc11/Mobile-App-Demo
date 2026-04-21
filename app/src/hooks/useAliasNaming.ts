@@ -1,38 +1,15 @@
-import { useEffect, useState } from "react";
+let devicesAlias: Record<string, string> = {};
 
 export default function UseAliasNaming() {
-  const [devicesAlias, setDevicesAlias] = useState<Record<string, string>>({});
+  function addAlias(deviceID: string, alias: string | undefined) {
+    if (!alias) return;
 
-  useEffect(() => {
-    Object.entries(devicesAlias).map(([key, value]) => {
-      console.log(key);
-      console.log(value);
-    });
-  },[]);
-
-  async function setInitialAliasNames() {}
-
-  function updateAlias(deviceID: string, alias: string | undefined) {
-    if (!alias) {
-      return;
-    }
-
-    console.log(alias);
-
-    setDevicesAlias((prev) => ({
-      ...prev,
-      [deviceID]: alias,
-    }));
+    devicesAlias[deviceID] = alias;
   }
 
   function getLatestAlias(deviceID: string) {
-    const latestAlias = devicesAlias[deviceID] ?? undefined;
-
-    console.log(deviceID);
-    console.log("latest alias" + latestAlias);
-
-    return latestAlias;
+    return devicesAlias[deviceID];
   }
-  
-  return { devicesAlias, updateAlias, getLatestAlias };
+
+  return { devicesAlias, addAlias, getLatestAlias };
 }

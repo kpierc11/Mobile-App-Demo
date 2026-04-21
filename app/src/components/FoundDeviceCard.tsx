@@ -3,9 +3,9 @@ import { useTheme } from "@react-navigation/native";
 import { View, TouchableOpacity, Image, Text, StyleSheet } from "react-native";
 import { HbsDevice } from "../types/hbsDevice";
 import Feather from "@expo/vector-icons/Feather";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { SettingsStore } from "../hooks/useStorage";
-import { useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import useAliasNaming from "../hooks/useAliasNaming";
 
 interface FoundDeviceProps {
@@ -37,8 +37,7 @@ export default function FoundDeviceCard({
     return deviceName.slice(0, 7);
   };
 
-  const {getLatestAlias} = useAliasNaming();
-  const alias = getLatestAlias(peripheral.device.id);
+  const { getLatestAlias } = useAliasNaming();
 
   const [currentStoredName, setCurrentStoredName] = useState<string>("");
 
@@ -52,6 +51,17 @@ export default function FoundDeviceCard({
       }
     } catch (error) {}
   };
+
+  useEffect(() => {
+    getStoredDeviceName();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const alias = getLatestAlias(peripheral.device.id);
+      setCurrentStoredName(alias ?? "");
+    }, [peripheral.device.id, getLatestAlias]),
+  );
 
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
@@ -121,7 +131,7 @@ export default function FoundDeviceCard({
                   maxWidth: 100,
                 }}
               >
-                {alias ?? peripheral.device.name}
+                {currentStoredName ?? peripheral.device.name}
               </Text>
             </View>
           </TouchableOpacity>
