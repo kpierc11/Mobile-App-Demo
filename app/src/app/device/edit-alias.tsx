@@ -23,6 +23,7 @@ export default function EditAlias() {
       const savedName = await SettingsStore.getValueFor(formattedDeviceID);
       if (savedName) {
         setDeviceName(savedName);
+        addAlias(currentDeviceID.toString(), savedName);
       }
     } catch (error) {}
   };
@@ -34,6 +35,12 @@ export default function EditAlias() {
       //   packet.sendSetAlias(deviceName.toString()),
       //   currentDeviceID.toString(),
       // );
+
+      if(!deviceName) {
+        addAlias(currentDeviceID.toString(), currentDeviceName.toString());
+        return;
+      }
+
       addAlias(currentDeviceID.toString(), deviceName.toString());
     } catch (error) {
       console.log(error);
@@ -48,6 +55,7 @@ export default function EditAlias() {
     if (deviceName !== currentDeviceName) {
       saveNewName();
     }
+
   }, [deviceName]);
 
   return (
