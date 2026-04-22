@@ -35,7 +35,6 @@ export default function EditAlias() {
       //   packet.sendSetAlias(deviceName.toString()),
       //   currentDeviceID.toString(),
       // );
-
       if(!deviceName) {
         addAlias(currentDeviceID.toString(), currentDeviceName.toString());
         return;

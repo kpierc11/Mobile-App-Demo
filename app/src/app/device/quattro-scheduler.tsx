@@ -24,6 +24,11 @@ interface TimeData {
   id: number;
 }
 
+interface OffTimeData {
+  time: string;
+  hoursOff: number;
+}
+
 export const CustomButton: React.FC<{
   label: string;
   onPress?: () => void;
@@ -43,9 +48,10 @@ export default function QuattroScheduler() {
   const theme = useTheme();
   const packet = new Packet();
   const { currentDeviceID, currentDeviceName } = useLocalSearchParams();
-  const [showPicker, setShowPicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showHourPicker, setShowHourPicker] = useState(false);
   const [alarmString, setAlarmString] = useState<string | null>(null);
-  const [offTimes, setOffTimes] = useState<string[]>([]);
+  const [offTimes, setOffTimes] = useState<OffTimeData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
 
@@ -119,16 +125,17 @@ export default function QuattroScheduler() {
     let currentMinutes = 0;
 
     try {
-      if (!offTimes) {
+      if (offTimes.length === 0) {
         await processImmediatePacket(
           packet.sendTurnOnQuattros(),
           currentDeviceID.toString(),
         );
+        await new Promise((r) => setTimeout(r, 3000));
         return;
       }
 
-      offTimes.forEach((time) => {
-        const scheduleTime = time.split(":");
+      offTimes.forEach((data) => {
+        const scheduleTime = data.time.split(":");
         const hoursToMinutes = Number(scheduleTime[0]) * 60;
         const minutes = Number(scheduleTime[1]);
         const totalMinutes = hoursToMinutes + minutes;
@@ -137,15 +144,27 @@ export default function QuattroScheduler() {
         currentMinutes = totalMinutes;
       });
 
-      // await processImmediatePacket(
-      //   packet.sendSetQuattroSchedule(currentMinutes),
-      //   currentDeviceID.toString(),
-      // );
+      await processImmediatePacket(
+        packet.sendTurnOffQuattros(),
+        currentDeviceID.toString(),
+      );
+
       await new Promise((r) => setTimeout(r, 3000));
     } catch (error) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleUpdatingTime = (data: OffTimeData) => {
+    setOffTimes(
+      offTimes.map((currentData) => {
+        if (currentData.time === data.time) {
+          return { ...currentData, time: data.time, hoursOff: data.hoursOff };
+        }
+        return currentData;
+      }),
+    );
   };
 
   useEffect(() => {
@@ -201,7 +220,7 @@ export default function QuattroScheduler() {
       >
         <TouchableOpacity
           style={[styles.button, { marginRight: "auto" }]}
-          onPress={() => setShowPicker(true)}
+          onPress={() => setShowTimePicker(true)}
         >
           <Text style={{ color: "white" }}>Add New Time</Text>
           <AntDesign name="plus" size={16} color={"white"} />
@@ -219,23 +238,31 @@ export default function QuattroScheduler() {
       >
         <View style={styles.iconMainContainer}>
           {offTimes.length > 0 ? (
-            offTimes.map((time, index) => {
+            offTimes.map((data, index) => {
               return (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.iconContainer}
-                  onPress={() => handleRemoveTime(index)}
-                >
+                <View style={styles.iconContainer}>
                   <View style={styles.row}>
+                    <TouchableOpacity onPress={() => handleUpdatingTime(data)}>
+                      <Text>Time:</Text>
+                      <Text
+                        style={[styles.label, { color: theme.colors.text }]}
+                      >
+                        {data.time}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text>Hours Off:</Text>
                     <Text style={[styles.label, { color: theme.colors.text }]}>
-                      {time}
+                      {data.hoursOff}
                     </Text>
-                    <Text
-                      style={[styles.value, { color: theme.colors.text }]}
-                    ></Text>
                   </View>
-                  <Feather name="trash" size={22} color={theme.colors.text} />
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.iconContainer}
+                    onPress={() => handleRemoveTime(index)}
+                  >
+                    <Feather name="trash" size={22} color={theme.colors.text} />
+                  </TouchableOpacity>
+                </View>
               );
             })
           ) : (
@@ -266,12 +293,15 @@ export default function QuattroScheduler() {
         hideSeconds
         LinearGradient={LinearGradient}
         modalTitle="Set Turn Off Time"
-        onCancel={() => setShowPicker(false)}
+        onCancel={() => setShowTimePicker(false)}
         onConfirm={(pickedDuration) => {
-          setOffTimes([...offTimes, formatTime(pickedDuration)]);
-          setShowPicker(false);
+          setOffTimes([
+            ...offTimes,
+            { time: formatTime(pickedDuration), hoursOff: 0 },
+          ]);
+          setShowTimePicker(false);
         }}
-        setIsVisible={setShowPicker}
+        setIsVisible={setShowTimePicker}
         use12HourPicker
         minuteInterval={10}
         minuteLabel="min"
@@ -294,7 +324,51 @@ export default function QuattroScheduler() {
             minutes: 120,
           },
         }}
-        visible={showPicker}
+        visible={showTimePicker}
+      />
+
+      <TimerPickerModal
+        closeOnOverlayPress
+        modalProps={{
+          overlayOpacity: 0.7,
+        }}
+        cancelButton={<CustomButton label="Cancel"></CustomButton>}
+        confirmButton={<CustomButton label="Confirm"></CustomButton>}
+        hideSeconds
+        LinearGradient={LinearGradient}
+        modalTitle="Set Turn Off Time"
+        onCancel={() => setShowHourPicker(false)}
+        onConfirm={(pickedDuration) => {
+          setOffTimes([
+            ...offTimes,
+            { time: formatTime(pickedDuration), hoursOff: 0 },
+          ]);
+          setShowHourPicker(false);
+        }}
+        setIsVisible={setShowHourPicker}
+        use12HourPicker
+        minuteInterval={10}
+        minuteLabel="min"
+        styles={{
+          theme: theme.dark ? "dark" : "light",
+          pickerLabelGap: 8,
+          pickerItem: {
+            fontSize: 20,
+          },
+          pickerLabel: {
+            fontSize: 20,
+            fontWeight: 500,
+          },
+          modalTitle: {
+            fontSize: 18,
+          },
+
+          pickerColumnWidth: {
+            hours: 120,
+            minutes: 120,
+          },
+        }}
+        visible={showHourPicker}
       />
     </View>
   );

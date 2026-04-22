@@ -38,15 +38,12 @@ const processSensorData = (
   }
 };
 
-const processQuattroSchedule = (packet:Uint8Array) =>{
+const processQuattroSchedule = (packet: Uint8Array) => {
+  console.log("Quattro Schedule Packet:" + packet);
+  const packetDataView = new DataView(packet.buffer, 0, packet.byteLength);
 
-  let byteOffset = 16 + 8 + 3;
-  //console.log("Current Schedule" +packet);
-  for(let i = byteOffset; i < packet.length; i++)
-  {
-    //console.log(packet[i]);
-  }
-}
+  const { quattroSchedule } = packetParser.parseQuattroSchedule(packetDataView);
+};
 
 const ensureConnected = async (deviceID: string) => {
   const connected = await BleManager.isPeripheralConnected(deviceID, []);
@@ -104,6 +101,8 @@ export default function PacketQueueProvider({
     } else {
       latestPacket.current = packet;
     }
+
+    console.log("Sent packet to device: " + latestPacket.current);
   };
 
   const processResponsePacket = async (packet: Uint8Array) => {
@@ -115,8 +114,8 @@ export default function PacketQueueProvider({
         processSensorData(packet, setUnitData, setUnitHID);
       }
 
-      if(type === PacketTypes.QUATTRO_SCHEDULE) {
-          processQuattroSchedule(packet)
+      if (type === PacketTypes.QUATTRO_SCHEDULE) {
+        processQuattroSchedule(packet);
       }
     } catch (error) {
       console.error("Packet parsing error:", error);

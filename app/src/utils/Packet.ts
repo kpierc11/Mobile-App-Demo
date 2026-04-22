@@ -677,7 +677,14 @@ export class Packet {
     return { newPacket: new Uint8Array(), registerData: regData };
   }
 
-  parseQuattroSchedule(packet: Uint8Array) {}
+  parseQuattroSchedule(packet: DataView) {
+    let byteOffset = 16 + 8 + 3;
+    console.log("Current Schedule" + packet);
+    // for (let i = byteOffset; i < 36; i++) {
+    //   console.log(packet.getUint8(byteOffset));
+    // }
+    return { quattroSchedule: [] };
+  }
 
   resetBuffer() {
     this.buffer = new ArrayBuffer(250);
