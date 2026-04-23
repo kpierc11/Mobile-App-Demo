@@ -55,30 +55,32 @@ export default function QuattroScheduler() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
 
-  const toggleSwitch = async () => {
-    setIsEnabled((previousState) => !previousState);
-    setIsLoading(true);
-    try {
-      if (isEnabled) {
-        await processImmediatePacket(
-          packet.sendTurnOffQuattros(),
-          currentDeviceID.toString(),
-        );
-      }
+  // const toggleSwitch = async () => {
+  //   setIsEnabled((previousState) => !previousState);
+  //   setIsLoading(true);
+  //   try {
+  //     if (isEnabled) {
+  //       await processImmediatePacket(
+  //         packet.sendTurnOffQuattros(),
+  //         currentDeviceID.toString(),
+  //       );
+  //     }
 
-      if (!isEnabled) {
-        await processImmediatePacket(
-          packet.sendTurnOnQuattros(),
-          currentDeviceID.toString(),
-        );
-      }
+  //     if (!isEnabled) {
+  //       await processImmediatePacket(
+  //         packet.sendTurnOnQuattros(),
+  //         currentDeviceID.toString(),
+  //       );
+  //     }
 
-      await new Promise((r) => setTimeout(r, 3000));
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     await new Promise((r) => setTimeout(r, 3000));
+  //   } catch (error) {
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const sortedTimes = offTimes.sort((a, b) => a.time.localeCompare(b.time));
 
   const formatTime = ({
     hours,
@@ -156,11 +158,11 @@ export default function QuattroScheduler() {
     }
   };
 
-  const handleUpdatingTime = (data: OffTimeData) => {
+  const handleUpdatingTime = (time: string) => {
     setOffTimes(
       offTimes.map((currentData) => {
-        if (currentData.time === data.time) {
-          return { ...currentData, time: data.time, hoursOff: data.hoursOff };
+        if (currentData.time === time) {
+          return { ...currentData, time: time, hoursOff: currentData.hoursOff };
         }
         return currentData;
       }),
@@ -238,22 +240,38 @@ export default function QuattroScheduler() {
       >
         <View style={styles.iconMainContainer}>
           {offTimes.length > 0 ? (
-            offTimes.map((data, index) => {
+            sortedTimes.map((data, index) => {
               return (
-                <View style={styles.iconContainer}>
-                  <View style={styles.row}>
-                    <TouchableOpacity onPress={() => handleUpdatingTime(data)}>
-                      <Text>Time:</Text>
+                <View
+                  key={index}
+                  style={{ display: "flex", flexDirection: "row" }}
+                >
+                  <View style={[styles.row, { marginRight: "auto", gap: 40 }]}>
+                    <View style={{display:"flex", flexDirection:"row", gap:20}}>
+                     
                       <Text
                         style={[styles.label, { color: theme.colors.text }]}
                       >
                         {data.time}
                       </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={[styles.iconContainer, { gap: 10 }]}
+                      onPress={() => setShowHourPicker(true)}
+                    >
+                      <Feather
+                        name="edit"
+                        size={18}
+                        color={theme.colors.text}
+                      />
+                      <Text>Hours Off</Text>
+                      <Text
+                        style={[styles.label, { color: theme.colors.text }]}
+                      >
+                        {data.hoursOff}
+                      </Text>
                     </TouchableOpacity>
-                    <Text>Hours Off:</Text>
-                    <Text style={[styles.label, { color: theme.colors.text }]}>
-                      {data.hoursOff}
-                    </Text>
                   </View>
                   <TouchableOpacity
                     key={index}
@@ -292,7 +310,7 @@ export default function QuattroScheduler() {
         confirmButton={<CustomButton label="Confirm"></CustomButton>}
         hideSeconds
         LinearGradient={LinearGradient}
-        modalTitle="Set Turn Off Time"
+        modalTitle="Set Time"
         onCancel={() => setShowTimePicker(false)}
         onConfirm={(pickedDuration) => {
           setOffTimes([
@@ -335,18 +353,15 @@ export default function QuattroScheduler() {
         cancelButton={<CustomButton label="Cancel"></CustomButton>}
         confirmButton={<CustomButton label="Confirm"></CustomButton>}
         hideSeconds
+        hideMinutes
         LinearGradient={LinearGradient}
-        modalTitle="Set Turn Off Time"
+        modalTitle="Off Hours"
         onCancel={() => setShowHourPicker(false)}
         onConfirm={(pickedDuration) => {
-          setOffTimes([
-            ...offTimes,
-            { time: formatTime(pickedDuration), hoursOff: 0 },
-          ]);
+          handleUpdatingHours(pickedDuration.hours);
           setShowHourPicker(false);
         }}
         setIsVisible={setShowHourPicker}
-        use12HourPicker
         minuteInterval={10}
         minuteLabel="min"
         styles={{
