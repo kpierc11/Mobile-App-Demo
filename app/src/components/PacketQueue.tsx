@@ -102,7 +102,7 @@ export default function PacketQueueProvider({
       latestPacket.current = packet;
     }
 
-    console.log("Sent packet to device: " + latestPacket.current);
+    //console.log("Sent packet to device: " + latestPacket.current);
   };
 
   const processResponsePacket = async (packet: Uint8Array) => {
