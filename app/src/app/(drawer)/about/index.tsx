@@ -91,7 +91,7 @@ export default function About() {
             style={styles.iconContainer}
             onPress={() =>
               Linking.openURL(
-                "https://www.hydro-bioscience.com/media/MNUL0063-V001.pdf",
+                "https://www.hydro-bioscience.com/wp-content/uploads/2026/04/MyQuattro-App-MNUL0063-V001-R01.pdf",
               )
             }
           >

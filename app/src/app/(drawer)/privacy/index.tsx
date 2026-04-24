@@ -8,161 +8,105 @@ export default function PrivacyPolicy() {
     <ScrollView
       contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <Text style={[styles.title, { color: theme.colors.text }]}>Privacy Policy</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]}>
+        Privacy Policy
+      </Text>
+
       <Text style={[styles.date, { color: theme.colors.text }]}>
-        Last updated: September 27, 2022
+        Last updated: April 24, 2026
       </Text>
 
       <Text style={[styles.section, { color: theme.colors.text }]}>
-        This Privacy Policy describes Our policies and procedures on the
-        collection, use and disclosure of Your information when You use the
-        Service and tells You about Your privacy rights and how the law protects
-        You.
-      </Text>
-
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        We use Your Personal data to provide and improve the Service. By using
-        the Service, You agree to the collection and use of information in
-        accordance with this Privacy Policy.
+        MyQuattro (“the App”) respects your privacy. This Privacy Policy explains
+        how the App handles information when you use it.
       </Text>
 
       <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-        Interpretation and Definitions
-      </Text>
-
-      <Text style={[styles.subSectionTitle, { color: theme.colors.text }]}>Interpretation</Text>
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        The words of which the initial letter is capitalized have meanings
-        defined under the following conditions. The following definitions shall
-        have the same meaning regardless of whether they appear in singular or
-        in plural.
-      </Text>
-
-      <Text style={[styles.subSectionTitle, { color: theme.colors.text }]}>Definitions</Text>
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>Account:</Text> means a unique
-        account created for You to access our Service or parts of our Service.
-      </Text>
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>Affiliate:</Text> means an entity
-        that controls, is controlled by or is under common control with a party...
-      </Text>
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>Application:</Text> means the
-        software program provided by the Company downloaded by You on any electronic device,
-        named MyQuattro.
+        Information We Access
       </Text>
 
       <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>Company:</Text> Hydro Bio Science, LLC, 123
-        Main St, Town, TN 77787. Referred to as "the Company", "We", "Us", or "Our".
+        MyQuattro uses Bluetooth Low Energy (BLE) to enable its core functionality.
+        When you use the App, it may access nearby Bluetooth-enabled devices in
+        order to discover and connect to compatible devices.
       </Text>
 
       <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>Country:</Text> Tennessee, United States.
-      </Text>
-
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>Device:</Text> Any device that can access the
-        Service such as a computer, cellphone, or tablet.
-      </Text>
-
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>Personal Data:</Text> Any information that
-        relates to an identified or identifiable individual.
-      </Text>
-
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>Service:</Text> Refers to the Application.
-      </Text>
-
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>Service Provider:</Text> Any natural or legal
-        person who processes data on behalf of the Company.
-      </Text>
-
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>Usage Data:</Text> Data collected
-        automatically from your use of the Service.
-      </Text>
-
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        <Text style={[styles.bold, { color: theme.colors.text }]}>You:</Text> The individual accessing or using
-        the Service.
+        This process may involve temporary access to device identifiers and
+        connection-related information required for Bluetooth communication.
+        This data is used only while the App is running and is not stored or
+        transmitted to external servers.
       </Text>
 
       <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-        Collecting and Using Your Personal Data
-      </Text>
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        We may collect personal data such as Usage Data automatically when you
-        use the Service. Information collected may include IP address, browser
-        type, pages visited, and device identifiers.
-      </Text>
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        While using our Application, we may collect location information, with
-        your permission, to provide and improve the Service. You can enable or
-        disable this through your device settings.
+        Data Storage
       </Text>
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Use of Your Personal Data</Text>
       <Text style={[styles.section, { color: theme.colors.text }]}>
-        We may use Personal Data to provide and maintain our Service, manage
-        your account, contact you, provide updates, manage requests, conduct
-        business transfers, and for data analysis.
-      </Text>
-
-      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Sharing Your Personal Information</Text>
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        We may share your personal information with service providers,
-        affiliates, business partners, or for business transfers. We may also
-        share information with your consent or when interacting publicly with
-        other users.
+        MyQuattro does not store Bluetooth scan results, device identifiers, or
+        connection data on external servers. All Bluetooth-related information
+        is used temporarily on your device and is discarded when no longer needed.
       </Text>
 
       <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-        Retention, Transfer, and Deletion of Personal Data
-      </Text>
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        We retain your data only as long as necessary to comply with legal
-        obligations, resolve disputes, and improve the Service. You can request
-        deletion of your personal data by contacting us or via your account
-        settings.
+        Data Sharing
       </Text>
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Security of Your Personal Data</Text>
       <Text style={[styles.section, { color: theme.colors.text }]}>
-        While we take reasonable measures to protect your data, no method of
-        transmission or storage is 100% secure.
+        We do not sell, rent, or share any user or Bluetooth-related data with
+        third parties.
       </Text>
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Children's Privacy</Text>
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        Our Service does not address children under 13. If we become aware that
-        we have collected data from a child, we remove it immediately.
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        Location
       </Text>
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Links to Other Websites</Text>
       <Text style={[styles.section, { color: theme.colors.text }]}>
-        Our Service may contain links to third-party websites. We are not
-        responsible for their content or privacy practices.
+        MyQuattro does not track or store your precise location. However,
+        Bluetooth scanning may involve proximity signals necessary for device
+        discovery and connection.
       </Text>
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Changes to this Privacy Policy</Text>
-      <Text style={[styles.section, { color: theme.colors.text }]}>
-        We may update this Privacy Policy from time to time. Updates will be
-        posted here with the revised "Last updated" date.
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        Third-Party Services
       </Text>
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Contact Us</Text>
       <Text style={[styles.section, { color: theme.colors.text }]}>
-        If you have questions, visit our website:{" "}
-        <Text
-          style={[styles.link, { color: theme.colors.primary }]}
-          onPress={() => Linking.openURL("http://www.hydro-bioscience.com")}
-        >
-          http://www.hydro-bioscience.com
-        </Text>
+        The App does not use advertising networks or analytics SDKs for tracking
+        or user profiling.
+      </Text>
+
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        Children's Privacy
+      </Text>
+
+      <Text style={[styles.section, { color: theme.colors.text }]}>
+        The App does not knowingly collect personal information from users of any
+        age, including children under 13.
+      </Text>
+
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        Changes to This Policy
+      </Text>
+
+      <Text style={[styles.section, { color: theme.colors.text }]}>
+        If the App is updated in the future in a way that changes how data is
+        used, this Privacy Policy will be updated accordingly.
+      </Text>
+
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        Contact
+      </Text>
+
+      <Text style={[styles.section, { color: theme.colors.text }]}>
+        If you have any questions about this Privacy Policy, you can contact:
+      </Text>
+
+      <Text
+        style={[styles.link, { color: theme.colors.primary }]}
+        onPress={() => Linking.openURL("mailto:dev@dpipower.com")}
+      >
+        dev@dpipower.com
       </Text>
 
       <View style={{ height: 40 }} />
@@ -181,7 +125,6 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 14,
-    color: "#555", // overridden by theme
     marginBottom: 20,
   },
   sectionTitle: {
@@ -190,23 +133,14 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginBottom: 5,
   },
-  subSectionTitle: {
-    fontSize: 18,
-    fontWeight: "500",
-    marginTop: 10,
-    marginBottom: 3,
-  },
   section: {
     fontSize: 16,
     lineHeight: 22,
-    color: "#333", // overridden by theme
     marginBottom: 10,
   },
-  bold: {
-    fontWeight: "bold",
-  },
   link: {
+    fontSize: 16,
     textDecorationLine: "underline",
-    // color overridden by theme
+    marginTop: 5,
   },
 });
