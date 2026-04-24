@@ -256,7 +256,7 @@ export default function QuattroScheduler() {
                       </Text>
                     </View>
 
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                       style={[styles.iconContainer, { gap: 10 }]}
                       onPress={() => setShowHourPicker(true)}
                     >
@@ -271,7 +271,7 @@ export default function QuattroScheduler() {
                       >
                         {data.hoursOff}
                       </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                   </View>
                   <TouchableOpacity
                     key={index}
@@ -345,7 +345,7 @@ export default function QuattroScheduler() {
         visible={showTimePicker}
       />
 
-      <TimerPickerModal
+      {/* <TimerPickerModal
         closeOnOverlayPress
         modalProps={{
           overlayOpacity: 0.7,
@@ -384,7 +384,7 @@ export default function QuattroScheduler() {
           },
         }}
         visible={showHourPicker}
-      />
+      /> */}
     </View>
   );
 }
